@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PillMate Demo',
-      home: const Text("Hello"),
+      home: const Text("Helloadsasd"),
     );
   }
 }
