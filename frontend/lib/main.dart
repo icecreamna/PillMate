@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/splash/splash_screen.dart';
+import 'package:frontend/screens/splash/splash_screen.dart';
 import 'package:get/get.dart';
 
 void main() {
@@ -19,4 +19,3 @@ class MyApp extends StatelessWidget {
     //ใช้ GetMaterail เพราะ ใช้ router get
   }
 }
-

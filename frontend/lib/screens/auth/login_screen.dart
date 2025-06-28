@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/text_field_input.dart';
+import 'package:get/get.dart';
+import 'package:frontend/screens/auth/register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -107,7 +109,9 @@ class LoginScreen extends StatelessWidget {
                                 padding: const EdgeInsets.all(5),
                                 minimumSize: const Size(0, 0),
                               ),
-                              onPressed: () {},
+                              onPressed: () {
+                                 Get.to(()=> const RegisScreen());
+                              },
                               child: Text(
                                 "Sign Up",
                                 style: TextStyle(
