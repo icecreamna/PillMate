@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:frontend/utils/colors.dart' as color;
 
 class TextFieldInput extends StatelessWidget {
-  final Icon preIcon;
-  final Icon sufIcon;
+  final Widget preIcon;
+  final Widget sufIcon;
   final String labelname;
-  final bool isEye;
+  final bool isSuf;
   final bool hideText;
 
   const TextFieldInput({
@@ -13,7 +13,7 @@ class TextFieldInput extends StatelessWidget {
     required this.labelname,
     required this.preIcon,
     required this.sufIcon,
-    this.isEye = false,
+    this.isSuf = false,
     this.hideText = false,
   });
 
@@ -24,7 +24,7 @@ class TextFieldInput extends StatelessWidget {
       child: TextField(
         decoration: InputDecoration(
           prefixIcon: preIcon,
-          suffixIcon: isEye ? sufIcon : null,
+          suffixIcon: isSuf ? sufIcon : null,
           labelText: labelname,
           labelStyle: const TextStyle(color: Colors.grey),
           enabledBorder: UnderlineInputBorder(

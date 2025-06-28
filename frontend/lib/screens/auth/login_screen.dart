@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/controller/user_controller.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/text_field_input.dart';
 import 'package:get/get.dart';
@@ -9,6 +10,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    UserController uc = Get.put(UserController());
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
       body: SafeArea(
@@ -62,24 +64,30 @@ class LoginScreen extends StatelessWidget {
                             Icons.people_outlined,
                             color: Colors.black,
                           ),
-                          sufIcon: Icon(
-                            Icons.visibility_off_outlined,
-                            color: Colors.black,
-                          ),
+                          sufIcon: Icon(null),
                         ),
                         const SizedBox(height: 25),
-                        const TextFieldInput(
-                          labelname: "Password",
-                          preIcon: Icon(
-                            Icons.lock_open_outlined,
-                            color: Colors.black,
+                        Obx(
+                          () => TextFieldInput(
+                            labelname: "Password",
+                            preIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Colors.black,
+                            ),
+                            sufIcon: IconButton(
+                              onPressed: () {
+                                uc.toggleObsecurePassword();
+                              },
+                              icon: Icon(
+                                color: Colors.black,
+                                uc.obsecurePassword.value
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                            ),
+                            isSuf: true,
+                            hideText: uc.obsecurePassword.value,
                           ),
-                          sufIcon: Icon(
-                            Icons.visibility_off_outlined,
-                            color: Colors.black,
-                          ),
-                          isEye: true,
-                          hideText: true,
                         ),
                         const Spacer(),
                         FilledButton(
@@ -110,7 +118,7 @@ class LoginScreen extends StatelessWidget {
                                 minimumSize: const Size(0, 0),
                               ),
                               onPressed: () {
-                                 Get.to(()=> const RegisScreen());
+                                Get.off(() => const RegisScreen());
                               },
                               child: Text(
                                 "Sign Up",
@@ -123,7 +131,6 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
