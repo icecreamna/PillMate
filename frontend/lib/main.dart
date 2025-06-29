@@ -11,10 +11,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const GetMaterialApp(
+    return  GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PillMate Demo',
-      home: SplashScreen(), //หน้าโหลด
+      home: const SplashScreen(),
+      theme: ThemeData(fontFamily: "Inter"), //หน้าโหลด
     );
     //ใช้ GetMaterail เพราะ ใช้ router get
   }

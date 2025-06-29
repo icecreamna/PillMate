@@ -39,7 +39,7 @@ class RegisScreen extends StatelessWidget {
                     const SizedBox(height: 80),
                     const TextFieldInput(
                       labelname: "ID card number",
-                      preIcon: Icon(Icons.people_outlined, color: Colors.black),
+                      preIcon: Icon(Icons.person_outline, color: Colors.black),
                       sufIcon: Icon(null),
                     ),
                     const SizedBox(height: 25),
@@ -93,7 +93,7 @@ class RegisScreen extends StatelessWidget {
                       onPressed: () {},
                       child: const Text(
                         "SIGN UP",
-                        style: TextStyle(color: Colors.white, fontSize: 24),
+                        style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 15),

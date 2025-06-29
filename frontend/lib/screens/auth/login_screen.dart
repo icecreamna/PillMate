@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/controller/user_controller.dart';
+import 'package:frontend/screens/home/home_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/text_field_input.dart';
 import 'package:get/get.dart';
@@ -61,7 +62,7 @@ class LoginScreen extends StatelessWidget {
                         const TextFieldInput(
                           labelname: "ID card number",
                           preIcon: Icon(
-                            Icons.people_outlined,
+                            Icons.person_outline,
                             color: Colors.black,
                           ),
                           sufIcon: Icon(null),
@@ -91,14 +92,16 @@ class LoginScreen extends StatelessWidget {
                         ),
                         const Spacer(),
                         FilledButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Get.off(()=> const HomeScreen());
+                          },
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(288, 49),
                             backgroundColor: color.AppColors.buttonColor,
                           ),
                           child: const Text(
                             "SIGN IN",
-                            style: TextStyle(color: Colors.white, fontSize: 24),
+                            style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 15),
