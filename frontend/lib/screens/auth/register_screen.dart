@@ -93,7 +93,11 @@ class RegisScreen extends StatelessWidget {
                       onPressed: () {},
                       child: const Text(
                         "SIGN UP",
-                        style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 15),

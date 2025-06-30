@@ -46,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: color.AppColors.buttonColor,
         unselectedItemColor: const Color(0xFF454545),
         showUnselectedLabels: true,
+
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             label: "วันนี้",
