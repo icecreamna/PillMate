@@ -6,8 +6,10 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  Container(
-      child: Center(
-        child: Text("Notification screen"),
+      child: const Center(
+        child: Text("ไม่มีการแจ้งเตือน",style: TextStyle(
+          fontSize: 20
+        ),),
       ),
     );
   }

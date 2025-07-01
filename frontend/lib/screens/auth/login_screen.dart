@@ -7,11 +7,11 @@ import 'package:get/get.dart';
 import 'package:frontend/screens/auth/register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+   LoginScreen({super.key});
 
+   final UserController uc = Get.put(UserController(),tag: "login");
   @override
   Widget build(BuildContext context) {
-    UserController uc = Get.put(UserController());
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
       body: SafeArea(
@@ -59,14 +59,16 @@ class LoginScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        const TextFieldInput(
-                          labelname: "ID card number",
-                          preIcon: Icon(
-                            Icons.person_outline,
-                            color: Colors.black,
+                        
+                          const TextFieldInput(
+                            labelname: "ID card number",
+                            preIcon: Icon(
+                              Icons.person_outline,
+                              color: Colors.black,
+                            ),
+                            textInputType: TextInputType.number,
                           ),
-                          sufIcon: Icon(null),
-                        ),
+                        
                         const SizedBox(height: 25),
                         Obx(
                           () => TextFieldInput(
@@ -88,12 +90,13 @@ class LoginScreen extends StatelessWidget {
                             ),
                             isSuf: true,
                             hideText: uc.obsecurePassword.value,
+                            textInputType: TextInputType.text,
                           ),
                         ),
                         const Spacer(),
                         FilledButton(
                           onPressed: () {
-                            Get.off(()=> const HomeScreen());
+                            Get.off(() => const HomeScreen());
                           },
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(288, 49),
@@ -101,7 +104,11 @@ class LoginScreen extends StatelessWidget {
                           ),
                           child: const Text(
                             "SIGN IN",
-                            style: TextStyle(color: Colors.white, fontSize: 24,fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -121,7 +128,7 @@ class LoginScreen extends StatelessWidget {
                                 minimumSize: const Size(0, 0),
                               ),
                               onPressed: () {
-                                Get.off(() => const RegisScreen());
+                                Get.off(() =>  RegisScreen());
                               },
                               child: Text(
                                 "Sign Up",
