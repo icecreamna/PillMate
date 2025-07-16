@@ -6,7 +6,7 @@ import 'package:frontend/utils/colors.dart' as color;
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
-
+  
   @override
   Widget build(BuildContext context) {
     Future.delayed(const Duration(milliseconds: 1500), () {
