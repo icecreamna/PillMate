@@ -11,6 +11,7 @@ abstract class Routes {
   static const TODAY = _Paths.HOME + _Paths.TODAY;
   static const NOTIFICATION = _Paths.HOME + _Paths.NOTIFICATION;
   static const DRUG = _Paths.HOME + _Paths.DRUG;
+  static const FORGET_PASSWORD = _Paths.LOGIN + _Paths.FORGET_PASSWORD;
 }
 
 abstract class _Paths {
@@ -23,4 +24,5 @@ abstract class _Paths {
   static const TODAY = '/today';
   static const NOTIFICATION = '/notification';
   static const DRUG = '/drug';
+  static const FORGET_PASSWORD = '/forget-password';
 }

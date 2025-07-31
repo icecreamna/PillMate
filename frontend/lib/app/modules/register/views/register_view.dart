@@ -36,18 +36,23 @@ class RegisterScreen extends GetView<RegisterController> {
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 80),
-
+                      const SizedBox(height: 30),
+                      const Text("ลงทะเบียน",style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0
+                      ),),
+                      const SizedBox(height: 30),
                       const TextFieldInput(
-                        labelname: "ID card number",
+                        labelname: "E-mail",
                         textInputType: TextInputType.number,
                         preIcon: Icon(
-                          Icons.person_outline,
+                          Icons.email_outlined,
                           color: Colors.black,
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 15),
                       Obx(
                         () => TextFieldInput(
                           labelname: "Password",
@@ -69,7 +74,7 @@ class RegisterScreen extends GetView<RegisterController> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 15),
                       Obx(
                         () => TextFieldInput(
                           labelname: "Confirm Password",
@@ -99,11 +104,10 @@ class RegisterScreen extends GetView<RegisterController> {
                         ),
                         onPressed: () {},
                         child: const Text(
-                          "SIGN UP",
+                          "ถัดไป",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -112,7 +116,7 @@ class RegisterScreen extends GetView<RegisterController> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            "Already member?",
+                            "มีบัญชีอยู่แล้ว?",
                             style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(width: 5),
@@ -125,7 +129,7 @@ class RegisterScreen extends GetView<RegisterController> {
                               Get.offAllNamed(Routes.LOGIN);
                             },
                             child: Text(
-                              "Sign In",
+                              "เข้าสู่ระบบ",
                               style: TextStyle(
                                 color: color.AppColors.buttonColor,
                                 fontWeight: FontWeight.bold,

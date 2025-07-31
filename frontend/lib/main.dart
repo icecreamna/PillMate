@@ -4,11 +4,15 @@ import 'package:get/get.dart';
 
 import 'app/routes/app_pages.dart';
 
+
+
 void main() {
   runApp(
     GetMaterialApp(
-      title: "Application",
+      title: "PillMate",
       initialRoute: AppPages.INITIAL,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(fontFamily:"NotoSansThai"),
       getPages: AppPages.routes,
     ),
   );

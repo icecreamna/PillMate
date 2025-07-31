@@ -11,6 +11,8 @@ import '../modules/home/today/bindings/today_binding.dart';
 import '../modules/home/today/views/today_view.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
+import '../modules/login/forget_password/bindings/forget_password_binding.dart';
+import '../modules/login/forget_password/views/forget_password_view.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
@@ -54,8 +56,15 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.LOGIN,
-      page: () =>  const LoginScreen(),
+      page: () => const LoginScreen(),
       binding: LoginBinding(),
+      children: [
+        GetPage(
+          name: _Paths.FORGET_PASSWORD,
+          page: () => const ForgetPasswordView(),
+          binding: ForgetPasswordBinding(),
+        ),
+      ],
     ),
     GetPage(
       name: _Paths.REGISTER,

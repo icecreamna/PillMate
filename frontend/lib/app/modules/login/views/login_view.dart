@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import '../controllers/login_controller.dart';
 
 class LoginScreen extends GetView<LoginController> {
-   const LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,35 +38,31 @@ class LoginScreen extends GetView<LoginController> {
                   child: SizedBox.expand(
                     child: Column(
                       children: [
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 25),
                         const Text(
-                          "Welcome",
+                          "ยินดีต้อนรับ",
                           style: TextStyle(
-                            color: Color(0xFF0B0870),
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 24,
+                            letterSpacing: 0,
                           ),
                         ),
                         const SizedBox(height: 10),
                         const Text(
-                          "Please log in to continue",
-                          style: TextStyle(
-                            color: Color(0xFF0B0870),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
+                          "กรุณาเข้าสู่ระบบเพื่อใช้งาน",
+                          style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         const SizedBox(height: 30),
-                        
-                          const TextFieldInput(
-                            labelname: "ID card number",
-                            preIcon: Icon(
-                              Icons.person_outline,
-                              color: Colors.black,
-                            ),
-                            textInputType: TextInputType.number,
+                        const TextFieldInput(
+                          labelname: "E-mail",
+                          preIcon: Icon(
+                            Icons.email_outlined,
+                            color: Colors.black,
                           ),
-                        
+                          textInputType: TextInputType.number,
+                        ),
+
                         const SizedBox(height: 25),
                         Obx(
                           () => TextFieldInput(
@@ -91,6 +87,25 @@ class LoginScreen extends GetView<LoginController> {
                             textInputType: TextInputType.text,
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0,),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                            onPressed: () => Get.toNamed(Routes.FORGET_PASSWORD),
+                            child: Text(
+                              "ลืมรหัสผ่าน",
+                              style: TextStyle(
+                                color: color.AppColors.buttonColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: color.AppColors.buttonColor,
+                              ),
+                            ),
+                          )),
+                        ),
                         const Spacer(),
                         FilledButton(
                           onPressed: () {
@@ -101,11 +116,11 @@ class LoginScreen extends GetView<LoginController> {
                             backgroundColor: color.AppColors.buttonColor,
                           ),
                           child: const Text(
-                            "SIGN IN",
+                            "เข้าสู่ระบบ",
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              // fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -114,7 +129,7 @@ class LoginScreen extends GetView<LoginController> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              "Don't have an account?",
+                              "ยังไม่มีบัญชี?",
                               style: TextStyle(
                                 color: Colors.grey,
                                 fontSize: 15,
@@ -123,17 +138,18 @@ class LoginScreen extends GetView<LoginController> {
                             TextButton(
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.all(5),
-                                minimumSize: const Size(0, 0),
                               ),
                               onPressed: () {
                                 Get.offAllNamed(Routes.REGISTER);
                               },
                               child: Text(
-                                "Sign Up",
+                                "ลงทะเบียน",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   color: color.AppColors.buttonColor,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: color.AppColors.buttonColor,
                                 ),
                               ),
                             ),
