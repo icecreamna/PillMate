@@ -60,7 +60,7 @@ class LoginScreen extends GetView<LoginController> {
                             Icons.email_outlined,
                             color: Colors.black,
                           ),
-                          textInputType: TextInputType.number,
+                          textInputType: TextInputType.emailAddress,
                         ),
 
                         const SizedBox(height: 25),
@@ -89,22 +89,26 @@ class LoginScreen extends GetView<LoginController> {
                         ),
                         const SizedBox(height: 20),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0,),
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                            onPressed: () => Get.toNamed(Routes.FORGET_PASSWORD),
-                            child: Text(
-                              "ลืมรหัสผ่าน",
-                              style: TextStyle(
-                                color: color.AppColors.buttonColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                                decorationColor: color.AppColors.buttonColor,
+                              onPressed: () => Get.offNamed(
+                                Routes.FORGET_PASSWORD,
+                                
+                              ),
+                              child: Text(
+                                "ลืมรหัสผ่าน",
+                                style: TextStyle(
+                                  color: color.AppColors.buttonColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: color.AppColors.buttonColor,
+                                ),
                               ),
                             ),
-                          )),
+                          ),
                         ),
                         const Spacer(),
                         FilledButton(

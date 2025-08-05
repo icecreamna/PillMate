@@ -12,8 +12,14 @@ import '../modules/home/today/views/today_view.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/forget_password/bindings/forget_password_binding.dart';
+import '../modules/login/forget_password/new_password/bindings/new_password_binding.dart';
+import '../modules/login/forget_password/new_password/views/new_password_view.dart';
 import '../modules/login/forget_password/views/forget_password_view.dart';
 import '../modules/login/views/login_view.dart';
+import '../modules/otp/bindings/otp_binding.dart';
+import '../modules/otp/views/otp_view.dart';
+import '../modules/profile_setup/bindings/profile_setup_binding.dart';
+import '../modules/profile_setup/views/profile_setup_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -63,6 +69,13 @@ class AppPages {
           name: _Paths.FORGET_PASSWORD,
           page: () => const ForgetPasswordView(),
           binding: ForgetPasswordBinding(),
+          children: [
+            GetPage(
+              name: _Paths.NEW_PASSWORD,
+              page: () => const NewPasswordView(),
+              binding: NewPasswordBinding(),
+            ),
+          ],
         ),
       ],
     ),
@@ -75,6 +88,16 @@ class AppPages {
       name: _Paths.SPLASH,
       page: () => const SplashScreen(),
       binding: SplashBinding(),
+    ),
+    GetPage(
+      name: _Paths.OTP,
+      page: () => const OtpView(),
+      binding: OtpBinding(),
+    ),
+    GetPage(
+      name: _Paths.PROFILE_SETUP,
+      page: () => const ProfileSetupView(),
+      binding: ProfileSetupBinding(),
     ),
   ];
 }

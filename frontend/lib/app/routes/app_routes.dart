@@ -12,6 +12,10 @@ abstract class Routes {
   static const NOTIFICATION = _Paths.HOME + _Paths.NOTIFICATION;
   static const DRUG = _Paths.HOME + _Paths.DRUG;
   static const FORGET_PASSWORD = _Paths.LOGIN + _Paths.FORGET_PASSWORD;
+  static const OTP = _Paths.OTP;
+  static const PROFILE_SETUP = _Paths.PROFILE_SETUP;
+  static const NEW_PASSWORD =
+      _Paths.LOGIN + _Paths.FORGET_PASSWORD + _Paths.NEW_PASSWORD;
 }
 
 abstract class _Paths {
@@ -25,4 +29,7 @@ abstract class _Paths {
   static const NOTIFICATION = '/notification';
   static const DRUG = '/drug';
   static const FORGET_PASSWORD = '/forget-password';
+  static const OTP = '/otp';
+  static const PROFILE_SETUP = '/profile-setup';
+  static const NEW_PASSWORD = '/new-password';
 }

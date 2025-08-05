@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/modules/otp/controllers/otp_controller.dart';
 import 'package:frontend/app/modules/register/controllers/register_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 import 'package:frontend/app/utils/colors.dart' as color;
@@ -45,7 +46,7 @@ class RegisterScreen extends GetView<RegisterController> {
                       const SizedBox(height: 30),
                       const TextFieldInput(
                         labelname: "E-mail",
-                        textInputType: TextInputType.number,
+                        textInputType: TextInputType.emailAddress,
                         preIcon: Icon(
                           Icons.email_outlined,
                           color: Colors.black,
@@ -102,7 +103,7 @@ class RegisterScreen extends GetView<RegisterController> {
                           minimumSize: const Size(288, 49),
                           backgroundColor: color.AppColors.buttonColor,
                         ),
-                        onPressed: () {},
+                        onPressed: () => Get.toNamed(Routes.OTP,arguments: {"otpPage":OTPType.register}),
                         child: const Text(
                           "ถัดไป",
                           style: TextStyle(
