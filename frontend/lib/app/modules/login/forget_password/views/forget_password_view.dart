@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app/modules/otp/controllers/otp_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
+import 'package:frontend/app/widgets/filled_button_custom.dart';
 import 'package:frontend/app/widgets/text_field_input.dart';
 
 import 'package:get/get.dart';
@@ -57,7 +58,10 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
                       const SizedBox(height: 60),
                       const TextFieldInput(
                         labelname: "E-mail",
-                        preIcon: Icon(Icons.email_outlined, color: Colors.black),
+                        preIcon: Icon(
+                          Icons.email_outlined,
+                          color: Colors.black,
+                        ),
                         textInputType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 70),
@@ -72,15 +76,11 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
                         ),
                       ),
                       const Spacer(),
-                      FilledButton(
-                        onPressed: () => Get.offNamed(Routes.OTP,arguments: {"otpPage":OTPType.forgot}),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: color.AppColors.buttonColor,
-                          minimumSize: const Size(288, 49),
-                        ),
-                        child: const Text(
-                          "ถัดไป",
-                          style: TextStyle(fontSize: 24),
+                      FilledButtonCustom(
+                        text: "ถัดไป",
+                        onPressed: () => Get.offNamed(
+                          Routes.OTP,
+                          arguments: {"otpPage": OTPType.forgot},
                         ),
                       ),
                       const SizedBox(height: 30),

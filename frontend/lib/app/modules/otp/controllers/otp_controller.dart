@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 enum OTPType { register, forgot }
 
 class OtpController extends GetxController {
-  //TODO: Implement OtpController 
-  late final OTPType otpType ;
+  //TODO: Implement OtpController
+  late final OTPType otpType;
 
   @override
   void onInit() {
@@ -22,12 +22,15 @@ class OtpController extends GetxController {
   void onClose() {
     super.onClose();
   }
-  void submitOtp() {
-    if(otpType == OTPType.forgot){
-      Get.offNamed(Routes.NEW_PASSWORD);
-    }
-    else {
-      Get.offNamed(Routes.PROFILE_SETUP);
+
+  void goNextScreen() {
+    switch (otpType) {
+      case OTPType.register:
+        Get.offNamed(Routes.PROFILE_SETUP);
+        break;
+      case OTPType.forgot:
+        Get.toNamed(Routes.NEW_PASSWORD);
+        break;
     }
   }
 }

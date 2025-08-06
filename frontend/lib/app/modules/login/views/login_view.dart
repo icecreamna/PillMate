@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/widgets/filled_button_custom.dart';
 import '../../../routes/app_pages.dart';
 import 'package:frontend/app/utils/colors.dart' as color;
 import 'package:frontend/app/widgets/text_field_input.dart';
@@ -93,10 +94,8 @@ class LoginScreen extends GetView<LoginController> {
                           child: Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => Get.offNamed(
-                                Routes.FORGET_PASSWORD,
-                                
-                              ),
+                              onPressed: () =>
+                                  Get.offNamed(Routes.FORGET_PASSWORD),
                               child: Text(
                                 "ลืมรหัสผ่าน",
                                 style: TextStyle(
@@ -111,22 +110,9 @@ class LoginScreen extends GetView<LoginController> {
                           ),
                         ),
                         const Spacer(),
-                        FilledButton(
-                          onPressed: () {
-                            Get.offAllNamed(Routes.HOME);
-                          },
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(288, 49),
-                            backgroundColor: color.AppColors.buttonColor,
-                          ),
-                          child: const Text(
-                            "เข้าสู่ระบบ",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              // fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        FilledButtonCustom(
+                          text: "เข้าสู่ระบบ",
+                          onPressed: () => Get.offNamed(Routes.HOME),
                         ),
                         const SizedBox(height: 15),
                         Row(

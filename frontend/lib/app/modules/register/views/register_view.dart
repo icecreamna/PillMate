@@ -3,6 +3,7 @@ import 'package:frontend/app/modules/otp/controllers/otp_controller.dart';
 import 'package:frontend/app/modules/register/controllers/register_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 import 'package:frontend/app/utils/colors.dart' as color;
+import 'package:frontend/app/widgets/filled_button_custom.dart';
 import 'package:frontend/app/widgets/text_field_input.dart';
 import 'package:get/get.dart';
 
@@ -38,11 +39,14 @@ class RegisterScreen extends GetView<RegisterController> {
                   child: Column(
                     children: [
                       const SizedBox(height: 30),
-                      const Text("ลงทะเบียน",style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0
-                      ),),
+                      const Text(
+                        "ลงทะเบียน",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0,
+                        ),
+                      ),
                       const SizedBox(height: 30),
                       const TextFieldInput(
                         labelname: "E-mail",
@@ -65,7 +69,8 @@ class RegisterScreen extends GetView<RegisterController> {
                             color: Colors.black,
                           ),
                           sufIcon: IconButton(
-                            onPressed: () => controller.toggleObsecurePassword(),
+                            onPressed: () =>
+                                controller.toggleObsecurePassword(),
                             icon: Icon(
                               controller.obsecurePassword
                                   ? Icons.visibility_off_outlined
@@ -87,7 +92,8 @@ class RegisterScreen extends GetView<RegisterController> {
                             color: Colors.black,
                           ),
                           sufIcon: IconButton(
-                            onPressed: () => controller.toggleObsecureConfirmPassword(),
+                            onPressed: () =>
+                                controller.toggleObsecureConfirmPassword(),
                             icon: Icon(
                               controller.obsecureConfirmPassword
                                   ? Icons.visibility_off_outlined
@@ -98,18 +104,11 @@ class RegisterScreen extends GetView<RegisterController> {
                         ),
                       ),
                       const Spacer(),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(288, 49),
-                          backgroundColor: color.AppColors.buttonColor,
-                        ),
-                        onPressed: () => Get.toNamed(Routes.OTP,arguments: {"otpPage":OTPType.register}),
-                        child: const Text(
-                          "ถัดไป",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                          ),
+                      FilledButtonCustom(
+                        text: "ถัดไป",
+                        onPressed: () => Get.offNamed(
+                          Routes.OTP,
+                          arguments: {"otpPage": OTPType.register},
                         ),
                       ),
                       const SizedBox(height: 15),

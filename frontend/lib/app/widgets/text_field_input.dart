@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/app/utils/colors.dart' as color;
 
 class TextFieldInput extends StatelessWidget {
@@ -8,17 +9,17 @@ class TextFieldInput extends StatelessWidget {
   final bool isSuf;
   final bool hideText;
   final TextInputType textInputType;
-  final FocusNode? focusNode;
+  final List<TextInputFormatter>? inputFormatters;
 
   const TextFieldInput({
     super.key,
     required this.labelname,
-    required this.preIcon,
+    this.preIcon,
     this.sufIcon,
     required this.textInputType,
     this.isSuf = false,
     this.hideText = false,
-    this.focusNode,
+    this.inputFormatters,
   });
 
   @override
@@ -26,6 +27,7 @@ class TextFieldInput extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 30),
       child: TextField(
+        inputFormatters: inputFormatters,
         keyboardType: textInputType,
         obscureText: hideText,
         decoration: InputDecoration(
@@ -39,7 +41,6 @@ class TextFieldInput extends StatelessWidget {
           focusedBorder: UnderlineInputBorder(
             borderSide: BorderSide(width: 1.5,color: color.AppColors.buttonColor),
           ),
-        
         ),
       ),
     );
