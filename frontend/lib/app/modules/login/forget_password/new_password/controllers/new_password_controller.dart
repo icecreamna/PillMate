@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 class NewPasswordController extends GetxController {
   //TODO: Implement NewPasswordController
 
-  final count = 0.obs;
+  final RxBool _obsecurePassword = true.obs;
+  bool get obsecurePassword => _obsecurePassword.value;
+  final RxBool _obsecureConfirmPassword = true.obs;
+  bool get obsecureConfirmPassword => _obsecureConfirmPassword.value;
   @override
   void onInit() {
     super.onInit();
@@ -19,5 +22,7 @@ class NewPasswordController extends GetxController {
     super.onClose();
   }
 
-  void increment() => count.value++;
+  void toggleObsecurePassword() => _obsecurePassword.value = !_obsecurePassword.value;
+  void toggleObsecureConfirmPassword()=> _obsecureConfirmPassword.value = !_obsecureConfirmPassword.value;
+      
 }
