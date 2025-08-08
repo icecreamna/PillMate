@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/app/widgets/filled_button_custom.dart';
 import '../../../routes/app_pages.dart';
 import 'package:frontend/app/utils/colors.dart' as color;
@@ -6,8 +7,13 @@ import 'package:frontend/app/widgets/text_field_input.dart';
 import 'package:get/get.dart';
 import '../controllers/login_controller.dart';
 
+final _fromKey = GlobalKey<FormState>();
+
 class LoginScreen extends GetView<LoginController> {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -37,115 +43,145 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                   width: double.infinity,
                   child: SizedBox.expand(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 25),
-                        const Text(
-                          "ยินดีต้อนรับ",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            letterSpacing: 0,
+                    child: Form(
+                      key: _fromKey,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 25),
+                          const Text(
+                            "ยินดีต้อนรับ",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                              letterSpacing: 0,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "กรุณาเข้าสู่ระบบเพื่อใช้งาน",
-                          style: TextStyle(color: Colors.black, fontSize: 16),
-                        ),
-                        const SizedBox(height: 30),
-                        const TextFieldInput(
-                          labelname: "E-mail",
-                          preIcon: Icon(
-                            Icons.email_outlined,
-                            color: Colors.black,
+                          const SizedBox(height: 10),
+                          const Text(
+                            "กรุณาเข้าสู่ระบบเพื่อใช้งาน",
+                            style: TextStyle(color: Colors.black, fontSize: 16),
                           ),
-                          textInputType: TextInputType.emailAddress,
-                        ),
-
-                        const SizedBox(height: 25),
-                        Obx(
-                          () => TextFieldInput(
-                            labelname: "Password",
+                          const SizedBox(height: 30),
+                          TextFieldInput(
+                            labelname: "E-mail",
+                            controller: _emailController,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                            ],
+                            validator: (email) {
+                              if (email == null || email.trim().isEmpty) {
+                                return "กรุณากรอกค่า";
+                              }
+                              return null;
+                            },
                             preIcon: const Icon(
-                              Icons.lock_outline,
+                              Icons.email_outlined,
                               color: Colors.black,
                             ),
-                            sufIcon: IconButton(
-                              onPressed: () {
-                                controller.toggleObsecurePassword();
+                            textInputType: TextInputType.emailAddress,
+                          ),
+
+                          const SizedBox(height: 25),
+                          Obx(
+                            () => TextFieldInput(
+                              labelname: "Password",
+                              controller: _passwordController,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                              ],
+                              validator: (password) {
+                                if (password == null ||
+                                    password.trim().isEmpty) {
+                                  return "กรุณากรอกค่า";
+                                }
+                                return null;
                               },
-                              icon: Icon(
+                              preIcon: const Icon(
+                                Icons.lock_outline,
                                 color: Colors.black,
-                                controller.obsecurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
                               ),
+                              sufIcon: IconButton(
+                                onPressed: () {
+                                  controller.toggleObsecurePassword();
+                                },
+                                icon: Icon(
+                                  color: Colors.black,
+                                  controller.obsecurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                              ),
+                              isSuf: true,
+                              hideText: controller.obsecurePassword,
+                              textInputType: TextInputType.text,
                             ),
-                            isSuf: true,
-                            hideText: controller.obsecurePassword,
-                            textInputType: TextInputType.text,
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () =>
-                                  Get.offNamed(Routes.FORGET_PASSWORD),
-                              child: Text(
-                                "ลืมรหัสผ่าน",
-                                style: TextStyle(
-                                  color: color.AppColors.buttonColor,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: color.AppColors.buttonColor,
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () =>
+                                    Get.offNamed(Routes.FORGET_PASSWORD),
+                                child: Text(
+                                  "ลืมรหัสผ่าน",
+                                  style: TextStyle(
+                                    color: color.AppColors.buttonColor,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor:
+                                        color.AppColors.buttonColor,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const Spacer(),
-                        FilledButtonCustom(
-                          text: "เข้าสู่ระบบ",
-                          onPressed: () => Get.offNamed(Routes.HOME),
-                        ),
-                        const SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "ยังไม่มีบัญชี?",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 15,
-                              ),
-                            ),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.all(5),
-                              ),
-                              onPressed: () {
-                                Get.offAllNamed(Routes.REGISTER);
-                              },
-                              child: Text(
-                                "ลงทะเบียน",
+                          const Spacer(),
+                          FilledButtonCustom(
+                            text: "เข้าสู่ระบบ",
+                            onPressed: () => _fromKey.currentState!.validate()
+                                ? Get.offNamed(Routes.HOME)
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "ยังไม่มีบัญชี?",
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
                                   fontSize: 15,
-                                  color: color.AppColors.buttonColor,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: color.AppColors.buttonColor,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.all(5),
+                                ),
+                                onPressed: () {
+                                  Get.offAllNamed(Routes.REGISTER);
+                                },
+                                child: Text(
+                                  "ลงทะเบียน",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: color.AppColors.buttonColor,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor:
+                                        color.AppColors.buttonColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -4,13 +4,19 @@ import 'package:frontend/app/widgets/filled_button_custom.dart';
 import 'package:frontend/app/widgets/text_field_input.dart';
 
 import 'package:get/get.dart';
-// 
+//
 import '../controllers/new_password_controller.dart';
 
 import '../../../../../utils/colors.dart' as color;
 
+final _fromKey = GlobalKey<FormState>();
+
 class NewPasswordView extends GetView<NewPasswordController> {
-  const NewPasswordView({super.key});
+  NewPasswordView({super.key});
+
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,120 +44,143 @@ class NewPasswordView extends GetView<NewPasswordController> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 30),
-                      const Text(
-                        "สร้างรหัสผ่านใหม่",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                  child: Form(
+                    key: _fromKey,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        const Text(
+                          "สร้างรหัสผ่านใหม่",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 30),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 42),
-                        child: Row(
-                          children: [
-                            Icon(Icons.email_outlined, color: Colors.black),
-                            SizedBox(width: 15),
-                            Text(
-                              "Kittabeth2547@gmail.com",
-                              style: TextStyle(
+                        const SizedBox(height: 30),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 42),
+                          child: Row(
+                            children: [
+                              Icon(Icons.email_outlined, color: Colors.black),
+                              SizedBox(width: 15),
+                              Text(
+                                "Kittabeth2547@gmail.com",
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Obx(
+                          () => TextFieldInput(
+                            labelname: "Password",
+                            textInputType: TextInputType.text,
+                            hideText: controller.obsecurePassword,
+                            controller: _passwordController,
+                            validator: (password) {
+                              if (password == null || password.trim().isEmpty) {
+                                return "กรุณากรอกค่า";
+                              } else if (password.length < 6) {
+                                return "รหัสควรมีความยาวมากกว่าเท่ากับ 6 ตัว";
+                              }
+                              return null;
+                            },
+                            preIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Colors.black,
+                            ),
+                            isSuf: true,
+                            sufIcon: IconButton(
+                              onPressed: () =>
+                                  controller.toggleObsecurePassword(),
+                              icon: Icon(
+                                controller.obsecurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
                                 color: Colors.black,
-                                fontSize: 16,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Obx(
-                        () => TextFieldInput(
-                          labelname: "Password",
-                          textInputType: TextInputType.text,
-                          hideText: controller.obsecurePassword,
-                          preIcon: const Icon(
-                            Icons.lock_outline,
-                            color: Colors.black,
                           ),
-                          isSuf: true,
-                          sufIcon: IconButton(
-                            onPressed: () =>
-                                controller.toggleObsecurePassword(),
-                            icon: Icon(
-                              controller.obsecurePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
+                        ),
+                        const SizedBox(height: 15),
+                        Obx(
+                          () => TextFieldInput(
+                            labelname: "Confirm Password",
+                            textInputType: TextInputType.text,
+                            hideText: controller.obsecureConfirmPassword,
+                            controller: _confirmPasswordController,
+                            validator: (cfmp) {
+                              if (cfmp == null || cfmp.trim().isEmpty) {
+                                return "กรุณากรอกค่า";
+                              } else if (cfmp != _passwordController.text) {
+                                return "รหัสไม่ตรงกัน";
+                              }
+                              return null;
+                            },
+                            preIcon: const Icon(
+                              Icons.lock_outline,
                               color: Colors.black,
+                            ),
+                            isSuf: true,
+                            sufIcon: IconButton(
+                              onPressed: () =>
+                                  controller.toggleObsecureConfirmPassword(),
+                              icon: Icon(
+                                controller.obsecureConfirmPassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      Obx(
-                        () => TextFieldInput(
-                          labelname: "Confirm Password",
-                          textInputType: TextInputType.text,
-                          hideText: controller.obsecureConfirmPassword,
-                          preIcon: const Icon(
-                            Icons.lock_outline,
-                            color: Colors.black,
-                          ),
-                          isSuf: true,
-                          sufIcon: IconButton(
-                            onPressed: () =>
-                                controller.toggleObsecureConfirmPassword(),
-                            icon: Icon(
-                              controller.obsecureConfirmPassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: Colors.black,
-                            ),
-                          ),
+                        const Spacer(),
+                        FilledButtonCustom(
+                          text: "ตกลง",
+                          onPressed: () => _fromKey.currentState!.validate()
+                              ? Get.offNamed(Routes.LOGIN)
+                              : null,
                         ),
-                      ),
-                      const Spacer(),
-                      FilledButtonCustom(
-                        text: "ตกลง",
-                        onPressed: () => Get.offNamed(Routes.LOGIN),
-                      ),
-                      const SizedBox(height: 30),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(5, 0, 0, 10),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: () => Get.offNamed(Routes.LOGIN),
-                            child: const Text.rich(
-                              TextSpan(
-                                children: [
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Text(
-                                      "<",
+                        const SizedBox(height: 30),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(5, 0, 0, 10),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: () => Get.offNamed(Routes.LOGIN),
+                              child: const Text.rich(
+                                TextSpan(
+                                  children: [
+                                    WidgetSpan(
+                                      alignment: PlaceholderAlignment.middle,
+                                      child: Text(
+                                        "<",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: "กลับ",
                                       style: TextStyle(
                                         color: Colors.black,
+                                        letterSpacing: 0,
                                         fontSize: 20,
                                       ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: "กลับ",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      letterSpacing: 0,
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

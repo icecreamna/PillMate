@@ -62,17 +62,17 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.LOGIN,
-      page: () => const LoginScreen(),
+      page: () =>  LoginScreen(),
       binding: LoginBinding(),
       children: [
         GetPage(
           name: _Paths.FORGET_PASSWORD,
-          page: () => const ForgetPasswordView(),
+          page: () =>  ForgetPasswordView(),
           binding: ForgetPasswordBinding(),
           children: [
             GetPage(
               name: _Paths.NEW_PASSWORD,
-              page: () => const NewPasswordView(),
+              page: () =>  NewPasswordView(),
               binding: NewPasswordBinding(),
             ),
           ],
@@ -81,7 +81,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.REGISTER,
-      page: () => const RegisterScreen(),
+      page: () => RegisterScreen(),
       binding: RegisterBinding(),
     ),
     GetPage(
@@ -91,12 +91,12 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.OTP,
-      page: () => const OtpView(),
+      page: () =>  OtpView(),
       binding: OtpBinding(),
     ),
     GetPage(
       name: _Paths.PROFILE_SETUP,
-      page: () => const ProfileSetupView(),
+      page: () => ProfileSetupView(),
       binding: ProfileSetupBinding(),
     ),
   ];

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/app/routes/app_pages.dart';
 import 'package:frontend/app/widgets/filled_button_custom.dart';
 
 import 'package:get/get.dart';
@@ -10,7 +9,7 @@ import '../controllers/otp_controller.dart';
 import '../../../utils//colors.dart' as color;
 
 class OtpView extends GetView<OtpController> {
-  const OtpView({super.key});
+  OtpView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +110,7 @@ class OtpView extends GetView<OtpController> {
                             PinCodeTextField(
                               appContext: context,
                               length: 6,
+                              controller: controller.otpController,
                               textStyle: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
@@ -151,13 +151,29 @@ class OtpView extends GetView<OtpController> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 10,),
+                            Obx(
+                              () => Align(
+                                alignment: Alignment.centerLeft,
+                                child: Visibility(
+                                  visible: controller.errorOtp.isNotEmpty,
+                                  child: Text(
+                                    controller.errorOtp.value,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFFFF0000),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                       const Spacer(),
                       FilledButtonCustom(
                         text: "ยืนยันอีเมล",
-                        onPressed: controller.goNextScreen,
+                        onPressed: controller.validateOtp,
                       ),
                       const SizedBox(height: 30),
                       Padding(
@@ -165,8 +181,7 @@ class OtpView extends GetView<OtpController> {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton(
-                            onPressed: () =>
-                                Get.offNamed(Routes.FORGET_PASSWORD),
+                            onPressed: () => controller.goBackScreen(),
                             child: const Text.rich(
                               TextSpan(
                                 children: [

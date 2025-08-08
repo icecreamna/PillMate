@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/app/modules/otp/controllers/otp_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 import 'package:frontend/app/widgets/filled_button_custom.dart';
@@ -10,8 +11,13 @@ import '../controllers/forget_password_controller.dart';
 
 import '../../../../utils/colors.dart' as color;
 
+final _fromKey = GlobalKey<FormState>();
+
 class ForgetPasswordView extends GetView<ForgetPasswordController> {
-  const ForgetPasswordView({super.key});
+  ForgetPasswordView({super.key});
+
+  final _emailController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,85 +45,100 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
                     borderRadius: BorderRadius.circular(20),
                     color: Colors.white,
                   ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 30),
-                      const Text(
-                        "ลืมรหัสผ่าน",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "กรุณาใส่อีเมลเพื่อยืนยันตัวตน",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 60),
-                      const TextFieldInput(
-                        labelname: "E-mail",
-                        preIcon: Icon(
-                          Icons.email_outlined,
-                          color: Colors.black,
-                        ),
-                        textInputType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 70),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 29),
-                        child: Text(
-                          "หากที่อยู่อีเมลที่คุณระบุมีการลงทะเบียนไว้กับเรา ระบบจะส่งรหัส OTP ไปที่อีเมลของคุณ",
+                  child: Form(
+                    key: _fromKey,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        const Text(
+                          "ลืมรหัสผ่าน",
                           style: TextStyle(
-                            color: Color(0xFFFF0000),
-                            fontSize: 16,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0,
                           ),
                         ),
-                      ),
-                      const Spacer(),
-                      FilledButtonCustom(
-                        text: "ถัดไป",
-                        onPressed: () => Get.offNamed(
-                          Routes.OTP,
-                          arguments: {"otpPage": OTPType.forgot},
+                        const SizedBox(height: 10),
+                        const Text(
+                          "กรุณาใส่อีเมลเพื่อยืนยันตัวตน",
+                          style: TextStyle(fontSize: 16),
                         ),
-                      ),
-                      const SizedBox(height: 30),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(5, 0, 0, 10),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: () => Get.offNamed(Routes.LOGIN),
-                            child: const Text.rich(
-                              TextSpan(
-                                children: [
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.middle,
-                                    child: Text(
-                                      "<",
+                        const SizedBox(height: 60),
+                        TextFieldInput(
+                          labelname: "E-mail",
+                          controller: _emailController,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                          ],
+                          validator: (email) {
+                            if (email == null || email.trim().isEmpty) {
+                              return "กรุณากรอกค่า";
+                            }
+                            return null;
+                          },
+                          preIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Colors.black,
+                          ),
+                          textInputType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 70),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 29),
+                          child: Text(
+                            "หากที่อยู่อีเมลที่คุณระบุมีการลงทะเบียนไว้กับเรา ระบบจะส่งรหัส OTP ไปที่อีเมลของคุณ",
+                            style: TextStyle(
+                              color: Color(0xFFFF0000),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        FilledButtonCustom(
+                          text: "ถัดไป",
+                          onPressed: () => _fromKey.currentState!.validate()
+                              ? Get.offNamed(
+                                  Routes.OTP,
+                                  arguments: {"otpPage": OTPType.forgot},
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 30),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(5, 0, 0, 10),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: () => Get.offNamed(Routes.LOGIN),
+                              child: const Text.rich(
+                                TextSpan(
+                                  children: [
+                                    WidgetSpan(
+                                      alignment: PlaceholderAlignment.middle,
+                                      child: Text(
+                                        "<",
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: "กลับ",
                                       style: TextStyle(
                                         fontSize: 20,
                                         color: Colors.black,
+                                        letterSpacing: 0,
                                       ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: "กลับ",
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.black,
-                                      letterSpacing: 0,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
