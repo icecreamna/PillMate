@@ -9,7 +9,7 @@ import '../controllers/otp_controller.dart';
 import '../../../utils//colors.dart' as color;
 
 class OtpView extends GetView<OtpController> {
-  OtpView({super.key});
+  const OtpView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -130,9 +130,10 @@ class OtpView extends GetView<OtpController> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            const Row(
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   "ไม่ได้รับรหัส?",
                                   style: TextStyle(
                                     color: Colors.black,
@@ -140,18 +141,34 @@ class OtpView extends GetView<OtpController> {
                                     fontSize: 16,
                                   ),
                                 ),
-                                SizedBox(width: 4),
-                                Text(
-                                  "ขออีกครั้งใน 60 วินาที",
-                                  style: TextStyle(
-                                    color: Color(0xFF00C907),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                ),
+                                const SizedBox(width: 4),
+                                Obx(() {
+                                  final isCount =
+                                      controller.countdown.value > 0;
+                                  return TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                                      minimumSize: const Size(0, 0)
+                                    ),
+                                    onPressed: isCount
+                                        ? null
+                                        : controller.sendOtp,
+                                    child: Text(
+                                      isCount
+                                          ? "ขออีกครั้งใน ${controller.countdown.value} วินาที"
+                                          : "ขอรหัส OTP อีกครั้ง",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.normal,
+                                        color: isCount
+                                            ? const Color(0xFF00C907)
+                                            : const Color(0xFF0873FF),
+                                      ),
+                                    ),
+                                  );
+                                }),
                               ],
                             ),
-                            const SizedBox(height: 10,),
                             Obx(
                               () => Align(
                                 alignment: Alignment.centerLeft,
@@ -170,6 +187,7 @@ class OtpView extends GetView<OtpController> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 5,),
                       const Spacer(),
                       FilledButtonCustom(
                         text: "ยืนยันอีเมล",
