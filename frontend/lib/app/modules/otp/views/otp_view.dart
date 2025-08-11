@@ -9,7 +9,9 @@ import '../controllers/otp_controller.dart';
 import '../../../utils//colors.dart' as color;
 
 class OtpView extends GetView<OtpController> {
-  const OtpView({super.key});
+  OtpView({super.key});
+
+  final OtpController otpController = Get.put(OtpController());
 
   @override
   Widget build(BuildContext context) {
@@ -74,19 +76,19 @@ class OtpView extends GetView<OtpController> {
                                 ),
                                 color: Colors.white,
                               ),
-                              child: const Row(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.email_outlined,
                                     color: Colors.black,
                                     size: 30,
                                   ),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
-                                      "Kittabeth554@gmail.com",
-                                      style: TextStyle(
+                                      controller.emailShow,
+                                      style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 16,
                                       ),
@@ -147,8 +149,10 @@ class OtpView extends GetView<OtpController> {
                                       controller.countdown.value > 0;
                                   return TextButton(
                                     style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 0),
-                                      minimumSize: const Size(0, 0)
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 0,
+                                      ),
+                                      minimumSize: const Size(0, 0),
                                     ),
                                     onPressed: isCount
                                         ? null
@@ -187,7 +191,7 @@ class OtpView extends GetView<OtpController> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 5,),
+                      const SizedBox(height: 5),
                       const Spacer(),
                       FilledButtonCustom(
                         text: "ยืนยันอีเมล",

@@ -13,9 +13,7 @@ final _fromKey = GlobalKey<FormState>();
 class RegisterScreen extends GetView<RegisterController> {
   RegisterScreen({super.key});
 
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final RegisterController registerController = Get.put(RegisterController());
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +67,7 @@ class RegisterScreen extends GetView<RegisterController> {
                             }
                             return null;
                           },
-                          controller: _emailController,
+                          controller: controller.emailController,
                           preIcon: const Icon(
                             Icons.email_outlined,
                             color: Colors.black,
@@ -80,7 +78,7 @@ class RegisterScreen extends GetView<RegisterController> {
                         Obx(
                           () => TextFieldInput(
                             labelname: "Password",
-                            controller: _passwordController,
+                            controller: controller.passwordController,
                             textInputType: TextInputType.text,
                             hideText: controller.obsecurePassword,
                             inputFormatters: [
@@ -115,7 +113,7 @@ class RegisterScreen extends GetView<RegisterController> {
                         Obx(
                           () => TextFieldInput(
                             labelname: "Confirm Password",
-                            controller: _confirmPasswordController,
+                            controller: controller.confirmPasswordController,
                             textInputType: TextInputType.text,
                             hideText: controller.obsecureConfirmPassword,
                             inputFormatters: [
@@ -125,7 +123,7 @@ class RegisterScreen extends GetView<RegisterController> {
                               if (cmfp == null || cmfp.trim().isEmpty) {
                                 return "กรุณากรอกค่า";
                               } else if (cmfp.trim() !=
-                                  _passwordController.text) {
+                                  controller.passwordController.text) {
                                 return "รหัสไม่ตรงกัน";
                               }
                               return null;

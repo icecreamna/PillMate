@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app/modules/otp/controllers/otp_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 import 'package:frontend/app/widgets/filled_button_custom.dart';
 import 'package:frontend/app/widgets/text_field_input.dart';
@@ -13,6 +14,8 @@ final _fromKey = GlobalKey<FormState>();
 
 class NewPasswordView extends GetView<NewPasswordController> {
   NewPasswordView({super.key});
+
+  final OtpController otpController = Get.find<OtpController>();
 
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -58,15 +61,15 @@ class NewPasswordView extends GetView<NewPasswordController> {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 42),
+                         Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 42),
                           child: Row(
                             children: [
-                              Icon(Icons.email_outlined, color: Colors.black),
-                              SizedBox(width: 15),
+                              const Icon(Icons.email_outlined, color: Colors.black),
+                              const SizedBox(width: 15),
                               Text(
-                                "Kittabeth2547@gmail.com",
-                                style: TextStyle(
+                                otpController.emailText.value,
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
                                 ),

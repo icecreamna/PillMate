@@ -16,7 +16,7 @@ final _fromKey = GlobalKey<FormState>();
 class ForgetPasswordView extends GetView<ForgetPasswordController> {
   ForgetPasswordView({super.key});
 
-  final _emailController = TextEditingController();
+  final ForgetPasswordController forgetPasswordController = Get.put(ForgetPasswordController()); 
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ class ForgetPasswordView extends GetView<ForgetPasswordController> {
                         const SizedBox(height: 60),
                         TextFieldInput(
                           labelname: "E-mail",
-                          controller: _emailController,
+                          controller: controller.emailController,
                           inputFormatters: [
                             FilteringTextInputFormatter.deny(RegExp(r'\s')),
                           ],

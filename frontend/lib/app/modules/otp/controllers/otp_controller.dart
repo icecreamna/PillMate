@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:frontend/app/modules/login/forget_password/controllers/forget_password_controller.dart';
 import 'package:frontend/app/routes/app_pages.dart';
 import 'package:get/get.dart';
+
+import '../../register/controllers/register_controller.dart';
 
 enum OTPType { register, forgot }
 
@@ -11,6 +14,7 @@ class OtpController extends GetxController {
 
   final otpController = TextEditingController();
   late final OTPType otpType;
+  RxString emailText = "".obs ; 
   RxString errorOtp = "".obs;
   RxInt countdown = 0.obs;
   // bool isCount = false;
@@ -30,7 +34,6 @@ class OtpController extends GetxController {
 
   @override
   void onClose() {
-    otpController.dispose();
     _timer?.cancel();
     super.onClose();
   }
@@ -70,11 +73,6 @@ class OtpController extends GetxController {
     }
   }
 
-  void sendOtp(){
-    //sendOtplogic
-    countDownTime();
-  }
-
   void countDownTime({int second = 60}) {
     countdown.value = second;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -86,5 +84,24 @@ class OtpController extends GetxController {
         countdown.value--;
       }
     });
+  }
+
+  void sendOtp() {
+    //sendOtplogic
+    countDownTime();
+  }
+
+  String get emailShow {
+    switch (otpType) {
+      case OTPType.forgot:
+        final ForgetPasswordController forgetPasswordController =
+            Get.find<ForgetPasswordController>();
+            emailText.value = forgetPasswordController.emailController.text;
+        return forgetPasswordController.emailController.text;
+      case OTPType.register:
+        final RegisterController registerController =
+            Get.find<RegisterController>();
+        return registerController.emailController.text;
+    }
   }
 }
