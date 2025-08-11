@@ -34,9 +34,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  get: ^4.7.2
   flutter_svg: ^2.2.0
   google_fonts: ^6.2.1
+  get: ^4.7.2
+  pin_code_fields: ^8.0.1
 
 dev_dependencies:
   flutter_test:
@@ -81,13 +82,16 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-Italic-VariableFont_opsz,wght.ttf
+          style: italic
         - asset: assets/fonts/Inter-VariableFont_opsz,wght.ttf
+          weight: 400
+
   #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+    - family: NotoSansThai
+      fonts:
+        - asset: assets/fonts/NotoSansThai-Regular.ttf
+        - asset: assets/fonts/NotoSansThai-Bold.ttf
+     
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
