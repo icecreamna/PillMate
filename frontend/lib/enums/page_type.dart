@@ -1,0 +1,4 @@
+enum PageType {
+  register,
+  forgot
+}
