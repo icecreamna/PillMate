@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/providers/login_provider.dart';
 import 'package:frontend/screens/forget_password_screen.dart';
+import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/register_screen.dart';
-import 'package:frontend/screens/splash_screen.dart';
 import 'package:frontend/widgets/text_field_input.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/filled_button_custom.dart';
@@ -157,7 +157,7 @@ class _LoginViewState extends State<_LoginView> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        ForgetPasswordScreen(),
+                                        const ForgetPasswordScreen(),
                                   ),
                                 ),
                                 child: Text(
@@ -182,7 +182,7 @@ class _LoginViewState extends State<_LoginView> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const SplashScreen(),
+                                          const HomeScreen(),
                                     ),
                                   )
                                 : null,

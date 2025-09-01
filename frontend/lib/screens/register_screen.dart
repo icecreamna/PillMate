@@ -4,6 +4,7 @@ import 'package:frontend/enums/page_type.dart';
 import 'package:frontend/providers/register_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/screens/otp_screens.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/filled_button_custom.dart';
 import 'package:frontend/widgets/text_field_input.dart';
@@ -16,7 +17,7 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return ChangeNotifierProvider(
-      create: (_) => RegisterProvider(),
+      create: (_) => RegisterProvider(AuthService()),
       child: _RegisterView(),
     );
   }
@@ -29,12 +30,12 @@ class _RegisterView extends StatefulWidget {
 
 class _RegisterScreenState extends State<_RegisterView> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController  _emailController;
-  late final TextEditingController _passwordController ;
-  late final TextEditingController _confirmPasswordController ;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
@@ -49,8 +50,50 @@ class _RegisterScreenState extends State<_RegisterView> {
     super.dispose();
   }
 
+  Future<void> _onSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final provider = context.read<RegisterProvider>();
+
+    try {
+      await provider.register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const OtpScreens(),
+          settings: RouteSettings(
+            arguments: {
+              "otpType": PageType.register,
+              "email": _emailController.text,
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("สมัครสมาชิกไม่สำเร็จ"),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("ปิด"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.watch<RegisterProvider>().isLoading;
+
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
       body: SafeArea(
@@ -98,6 +141,12 @@ class _RegisterScreenState extends State<_RegisterView> {
                           validator: (email) {
                             if (email == null || email.trim().isEmpty) {
                               return "กรุณากรอกค่า";
+                            }
+                            final emailRegex = RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            );
+                            if (!emailRegex.hasMatch(email.trim())) {
+                              return "รูปแบบอีเมลไม่ถูกต้อง";
                             }
                             return null;
                           },
@@ -190,21 +239,8 @@ class _RegisterScreenState extends State<_RegisterView> {
                         ),
                         const Spacer(),
                         FilledButtonCustom(
-                          text: "ถัดไป",
-                          onPressed: () => _formKey.currentState!.validate()
-                              ? Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const OtpScreens(),
-                                    settings: RouteSettings(
-                                      arguments: {
-                                        "otpType": PageType.register,
-                                        "email": _emailController.text,
-                                      },
-                                    ),
-                                  ),
-                                )
-                              : null,
+                          text: isLoading ? "กำลังส่ง..." : "ถัดไป",
+                          onPressed: () => isLoading ? null : _onSubmit(),
                         ),
                         const SizedBox(height: 15),
                         Row(

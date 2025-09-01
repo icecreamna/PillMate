@@ -2,10 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/page_type.dart';
-import 'package:frontend/screens/forget_password_screen.dart';
-import 'package:frontend/screens/new_password_screen.dart';
-import 'package:frontend/screens/profile_setup_screen.dart';
-import 'package:frontend/screens/register_screen.dart';
+
 
 class OtpProvider extends ChangeNotifier {
 
@@ -42,40 +39,6 @@ class OtpProvider extends ChangeNotifier {
       errorOtp = "";
       notifyListeners();
       return true;
-    }
-  }
-
-  void goNextScreen(BuildContext context) {
-    switch (otpType) {
-      case PageType.register:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
-        );
-        break;
-      case PageType.forgot:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const NewPasswordScreen()),
-        );
-        break;
-    }
-  }
-
-  void goBackScreen(BuildContext context) {
-    switch (otpType) {
-      case PageType.register:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const RegisterScreen()),
-        );
-        break;
-      case PageType.forgot:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ForgetPasswordScreen()),
-        );
-        break;
     }
   }
 
