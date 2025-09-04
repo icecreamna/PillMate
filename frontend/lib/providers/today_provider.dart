@@ -5,12 +5,14 @@ class Dose {
   final String name;
   final DateTime at;
   final String instruction;
+  final String picture;
   bool isTaken;
   Dose({
     required this.name,
     required this.at,
     required this.instruction,
     required this.isTaken,
+    required this.picture,
   });
 }
 
@@ -24,24 +26,82 @@ class TodayProvider extends ChangeNotifier {
   final List<Dose> all = <Dose>[
     Dose(
       name: "ยา1",
-      at: DateTime(2025, 9, 1, 8, 0),
+      at: DateTime(2025, 9, 4, 8, 0),
       instruction: "หลังอาหาร",
       isTaken: false,
+      picture: "assets/images/pill.png",
     ),
     Dose(
       name: "ยา2",
-      at: DateTime(2025, 9, 1, 9, 0),
+      at: DateTime(2025, 9, 4, 9, 0),
       instruction: "ก่อนอาหาร",
       isTaken: false,
+      picture: "assets/images/pill.png",
     ),
     Dose(
       name: "ยา3",
-      at: DateTime(2025, 9, 2, 13, 0),
+      at: DateTime(2025, 9, 4, 13, 0),
       instruction: "หลังอาหาร",
       isTaken: false,
+      picture: "assets/images/pill.png",
+    ),
+    Dose(
+      name: "แคปซูล1",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/capsule.png",
+    ),
+    Dose(
+      name: "แคปซูล2",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/capsule.png",
+    ),
+    Dose(
+      name: "ยาน้ำ1",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/syrup.png",
+    ),
+    Dose(
+      name: "ยาน้ำ2",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/syrup.png",
+    ),
+    Dose(
+      name: "ยาทา1",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/ointment.png",
+    ),
+    Dose(
+      name: "ยาฉีด1",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/vaccine.png",
+    ),
+    Dose(
+      name: "ยาฉีด2",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/vaccine.png",
+    ),
+    Dose(
+      name: "ยาหยด",
+      at: DateTime(2025, 9, 4, 13, 0),
+      instruction: "หลังอาหาร",
+      isTaken: false,
+      picture: "assets/images/eye-drop 1.png",
     ),
   ];
-
   List<Dose> get doseSelect {
     return all
         .where(

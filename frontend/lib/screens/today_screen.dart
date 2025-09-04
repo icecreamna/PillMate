@@ -255,7 +255,7 @@ class TodayScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 15),
                                     Image.asset(
-                                      "assets/images/pill.png",
+                                      d.picture,
                                       width: 33,
                                       height: 33,
                                     ),
