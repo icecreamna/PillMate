@@ -5,23 +5,21 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class TodayScreen extends StatefulWidget {
-  
   const TodayScreen({super.key});
 
   @override
   State<TodayScreen> createState() => _TodayScreenState();
 }
-  
-class _TodayScreenState extends State<TodayScreen> {
 
+class _TodayScreenState extends State<TodayScreen> {
   final _formKey = GlobalKey<FormState>();
   final _saveSymptom = TextEditingController();
 
   @override
-  void dispose(){
+  void dispose() {
     _saveSymptom.dispose();
     super.dispose();
-  } 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -273,12 +271,17 @@ class _TodayScreenState extends State<TodayScreen> {
                                                               CrossAxisAlignment
                                                                   .start,
                                                           children: [
-                                                             Expanded(
+                                                            Expanded(
                                                               child: TextFormField(
-                                                                controller: _saveSymptom,
+                                                                controller:
+                                                                    _saveSymptom,
                                                                 validator: (e) {
-                                                                  if(e == null || e.trim().isEmpty){
-                                                                      return "กรุณากรอกอาการ";
+                                                                  if (e ==
+                                                                          null ||
+                                                                      e
+                                                                          .trim()
+                                                                          .isEmpty) {
+                                                                    return "กรุณากรอกอาการ";
                                                                   }
                                                                   return null;
                                                                 },
@@ -317,7 +320,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                     Navigator.pop(
                                                                       context,
                                                                     );
-                                                                    _saveSymptom.clear();
+                                                                    _saveSymptom
+                                                                        .clear();
                                                                   },
                                                                   style: ElevatedButton.styleFrom(
                                                                     shape: RoundedRectangleBorder(
@@ -351,11 +355,14 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                 ),
                                                                 ElevatedButton(
                                                                   onPressed: () {
-                                                                    if(_formKey.currentState!.validate()){
+                                                                    if (_formKey
+                                                                        .currentState!
+                                                                        .validate()) {
                                                                       Navigator.pop(
-                                                                      context,
-                                                                    );
-                                                                      _saveSymptom.clear();
+                                                                        context,
+                                                                      );
+                                                                      _saveSymptom
+                                                                          .clear();
                                                                     }
                                                                   },
                                                                   style: ElevatedButton.styleFrom(
