@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/providers/home_provider.dart';
+import 'package:frontend/providers/profile_provider.dart';
 import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/screens/drug_screen.dart';
 import 'package:frontend/screens/notification_screen.dart';
@@ -32,9 +34,15 @@ class _HomeViewState extends State<_HomeView> {
       create: (_) => TodayProvider(),
       child: const TodayScreen(),
     ),
-    const DrugScreen(),
+    ChangeNotifierProvider(
+      create: (_) => DrugProvider(),
+      child: const DrugScreen(),
+    ),
     const NotificationScreen(),
-    const ProfileScreen(),
+    ChangeNotifierProvider(
+      create: (context) => ProfileProvider(),
+      child:  ProfileScreen(),
+    ),
   ];
 
   @override
