@@ -122,6 +122,8 @@ func SeedInitialData(db *gorm.DB) {
 	instructions := []models.Instruction{
 		{InstructionName: "ก่อนอาหาร"},
 		{InstructionName: "หลังอาหาร"},
+		{InstructionName: "พร้อมอาหาร"},
+		{InstructionName: "ก่อนนอน"},
 		
 	}
 	for _, instruction := range instructions {
@@ -130,17 +132,18 @@ func SeedInitialData(db *gorm.DB) {
 		}
 	}
 
-	// seed ข้อมูล DosageTime
-	dosagetimes := []models.DosageTime{
-		{DoseName: "เช้า"},
-		{DoseName: "กลางวัน"},
-		{DoseName: "เย็น"},
-		{DoseName: "ก่อนนอน"},
+	// seed ข้อมูล NotiFormat
+	notiformats := []models.NotiFormat{
+		{FormatName: "เวลาเฉพาะ (Fixed Times)"},
+		{FormatName: "ทุกกี่ชั่วโมง (Interval)"},
+		{FormatName: "วันเว้นวัน / ทุกกี่วัน"},
+		{FormatName: "รายสัปดาห์ (Weekly)"},
+		{FormatName: "ทานต่อเนื่อง/พักยา (Cycle)"},
 		
 	}
-	for _, dosagetime := range dosagetimes {
-		if err := db.FirstOrCreate(&dosagetime, models.DosageTime{DoseName: dosagetime.DoseName}).Error; err != nil {
-			log.Println("Seed dosagetime error:", err)
+	for _, notiformat := range notiformats {
+		if err := db.FirstOrCreate(&notiformat, models.NotiFormat{FormatName: notiformat.FormatName}).Error; err != nil {
+			log.Println("Seed notiformat error:", err)
 		}
 	}
 
@@ -154,12 +157,6 @@ func SeedInitialData(db *gorm.DB) {
         FormID: 1,
         UnitID: 1, 
         InstructionID: 2, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-            {ID: 2},
-            {ID: 3},
-            {ID: 4},
-        },
 		// MedStatus: "active",
     },
 
@@ -171,11 +168,6 @@ func SeedInitialData(db *gorm.DB) {
         FormID: 2,
         UnitID: 2, 
         InstructionID: 2, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-            {ID: 2},
-            {ID: 3},
-        },
     },
 
 	{
@@ -186,11 +178,6 @@ func SeedInitialData(db *gorm.DB) {
         FormID: 3,
         UnitID: 3, 
         InstructionID: 2, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-            {ID: 2},
-            {ID: 3},
-        },
     },
 
 	{
@@ -199,12 +186,6 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
         Strength: "4%",
         FormID: 5, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-            {ID: 2},
-            {ID: 3},
-			{ID: 4},
-        },
     },
 
 	{
@@ -213,10 +194,6 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
         Strength: "(10 G+5 G)/100 ML",
         FormID: 5, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-			{ID: 4},
-        },
     },
 
 	{
@@ -227,10 +204,6 @@ func SeedInitialData(db *gorm.DB) {
         FormID: 4,
         UnitID: 7, 
         InstructionID: 1, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-			{ID: 3},
-        },
     },
 
 	{
@@ -240,12 +213,6 @@ func SeedInitialData(db *gorm.DB) {
         Strength: "(0.3 G+0.1 G)/100 ML",
         FormID: 6,
         UnitID: 12, 
-        DosageTimes: []models.DosageTime{
-            {ID: 1},
-            {ID: 2},
-            {ID: 3},
-			{ID: 4},
-        },
     },
     
     // ...ใส่ยาอีกตามต้องการ

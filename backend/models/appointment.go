@@ -17,20 +17,23 @@ type Appointment struct {
 	AppointmentDate time.Time `gorm:"type:date" json:"appointment_date"`
 	AppointmentTime time.Time `gorm:"type:time" json:"appointment_time"`
 	HospitalID      uint      `gorm:"not null" json:"hospital_id"`
+	DoctorID  		uint 	  `gorm:"not null" json:"doctor_id"`
+	Note 			string 	  `gorm:"default:null" json:"properties"` // เช่นต้องงดอาหาร
 
-	// Patient  Patient  `gorm:"foreignKey:IDCardNumber;references:IDCardNumber"`
+	
 	Hospital Hospital `gorm:"foreignKey:HospitalID"`
+	WebAdmin 		WebAdmin `gorm:"foreignKey:DoctorID"`
 
 	AppSyncStatus bool `gorm:"default:false" json:"app_sync_status"` // false=ยังไม่ซิงค์
 }
 
-// ข้อมูลแจ้งเตือนนัดพบแพทย์
+// สร้างการแจ้งเตือนนัดพบแพทย์
 type AppointmentNoti struct {
 	ID                 uint      `gorm:"primaryKey" json:"id"`
 	PatientID          uint      `gorm:"not null" json:"patient_id"`
-	NotifyTime         time.Time `gorm:"type:time" json:"notify_time"`
-	ReminderDateBefore time.Time `gorm:"type:date" json:"reminder_date_before"`
-	ReminderDateOn     time.Time `gorm:"type:date" json:"reminder_date_on"`
+	NotifyTime         time.Time `gorm:"type:time" json:"notify_time"` //เวลาที่แจ้งเตือน
+	ReminderDateBefore time.Time `gorm:"type:date" json:"reminder_date_before"` // แจ้งเตือนก่อน7วัน
+	ReminderDateOn     time.Time `gorm:"type:date" json:"reminder_date_on"`// แจ้งเตือนวันที่นัด
 	StatusBefore       bool      `gorm:"default:false" json:"status_before"`
 	StatusOn           bool      `gorm:"default:false" json:"status_on"`
 

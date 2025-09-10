@@ -27,16 +27,10 @@ type FormUnit struct {
     UnitID uint `gorm:"primaryKey"`
 }
 
-// คำแนะนำการทานยา
+// ช่วงเวลาใช้ยา
 type Instruction struct {
     ID   uint   `gorm:"primaryKey" json:"id"`
     InstructionName string `gorm:"type:varchar(100);not null;unique" json:"instruction_name"` // เช่น ก่อนอาหาร, หลังอาหาร
-}
-
-// ช่วงเวลาที่ทานยา
-type DosageTime struct {
-    ID   uint   `gorm:"primaryKey" json:"id"`
-    DoseName string `gorm:"type:varchar(100);not null;unique" json:"dose_name"` // เช่น เช้า, กลางวัน, เย็น, ก่อนนอน
 }
 
 // ข้อมูลยา
@@ -56,8 +50,6 @@ type MedicineInfo struct {
     Unit Unit `gorm:"foreignKey:UnitID"`
 	Instruction Instruction `gorm:"foreignKey:InstructionID"`
 	
-	// Many-to-Many
-	DosageTimes []DosageTime `gorm:"many2many:medicine_dosage_times;" json:"dosage_times"`
 
 	MedStatus string `gorm:"check:med_status IN ('active','inactive');default:'active'" json:"med_status"` //สถานะว่ายายังมีการใช้อยู่ไหม
 
