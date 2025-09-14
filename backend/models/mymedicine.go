@@ -22,6 +22,9 @@ type MyMedicine struct {
 	Form 			Form `gorm:"foreignKey:FormID"`
     Unit 			Unit `gorm:"foreignKey:UnitID"`
 	Instruction 	Instruction `gorm:"foreignKey:InstructionID"`
+	CreatedAt 		time.Time      `json:"created_at"`
+	UpdatedAt 		time.Time      `json:"updated_at"`
+	DeletedAt 		gorm.DeletedAt `gorm:"index" json:"-"`
 
 }
 

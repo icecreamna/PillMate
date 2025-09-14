@@ -67,7 +67,7 @@ func LoginPatient(db *gorm.DB, patient *models.Patient) (string, error) {
 	}
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = selectedPatient.ID
+	claims["patient_id"] = selectedPatient.ID
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	t, err := token.SignedString([]byte(jwtSecretKey))
