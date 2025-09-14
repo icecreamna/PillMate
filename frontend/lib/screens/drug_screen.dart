@@ -135,53 +135,77 @@ class DrugScreen extends StatelessWidget {
                                     color: d.import
                                         ? const Color(0xFFFFF5D0)
                                         : Colors.white,
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        10,
-                                        13,
-                                        16,
-                                        0,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: Column(
+                                    child: InkWell(
+                                      onTap: (){},
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          10,
+                                          13,
+                                          16,
+                                          0,
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    d.name,
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 20,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 5),
+                                                  Text(
+                                                    d.drugIndication,
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "ครั้งละ " +
+                                                        d.numberOfTake +
+                                                        "เม็ด" +
+                                                        " " +
+                                                        "วันละ " +
+                                                        d.takePerDay +
+                                                        " " +
+                                                        "ครั้ง",
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    d.instruction,
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Column(
                                               crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                                  CrossAxisAlignment.end,
                                               children: [
-                                                Text(
-                                                  d.name,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 20,
-                                                  ),
+                                                Image.asset(
+                                                  d.picture,
+                                                  width: 40,
+                                                  height: 40,
                                                 ),
-                                                const SizedBox(height: 5),
+                                                const SizedBox(height: 40),
                                                 Text(
-                                                  d.drugIndication,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "ครั้งละ " +
-                                                      d.numberOfTake +
-                                                      "เม็ด" +
-                                                      " " +
-                                                      "วันละ " +
-                                                      d.takePerDay +
-                                                      " " +
-                                                      "ครั้ง",
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  d.instruction,
+                                                  d.import
+                                                      ? "(โรงพยาบาล)"
+                                                      : "(ของฉัน)",
                                                   style: const TextStyle(
                                                     color: Colors.black,
                                                     fontSize: 16,
@@ -189,29 +213,8 @@ class DrugScreen extends StatelessWidget {
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Image.asset(
-                                                d.picture,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                              const SizedBox(height: 40),
-                                              Text(
-                                                d.import
-                                                    ? "(โรงพยาบาล)"
-                                                    : "(ของฉัน)",
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),

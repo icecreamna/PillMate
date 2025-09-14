@@ -21,10 +21,28 @@ class _TodayScreenState extends State<TodayScreen> {
     super.dispose();
   }
 
+  //   List<Widget> buildDoseWidgets(DoseGroup d) {
+  //   if (d.doses.length > 1) {
+  //     return d.doses
+  //         .map((dose) => Padding(
+  //               padding: const EdgeInsets.only(top: 5, bottom: 5, left: 15),
+  //               child: Text("• ${dose.name} ${dose.unit}"),
+  //             ))
+  //         .toList();
+  //   } else {
+  //     return [
+  //       Padding(
+  //         padding: const EdgeInsets.only(top: 5, bottom: 5, left: 15),
+  //         child: Text("${d.doses.first.name} ${d.doses.first.unit}"),
+  //       ),
+  //     ];
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<TodayProvider>();
-
+    final items = p.doseSelect(p.selected);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
@@ -59,7 +77,7 @@ class _TodayScreenState extends State<TodayScreen> {
       body: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-        child: p.doseSelect(p.selected).isEmpty
+        child: items.isEmpty
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -83,12 +101,11 @@ class _TodayScreenState extends State<TodayScreen> {
               )
             : ListView.builder(
                 itemBuilder: (_, i) {
-                  final d = p.doseSelect(p.selected)[i];
+                  final d = items[i];
                   final timeText = DateFormat('HH:mm').format(d.at.toLocal());
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 5),
                     child: SizedBox(
-                      height: 100,
                       child: Card(
                         color: Colors.white,
                         child: InkWell(
@@ -120,7 +137,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                               width: 120,
                                               child: ElevatedButton(
                                                 onPressed: () {
-                                                  p.handleIsTaken("taken", d);
+                                                  p.setIsTaken(true, d);
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
@@ -149,10 +166,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                               width: 130,
                                               child: ElevatedButton(
                                                 onPressed: () {
-                                                  p.handleIsTaken(
-                                                    "not_taken",
-                                                    d,
-                                                  );
+                                                  p.setIsTaken(false, d);
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
@@ -182,7 +196,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                           height: 37,
                                           child: ElevatedButton(
                                             onPressed: () {
-                                              p.handleIsTaken("remove", d);
+                                              p.removeDose(d);
                                               Navigator.pop(context);
                                             },
                                             style: ElevatedButton.styleFrom(
@@ -361,6 +375,10 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                       Navigator.pop(
                                                                         context,
                                                                       );
+                                                                      p.setNote(
+                                                                        true,
+                                                                        d,
+                                                                      );
                                                                       _saveSymptom
                                                                           .clear();
                                                                     }
@@ -405,43 +423,80 @@ class _TodayScreenState extends State<TodayScreen> {
                                             icon: Icon(
                                               Icons.note_add_outlined,
                                               size: 32,
-                                              color: d.isTake
+                                              color: d.saveNote
                                                   ? const Color(0xFFFFC800)
                                                   : const Color(0xFFA5A5A5),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const Text(
-                                        "paracetamol",
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
-                                        ),
+                                      //  Column(
+                                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                                      //   children: d.doses.map((dose) {
+                                      //     return Text("${dose.name} ${dose.unit}");
+                                      //   },).toList()
+                                      //  )
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (d.doses.length > 1) ...[
+                                            Text(d.nameGroup,style: const TextStyle(color: Colors.black,fontSize: 16),),
+                                            ...d.doses.map(
+                                              (dose) => Padding(
+                                                padding:
+                                                    const EdgeInsetsGeometry.only(
+                                                      top: 5,
+                                                      bottom: 5,
+                                                      left: 15,
+                                                    ),
+                                                child: Text(
+                                                  "• ${dose.name} ${dose.unit}",
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 16,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ]
+                                          else if (d.doses.length == 1) ...[
+                                              Text(
+                                                "${d.doses.first.name} ${d.doses.first.unit}",
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              ),
+                                          ]
+                                        ],
                                       ),
+                                      const SizedBox(height: 10),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    // Text(
-                                    //   d.isTaken ? "กินแล้ว" : "ยังไม่กิน",
-                                    //   style: TextStyle(
-                                    //     color: d.isTaken
-                                    //         ? color.AppColors.greenColor
-                                    //         : color.AppColors.redColor,
-                                    //     fontSize: 16,
-                                    //     fontWeight: FontWeight.bold,
-                                    //   ),
-                                    // ),
-                                    const SizedBox(height: 15),
-                                    Image.asset(
-                                      "assets/images/pill.png",
-                                      width: 33,
-                                      height: 33,
+                                    Text(
+                                      d.isTaken ? "กินแล้ว" : "ยังไม่กิน",
+                                      style: TextStyle(
+                                        color: d.isTaken
+                                            ? color.AppColors.greenColor
+                                            : color.AppColors.redColor,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
+                                    const SizedBox(height: 15),
+                                    //     Image.asset(
+                                    //       "assets/images/pill.png",
+                                    //       width: 33,
+                                    //       height: 33,
+                                    //     ),
                                   ],
                                 ),
                               ],
@@ -452,7 +507,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     ),
                   );
                 },
-                itemCount: p.doseSelect(p.selected).length,
+                itemCount: items.length,
               ),
       ),
     );

@@ -38,7 +38,7 @@ class ProfileProvider extends ChangeNotifier {
 
   final InfoAppoinment _appoinment = InfoAppoinment(
     dateTime: DateTime.now(),
-    note: "งดอาหาร 8 ชั่วโมง ก่อนเจาะเลือด",
+    note: "งดอาหาร 8 ชั่วโมง ก่อนเจาะเลือด",
     hourMinute: DateTime.now(),
   );
 

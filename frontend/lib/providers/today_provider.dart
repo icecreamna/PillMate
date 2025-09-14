@@ -3,27 +3,29 @@ import 'package:intl/intl.dart';
 
 class Dose {
   final String name;
-  final DateTime at;
-  final String instruction;
-  final String picture;
+  // final String picture;
   final String unit;
-   bool isTake;
-  Dose({
-    required this.name,
-    required this.at,
-    required this.instruction,
-    required this.picture,
-    required this.unit,
-    this.isTake = false,
-  });
+  Dose({required this.name, required this.unit});
 }
 
 class DoseGroup {
+  final String nameGroup;
   final String key;
   final List<Dose> doses;
+  final DateTime at;
+  final String instruction;
+  bool saveNote;
   bool isTaken;
 
-  DoseGroup({required this.key, required this.doses, this.isTaken = false});
+  DoseGroup({
+    required this.nameGroup,
+    required this.key,
+    required this.doses,
+    required this.at,
+    required this.instruction,
+    this.saveNote = false,
+    this.isTaken = false,
+  });
 }
 
 class TodayProvider extends ChangeNotifier {
@@ -33,105 +35,36 @@ class TodayProvider extends ChangeNotifier {
 
   String get dateLabel => DateFormat("MMM d, yyyy").format(_selected);
 
-  String getTimeHourMinute(String key) => key.split("|").first;
-  String getInstruction(String key) => key.split("|").last;
+  // String getTimeHourMinute(String key) => key.split("|").first;
+  // String getInstruction(String key) => key.split("|").last;
 
-  final List<Dose> all = <Dose>[
-    Dose(
-      name: "ยา1",
-      at: DateTime(2025, 9, 4, 8, 0),
+  final List<DoseGroup> all = <DoseGroup>[
+    DoseGroup(
+      key: "08:00-หลังอาหาร",
+      nameGroup: "กลุ่ม 1",
+      at: DateTime(2025, 9, 14, 8, 0),
       instruction: "หลังอาหาร",
-      picture: "assets/images/pill.png",
-      unit: "1 เม็ด",
-      isTake: false
+      doses: [Dose(name: "ยา1", unit: "1 เม็ด")],
     ),
-    Dose(
-      name: "ยา2",
-      at: DateTime(2025, 9, 4, 9, 0),
+    DoseGroup(
+      key: "09:00-ก่อนอาหาร",
+      nameGroup: "กลุ่ม 2",
+      at: DateTime(2025, 9, 14, 9, 0),
       instruction: "ก่อนอาหาร",
-      picture: "assets/images/pill.png",
-      unit: "1 เม็ด",
-      isTake: false
+      doses: [Dose(name: "ยา2", unit: "1 เม็ด")],
     ),
-    Dose(
-      name: "ยา3",
-      at: DateTime(2025, 9, 4, 13, 0),
+    DoseGroup(
+      key: "13:00-หลังอาหาร",
+      nameGroup: "กลุ่ม 3",
+      at: DateTime(2025, 9, 14, 13, 0),
       instruction: "หลังอาหาร",
-      picture: "assets/images/pill.png",
-      unit: "1 เม็ด",
-      isTake: false
-    ),
-    Dose(
-      name: "แคปซูล1",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/capsule.png",
-      unit: "1 เม็ด",
-      isTake: true
-    ),
-    Dose(
-      name: "แคปซูล2",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/capsule.png",
-      unit: "1 เม็ด",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาน้ำ1",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/syrup.png",
-      unit: "1 ช้อน",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาน้ำ2",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/syrup.png",
-      unit: "1 ช้อน",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาทา1",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/ointment.png",
-      unit: "ทาบาง ๆ",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาฉีด1",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/vaccine.png",
-      unit: "1 เข็ม",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาฉีด2",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/vaccine.png",
-      unit: "1 เข็ม",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาหยด1",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/eye-drop 1.png",
-      unit: "2 หยด",
-      isTake: true
-    ),
-    Dose(
-      name: "ยาหยด2",
-      at: DateTime(2025, 9, 4, 13, 0),
-      instruction: "หลังอาหาร",
-      picture: "assets/images/eye-drop 1.png",
-      unit: "2 หยด",
-      isTake: true
+      doses: [
+        Dose(name: "ยา3", unit: "1 เม็ด"),
+        Dose(name: "แคปซูล1", unit: "1 เม็ด"),
+        Dose(name: "แคปซูล2", unit: "1 เม็ด"),
+        Dose(name: "ยาน้ำ1", unit: "1 ช้อน"),
+        Dose(name: "ยาน้ำ2", unit: "1 ช้อน"),
+      ],
     ),
   ];
   // List<Dose> get doseSelect {
@@ -145,7 +78,8 @@ class TodayProvider extends ChangeNotifier {
   //       .toList();
   // }//function
 
-  List<Dose> doseSelect(DateTime selectTime) {
+  List<DoseGroup> doseSelect(DateTime? selectTime) {
+    if (selectTime == null) return [];
     return all
         .where(
           (d) =>
@@ -157,24 +91,6 @@ class TodayProvider extends ChangeNotifier {
   }
 
   //function kub
-  List<DoseGroup> get groupSelect {
-    final Map<String, List<Dose>> group = {};
-    for (var d in doseSelect(_selected)) {
-      final key =
-          "${d.at.hour}"
-          ":"
-          "${d.at.minute}"
-          "|"
-          "${d.instruction}";
-      if (!group.containsKey(key)) {
-        group[key] = [];
-      }
-      group[key]!.add(d);
-    }
-    return group.entries
-        .map((e) => DoseGroup(key: e.key, doses: e.value))
-        .toList();
-  }
 
   Future<void> pickDate(BuildContext context) async {
     final picked = await showDatePicker(
@@ -192,20 +108,20 @@ class TodayProvider extends ChangeNotifier {
     }
   }
 
-  void handleIsTaken(String field, Dose dose) {
-    switch (field) {
-      case "taken":
-        // dose.isTaken = true;
-        notifyListeners();
-        break;
-      case "not_taken":
-        // dose.isTaken = false;
-        notifyListeners();
-        break;
-      case "remove":
-        all.remove(dose);
-        notifyListeners();
-        break;
-    }
+  void setIsTaken(bool taken, DoseGroup doseGroup) {
+    doseGroup.isTaken = taken;
+    notifyListeners();
   }
+
+  void removeDose(DoseGroup doseGroup) {
+    all.remove(doseGroup);
+    notifyListeners();
+  }
+
+  void setNote(bool saveNote, DoseGroup doseGroup){
+    doseGroup.saveNote = saveNote ;
+    notifyListeners();
+  }
+
+  
 }
