@@ -29,6 +29,7 @@ func main() {
 	api := app.Group("/api", handlers.AuthRequired)
 
 	routes.SetupMyMedicineRoutes(api)
+	routes.SetupMedicineInfoRoutes(api)
 	
 
 	port := os.Getenv("PORT")

@@ -150,8 +150,8 @@ func SeedInitialData(db *gorm.DB) {
 	// seed ข้อมูล MedicineInfo
 	medicines := []models.MedicineInfo{
     {
-        MedName: "TYLENOL 500",
-        GenericName: "Paracetamol",
+        MedName: "Paracetamol",
+        GenericName: "Acetaminophen",
         Properties: "บรรเทาอาการปวดลดไข้",
         Strength: "500mg",
         FormID: 1,

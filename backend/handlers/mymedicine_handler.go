@@ -13,10 +13,10 @@ func AddMyMedicine(db *gorm.DB, mymedicine *models.MyMedicine) (*models.MyMedici
 }
 
 // READ: ดึงรายการยา "รายการเดียว" ของผู้ป่วย
-func GetMyMedicine(db *gorm.DB, patientID, medicineID uint) (*models.MyMedicine, error) {
+func GetMyMedicine(db *gorm.DB, patientID, mymedicineID uint) (*models.MyMedicine, error) {
 	var m models.MyMedicine
 	if err := db.
-		Where("id = ? AND patient_id = ?", medicineID, patientID).
+		Where("id = ? AND patient_id = ?", mymedicineID, patientID).
 		First(&m).Error; err != nil {
 		return nil, err
 	}
