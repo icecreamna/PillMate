@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/enums/drug_tab.dart';
 import 'package:frontend/providers/drug_provider.dart';
+import 'package:frontend/screens/all_drug_screen.dart';
+import 'package:frontend/screens/group_drug_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/tab_button.dart';
 import 'package:provider/provider.dart';
@@ -99,176 +102,94 @@ class DrugScreen extends StatelessWidget {
                             horizontal: 7,
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TabButton(
-                                onTap: (t) => context.read<DrugProvider>().setPage(t),
+                                onTap: (t) =>
+                                    context.read<DrugProvider>().setPage(t),
                                 selectPage: p.page,
                               ),
                               Expanded(
-                                child: Align(
-                                  alignment: Alignment.topRight,
-                                  child: SizedBox(
-                                    width: 144,
-                                    height: 45,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFFFDF6A,
+                                child: p.page == DrugTab.all
+                                    ? Align(
+                                        alignment: Alignment.topRight,
+                                        child: SizedBox(
+                                          width: 144,
+                                          height: 45,
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFFFFDF6A,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              elevation: 3,
+                                              shadowColor: Colors.black,
+                                              shape:
+                                                  const RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.zero,
+                                                  ),
+                                            ),
+                                            onPressed: () {},
+                                            child: const Text(
+                                              "เพิ่มยาจากโรงพยาบาล",
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
                                         ),
-                                        padding: EdgeInsets.zero,
-                                        elevation: 3,
-                                        shadowColor: Colors.black,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.zero,
+                                      )
+                                    : Align(
+                                        alignment: Alignment.topRight,
+                                        child: SizedBox(
+                                          width: 32,
+                                          height: 45,
+                                          child: RawMaterialButton(
+                                            onPressed: () {},
+                                            shape: const CircleBorder(),
+                                            fillColor: const Color(0xFFFF92DB),
+                                            child: const Icon(
+                                              Icons.add,
+                                              color: Colors.black,
+                                              size: 28,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      onPressed: () {},
-                                      child: const Text(
-                                        "เพิ่มยาจากโรงพยาบาล",
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 16,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 15),
                         Expanded(
-                          child: ListView.builder(
-                            itemBuilder: (_, index) {
-                              final d = p.doseAll[index];
-                              return Padding(
-                                padding: const EdgeInsetsGeometry.only(
-                                  bottom: 10,
-                                ),
-                                child: SizedBox(
-                                  width: 384,
-                                  height: 135,
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      side: const BorderSide(
-                                        color: Colors.grey,
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                    color: d.import
-                                        ? const Color(0xFFFFF5D0)
-                                        : Colors.white,
-                                    child: InkWell(
-                                      onTap: () {},
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          10,
-                                          13,
-                                          16,
-                                          0,
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    d.name,
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 20,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 5),
-                                                  Text(
-                                                    d.drugIndication,
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    "ครั้งละ " +
-                                                        d.numberOfTake +
-                                                        "เม็ด" +
-                                                        " " +
-                                                        "วันละ " +
-                                                        d.takePerDay +
-                                                        " " +
-                                                        "ครั้ง",
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    d.instruction,
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                Image.asset(
-                                                  d.picture,
-                                                  width: 40,
-                                                  height: 40,
-                                                ),
-                                                const SizedBox(height: 40),
-                                                Text(
-                                                  d.import
-                                                      ? "(โรงพยาบาล)"
-                                                      : "(ของฉัน)",
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            itemCount: p.doseAll.length,
-                          ),
+                          child: p.page == DrugTab.all
+                              ? const AllDrugScreen()
+                              : const GroupDrugScreen(),
                         ),
                       ],
                     ),
             ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: SizedBox(
-                width: 70,
-                height: 70,
-                child: RawMaterialButton(
-                  onPressed: () {},
-                  shape: const CircleBorder(),
-                  fillColor: color.AppColors.backgroundColor1st,
-                  highlightColor: Colors.blueAccent.withOpacity(0.1),
-                  splashColor: Colors.blueAccent.withOpacity(0.1),
-                  child: const Icon(Icons.add, color: Colors.white, size: 36),
+            if (p.page == DrugTab.all) ...[
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: RawMaterialButton(
+                    onPressed: () {},
+                    shape: const CircleBorder(),
+                    fillColor: color.AppColors.backgroundColor1st,
+                    highlightColor: Colors.blueAccent.withOpacity(0.1),
+                    splashColor: Colors.blueAccent.withOpacity(0.1),
+                    child: const Icon(Icons.add, color: Colors.white, size: 36),
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),

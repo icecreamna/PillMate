@@ -10,6 +10,7 @@ class TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      
       width: 154,
       height: 37,
       decoration: BoxDecoration(
@@ -31,6 +32,7 @@ class TabButton extends StatelessWidget {
                     color: selectPage == DrugTab.all
                         ? Colors.black
                         : Colors.transparent,
+                        
                   ),
                   borderRadius: BorderRadius.circular(20),
                 ),
