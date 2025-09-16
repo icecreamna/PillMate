@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
+import 'package:frontend/widgets/tab_button.dart';
 import 'package:provider/provider.dart';
 
 class DrugScreen extends StatelessWidget {
@@ -33,31 +34,38 @@ class DrugScreen extends StatelessWidget {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: 144,
-                            height: 45,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFFDF6A),
-                                padding: EdgeInsets.zero,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: SizedBox(
+                                width: 144,
+                                height: 45,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFFDF6A),
+                                    padding: EdgeInsets.zero,
+                                    shadowColor: Colors.black,
+                                    elevation: 3,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                  ),
+                                  onPressed: () {},
+                                  child: const Text(
+                                    "เพิ่มยาจากโรงพยาบาล",
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                              onPressed: () {},
-                              child: const Text(
-                                "เพิ่มยาจากโรงพยาบาล",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
+                          ],
                         ),
                         const Spacer(),
                         Opacity(
@@ -86,30 +94,49 @@ class DrugScreen extends StatelessWidget {
                     )
                   : Column(
                       children: [
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: 144,
-                            height: 45,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFFDF6A),
-                                padding: EdgeInsets.zero,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero,
+                        Padding(
+                          padding: const EdgeInsetsGeometry.symmetric(
+                            horizontal: 7,
+                          ),
+                          child: Row(
+                            children: [
+                              TabButton(
+                                onTap: (t) => context.read<DrugProvider>().setPage(t),
+                                selectPage: p.page,
+                              ),
+                              Expanded(
+                                child: Align(
+                                  alignment: Alignment.topRight,
+                                  child: SizedBox(
+                                    width: 144,
+                                    height: 45,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFFDF6A,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        elevation: 3,
+                                        shadowColor: Colors.black,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.zero,
+                                        ),
+                                      ),
+                                      onPressed: () {},
+                                      child: const Text(
+                                        "เพิ่มยาจากโรงพยาบาล",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              onPressed: () {},
-                              child: const Text(
-                                "เพิ่มยาจากโรงพยาบาล",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -136,7 +163,7 @@ class DrugScreen extends StatelessWidget {
                                         ? const Color(0xFFFFF5D0)
                                         : Colors.white,
                                     child: InkWell(
-                                      onTap: (){},
+                                      onTap: () {},
                                       child: Padding(
                                         padding: const EdgeInsets.fromLTRB(
                                           10,

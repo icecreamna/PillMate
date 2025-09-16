@@ -66,6 +66,13 @@ class TodayProvider extends ChangeNotifier {
         Dose(name: "ยาน้ำ2", unit: "1 ช้อน"),
       ],
     ),
+    DoseGroup(
+      nameGroup: "กลุ่ม 4",
+      key: "13:00-ก่อนอาหาร",
+      doses: [Dose(name: "ยา4", unit: "3 เม็ด"),Dose(name: "ยา5", unit: "5 ช้อน"),Dose(name: "ยาบ้า", unit: "100 ขวด")],
+      at: DateTime(2025, 9, 14, 13, 0),
+      instruction: "ก่อนอาหาร",
+    ),
   ];
   // List<Dose> get doseSelect {
   //   return all
@@ -118,10 +125,8 @@ class TodayProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setNote(bool saveNote, DoseGroup doseGroup){
-    doseGroup.saveNote = saveNote ;
+  void setNote(bool saveNote, DoseGroup doseGroup) {
+    doseGroup.saveNote = saveNote;
     notifyListeners();
   }
-
-  
 }

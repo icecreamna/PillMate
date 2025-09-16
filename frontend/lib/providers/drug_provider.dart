@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/enums/drug_tab.dart';
 
 class DoseTest {
   final String name;
@@ -21,6 +22,10 @@ class DoseTest {
 }
 
 class DrugProvider extends ChangeNotifier {
+  DrugTab _page = DrugTab.all;
+
+  DrugTab get page => _page;
+
   final List<DoseTest> _all = [
     DoseTest(
       name: "Paracetamol",
@@ -70,4 +75,10 @@ class DrugProvider extends ChangeNotifier {
   ];
 
   List<DoseTest> get doseAll => _all;
+
+  void setPage(DrugTab selectPage) {
+    _page = selectPage;
+    notifyListeners();
+  }
+
 }
