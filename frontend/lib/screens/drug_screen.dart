@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
 import 'package:frontend/providers/drug_provider.dart';
+import 'package:frontend/screens/add_edit_screen.dart';
 import 'package:frontend/screens/all_drug_screen.dart';
 import 'package:frontend/screens/group_drug_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -18,13 +19,10 @@ class DrugScreen extends StatelessWidget {
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: const Text(
           "ยาของฉัน",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
         ),
       ),
       body: Padding(
@@ -149,7 +147,18 @@ class DrugScreen extends StatelessWidget {
                                           width: 32,
                                           height: 45,
                                           child: RawMaterialButton(
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const AddEditScreen(),
+                                                    settings:const RouteSettings(arguments: {
+                                                      "pageType":"edit"
+                                                    })
+                                                ),
+                                              );
+                                            },
                                             shape: const CircleBorder(),
                                             fillColor: const Color(0xFFFF92DB),
                                             child: const Icon(
@@ -180,7 +189,17 @@ class DrugScreen extends StatelessWidget {
                   width: 70,
                   height: 70,
                   child: RawMaterialButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddEditScreen(),
+                          settings: const RouteSettings(
+                            arguments: {"pageType": "add"},
+                          ),
+                        ),
+                      );
+                    },
                     shape: const CircleBorder(),
                     fillColor: color.AppColors.backgroundColor1st,
                     highlightColor: Colors.blueAccent.withOpacity(0.1),

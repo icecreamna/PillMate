@@ -24,10 +24,10 @@ class ProfileScreen extends StatelessWidget {
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: const Text(
           "ข้อมูลผู้ใช้",
           style: TextStyle(
-            color: Colors.white,
             fontSize: 25,
             fontWeight: FontWeight.bold,
           ),

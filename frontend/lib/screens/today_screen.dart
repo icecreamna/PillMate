@@ -46,6 +46,7 @@ class _TodayScreenState extends State<TodayScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -53,7 +54,6 @@ class _TodayScreenState extends State<TodayScreen> {
               "ตารางกินยา",
               style: TextStyle(
                 fontSize: 25,
-                color: Colors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -65,7 +65,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   onTap: () => p.pickDate(context),
                   child: Text(
                     p.dateLabel,
-                    style: const TextStyle(fontSize: 20, color: Colors.white),
+                    style: const TextStyle(fontSize: 20,),
                   ),
                 ),
               ],
