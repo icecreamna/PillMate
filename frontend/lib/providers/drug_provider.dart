@@ -7,16 +7,18 @@ class DoseTest {
   final String takePerDay;
   final String instruction;
   final String picture;
-  final String drugIndication;
+  final String description;
+  final String unit;
   final bool import;
 
   DoseTest({
     required this.name,
-    required this.drugIndication,
+    required this.description,
     required this.import,
     required this.numberOfTake,
     required this.takePerDay,
     required this.instruction,
+    required this.unit,
     required this.picture,
   });
 }
@@ -29,47 +31,52 @@ class DrugProvider extends ChangeNotifier {
   final List<DoseTest> _all = [
     DoseTest(
       name: "Paracetamol",
-      drugIndication: "แก้ปวดหัว",
+      description: "แก้ปวดหัว",
       import: false,
       numberOfTake: "1",
       takePerDay: "3",
       instruction: "หลังอาหาร",
+      unit: "เม็ด",
       picture: "assets/images/pill.png",
     ),
     DoseTest(
       name: "Paracetamol",
-      drugIndication: "แก้ปวดหัว",
+      description: "แก้ปวดหัว",
       import: true,
       numberOfTake: "1",
       takePerDay: "3",
       instruction: "ก่อนอาหาร",
+      unit: "เม็ด",
       picture: "assets/images/pill.png",
     ),
     DoseTest(
       name: "ยาทา1",
-      drugIndication: "แก้ระคายเคือง",
+      description: "แก้ระคายเคือง",
       import: false,
       numberOfTake: "1",
       takePerDay: "3",
       instruction: "หลังอาหาร",
+      unit: "ช้อน",
       picture: "assets/images/ointment.png",
     ),
     DoseTest(
       name: "ยาน้ำ1",
-      drugIndication: "ลดไข้",
+      description: "ลดไข้",
       import: true,
       numberOfTake: "0.5",
       takePerDay: "4",
       instruction: "หลังอาหาร",
+      unit: "ช้อน",
       picture: "assets/images/syrup.png",
     ),
     DoseTest(
       name: "ยาน้ำ12",
-      drugIndication: "ลดไข้",
+      description: "ลดไข้",
       import: true,
       numberOfTake: "2",
       takePerDay: "4",
       instruction: "หลังอาหาร",
+      unit: "มิลลิต",
       picture: "assets/images/syrup.png",
     ),
   ];
@@ -81,4 +88,9 @@ class DrugProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addDose(DoseTest newDose) {
+    _all.add(newDose);
+    print("มี ${_all.length}");
+    notifyListeners();
+  }
 }

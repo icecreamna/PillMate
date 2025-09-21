@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
+import 'package:frontend/providers/add_edit_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/screens/add_edit_screen.dart';
 import 'package:frontend/screens/all_drug_screen.dart';
@@ -152,10 +153,12 @@ class DrugScreen extends StatelessWidget {
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
-                                                      const AddEditScreen(),
-                                                    settings:const RouteSettings(arguments: {
-                                                      "pageType":"edit"
-                                                    })
+                                                      AddEditView(),
+                                                  settings: const RouteSettings(
+                                                    arguments: {
+                                                      "pageType": "edit",
+                                                    },
+                                                  ),
                                                 ),
                                               );
                                             },
@@ -193,15 +196,26 @@ class DrugScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const AddEditScreen(),
-                          settings: const RouteSettings(
-                            arguments: {"pageType": "add"},
+                          builder: (_) => MultiProvider(
+                            providers: [
+                              ChangeNotifierProvider.value(
+                                value: context.read<DrugProvider>(),
+                              ),
+                              ChangeNotifierProvider(
+                                create: (_) =>
+                                    AddEditProvider(pageFrom: "add"),
+                              ),
+                            ],
+                            child: AddEditView(),
                           ),
                         ),
+                        // MaterialPageRoute(builder: (context) => const AddEditScreen(),settings: const RouteSettings(arguments: {
+                        //   "pageType":"add"
+                        // }))
                       );
                     },
                     shape: const CircleBorder(),
-                    fillColor: color.AppColors.backgroundColor1st,
+                    fillColor: Colors.transparent,
                     highlightColor: Colors.blueAccent.withOpacity(0.1),
                     splashColor: Colors.blueAccent.withOpacity(0.1),
                     child: const Icon(Icons.add, color: Colors.white, size: 36),

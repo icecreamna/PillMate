@@ -7,7 +7,7 @@ class AllDrugScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.read<DrugProvider>();
+    final p = context.watch<DrugProvider>();
     return ListView.builder(
       itemBuilder: (_, index) {
         final d = p.doseAll[index];
@@ -42,7 +42,7 @@ class AllDrugScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              d.drugIndication,
+                              d.description,
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
@@ -51,7 +51,7 @@ class AllDrugScreen extends StatelessWidget {
                             Text(
                               "ครั้งละ " +
                                   d.numberOfTake +
-                                  "เม็ด" +
+                                  d.unit +
                                   " " +
                                   "วันละ " +
                                   d.takePerDay +
