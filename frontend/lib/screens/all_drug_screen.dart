@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/drug_provider.dart';
+import 'package:frontend/screens/add_single_notification.dart';
 import 'package:provider/provider.dart';
 
 class AllDrugScreen extends StatelessWidget {
@@ -12,10 +13,9 @@ class AllDrugScreen extends StatelessWidget {
       itemBuilder: (_, index) {
         final d = p.doseAll[index];
         return Padding(
-          padding: const EdgeInsetsGeometry.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 10),
           child: SizedBox(
             width: 384,
-            height: 135,
             child: Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -23,7 +23,17 @@ class AllDrugScreen extends StatelessWidget {
               ),
               color: d.import ? const Color(0xFFFFF5D0) : Colors.white,
               child: InkWell(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: context.read<DrugProvider>(),
+                        child: AddSingleNotification(dose: d),
+                      ),
+                    ),
+                  );
+                },
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(10, 13, 16, 0),
                   child: Row(

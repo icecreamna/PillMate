@@ -489,7 +489,7 @@ class ProfileScreen extends StatelessWidget {
                   backgroundColor: Colors.grey[300],
                   minimumSize: const Size(389, 50),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(5),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
                 child: const Text(

@@ -30,6 +30,9 @@ import 'package:frontend/utils/colors.dart' as color;
 // }
 
 class AddEditView extends StatefulWidget {
+  final DoseTest? dose;
+  const AddEditView({super.key, this.dose});
+
   @override
   State<AddEditView> createState() => AddEditViewState();
 }
@@ -394,7 +397,7 @@ class AddEditViewState extends State<AddEditView> {
                           : _frequencyController.text,
                       instruction: addP.selectTime.label,
                       picture: addP.selectedForm.image,
-                      unit: addP.selectedUnit ?? '-'
+                      unit: addP.selectedUnit ?? '-',
                     );
 
                     context.read<DrugProvider>().addDose(newDose);

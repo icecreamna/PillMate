@@ -143,7 +143,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                 style: ElevatedButton.styleFrom(
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadiusGeometry.circular(
+                                                        BorderRadius.circular(
                                                           10,
                                                         ),
                                                   ),
@@ -172,7 +172,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                 style: ElevatedButton.styleFrom(
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadiusGeometry.circular(
+                                                        BorderRadius.circular(
                                                           10,
                                                         ),
                                                   ),
@@ -202,7 +202,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                             style: ElevatedButton.styleFrom(
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
-                                                    BorderRadiusGeometry.circular(
+                                                    BorderRadius.circular(
                                                       10,
                                                     ),
                                               ),
@@ -265,7 +265,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                     shape:
                                                         const RoundedRectangleBorder(
                                                           borderRadius:
-                                                              BorderRadiusGeometry
+                                                              BorderRadius
                                                                   .zero,
                                                         ),
                                                     child: Form(
@@ -340,7 +340,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                   style: ElevatedButton.styleFrom(
                                                                     shape: RoundedRectangleBorder(
                                                                       borderRadius:
-                                                                          BorderRadiusGeometry.circular(
+                                                                          BorderRadius.circular(
                                                                             5,
                                                                           ),
                                                                     ),
@@ -386,7 +386,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                   style: ElevatedButton.styleFrom(
                                                                     shape: RoundedRectangleBorder(
                                                                       borderRadius:
-                                                                          BorderRadiusGeometry.circular(
+                                                                          BorderRadius.circular(
                                                                             5,
                                                                           ),
                                                                     ),

@@ -148,20 +148,7 @@ class DrugScreen extends StatelessWidget {
                                           width: 32,
                                           height: 45,
                                           child: RawMaterialButton(
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      AddEditView(),
-                                                  settings: const RouteSettings(
-                                                    arguments: {
-                                                      "pageType": "edit",
-                                                    },
-                                                  ),
-                                                ),
-                                              );
-                                            },
+                                            onPressed: () {},
                                             shape: const CircleBorder(),
                                             fillColor: const Color(0xFFFF92DB),
                                             child: const Icon(
@@ -206,7 +193,7 @@ class DrugScreen extends StatelessWidget {
                                     AddEditProvider(pageFrom: "add"),
                               ),
                             ],
-                            child: AddEditView(),
+                            child: const AddEditView(),
                           ),
                         ),
                         // MaterialPageRoute(builder: (context) => const AddEditScreen(),settings: const RouteSettings(arguments: {
