@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
+import 'package:uuid/uuid.dart';
+
 
 class DoseTest {
+  final String id;
   final String name;
-  final String numberOfTake;
-  final String takePerDay;
+  final String amountPerDose;
+  final String frequency;
   final String instruction;
   final String picture;
   final String description;
@@ -12,15 +15,39 @@ class DoseTest {
   final bool import;
 
   DoseTest({
+    required this.id,
     required this.name,
     required this.description,
     required this.import,
-    required this.numberOfTake,
-    required this.takePerDay,
+    required this.amountPerDose,
+    required this.frequency,
     required this.instruction,
     required this.unit,
     required this.picture,
   });
+  DoseTest copyWith({
+    String? id,
+    String? name,
+    String? description,
+    bool? import,
+    String? amountPerDose,
+    String? frequency,
+    String? instruction,
+    String? picture,
+    String? unit,
+  }) {
+    return DoseTest(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      import: import ?? this.import,
+      amountPerDose: amountPerDose ?? this.amountPerDose,
+      frequency: frequency ?? this.frequency,
+      instruction: instruction ?? this.instruction,
+      picture: picture ?? this.picture,
+      unit: unit ?? this.unit,
+    );
+  }
 }
 
 class DrugProvider extends ChangeNotifier {
@@ -28,60 +55,11 @@ class DrugProvider extends ChangeNotifier {
 
   DrugTab get page => _page;
 
-  final List<DoseTest> _all = [
-    DoseTest(
-      name: "Paracetamol",
-      description: "แก้ปวดหัว",
-      import: false,
-      numberOfTake: "1",
-      takePerDay: "3",
-      instruction: "หลังอาหาร",
-      unit: "เม็ด",
-      picture: "assets/images/pill.png",
-    ),
-    DoseTest(
-      name: "Paracetamol",
-      description: "แก้ปวดหัว",
-      import: true,
-      numberOfTake: "1",
-      takePerDay: "3",
-      instruction: "ก่อนอาหาร",
-      unit: "เม็ด",
-      picture: "assets/images/pill.png",
-    ),
-    DoseTest(
-      name: "ยาทา1",
-      description: "แก้ระคายเคือง",
-      import: false,
-      numberOfTake: "1",
-      takePerDay: "3",
-      instruction: "หลังอาหาร",
-      unit: "ช้อน",
-      picture: "assets/images/ointment.png",
-    ),
-    DoseTest(
-      name: "ยาน้ำ1",
-      description: "ลดไข้",
-      import: true,
-      numberOfTake: "0.5",
-      takePerDay: "4",
-      instruction: "หลังอาหาร",
-      unit: "ช้อน",
-      picture: "assets/images/syrup.png",
-    ),
-    DoseTest(
-      name: "ยาน้ำ12",
-      description: "ลดไข้",
-      import: true,
-      numberOfTake: "2",
-      takePerDay: "4",
-      instruction: "หลังอาหาร",
-      unit: "มิลลิต",
-      picture: "assets/images/syrup.png",
-    ),
-  ];
+  final List<DoseTest> _all = [];
 
   List<DoseTest> get doseAll => _all;
+
+  final _uuid = const Uuid();
 
   void setPage(DrugTab selectPage) {
     _page = selectPage;
@@ -89,8 +67,23 @@ class DrugProvider extends ChangeNotifier {
   }
 
   void addDose(DoseTest newDose) {
-    _all.add(newDose);
+    final dose = newDose.copyWith(id:_uuid.v4());
+    _all.add(dose);
     print("มี ${_all.length}");
     notifyListeners();
+  }
+
+  void removeDose(DoseTest dose){
+    _all.removeWhere((d) => d.id == dose.id,);
+    print("มี ${_all.length}");
+    notifyListeners();
+  }
+
+  void updatedDose(DoseTest updateDose){  
+    final index = _all.indexWhere((d) => d.id == updateDose.id);
+    if(index != -1){
+      _all[index] = updateDose;
+      notifyListeners();
+    }
   }
 }

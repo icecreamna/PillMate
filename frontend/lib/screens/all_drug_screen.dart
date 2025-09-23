@@ -60,11 +60,11 @@ class AllDrugScreen extends StatelessWidget {
                             ),
                             Text(
                               "ครั้งละ " +
-                                  d.numberOfTake +
+                                  d.amountPerDose +
                                   d.unit +
                                   " " +
                                   "วันละ " +
-                                  d.takePerDay +
+                                  d.frequency +
                                   " " +
                                   "ครั้ง",
                               style: const TextStyle(

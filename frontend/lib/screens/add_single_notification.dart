@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/add_edit_provider.dart';
+import 'package:frontend/providers/add_single_notification_provider.dart';
 import 'package:frontend/screens/add_edit_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/providers/drug_provider.dart';
@@ -7,11 +8,28 @@ import 'package:provider/provider.dart';
 
 class AddSingleNotification extends StatelessWidget {
   final DoseTest dose;
-
   const AddSingleNotification({super.key, required this.dose});
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AddSingleNotificationProvider(dose),
+      child: _AddSingleNotificationView(),
+    );
+  }
+}
+
+class _AddSingleNotificationView extends StatefulWidget {
+  @override
+  State<_AddSingleNotificationView> createState() =>
+      _AddSingleNotificationViewState();
+}
+
+class _AddSingleNotificationViewState
+    extends State<_AddSingleNotificationView> {
+  @override
+  Widget build(BuildContext context) {
+    final addS = context.watch<AddSingleNotificationProvider>();
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
@@ -30,7 +48,7 @@ class AddSingleNotification extends StatelessWidget {
             SizedBox(
               width: 384,
               child: Card(
-                color: dose.import ? const Color(0xFFFFF5D0) : Colors.white,
+                color: addS.tempDose.import ? const Color(0xFFFFF5D0) : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: const BorderSide(color: Colors.grey, width: 0.5),
@@ -46,7 +64,7 @@ class AddSingleNotification extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              dose.name,
+                              addS.tempDose.name,
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 20,
@@ -54,7 +72,7 @@ class AddSingleNotification extends StatelessWidget {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              dose.description,
+                              addS.tempDose.description,
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
@@ -62,11 +80,11 @@ class AddSingleNotification extends StatelessWidget {
                             ),
                             Text(
                               "ครั้งละ " +
-                                  dose.numberOfTake +
-                                  dose.unit +
+                                  addS.tempDose.amountPerDose +
+                                  addS.tempDose.unit +
                                   " " +
                                   "วันละ " +
-                                  dose.takePerDay +
+                                  addS.tempDose.frequency +
                                   " " +
                                   "ครั้ง",
                               style: const TextStyle(
@@ -75,14 +93,14 @@ class AddSingleNotification extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              dose.instruction,
+                              addS.tempDose.instruction,
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 16,
                               ),
                             ),
                             const SizedBox(height: 10),
-                            if (!dose.import) ...[
+                            if (!addS.tempDose.import) ...[
                               SizedBox(
                                 width: 95,
                                 height: 35,
@@ -95,12 +113,12 @@ class AddSingleNotification extends StatelessWidget {
                                           providers: [
                                             ChangeNotifierProvider.value(
                                               value: context
-                                                  .read<DrugProvider>(),
+                                                  .read<AddSingleNotificationProvider>(),
                                             ),
                                             ChangeNotifierProvider(
                                               create: (_) => AddEditProvider(
                                                 pageFrom: "edit",
-                                                editDose: dose
+                                                editDose: addS.tempDose,
                                               ),
                                             ),
                                           ],
@@ -137,10 +155,10 @@ class AddSingleNotification extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Image.asset(dose.picture, width: 40, height: 40),
+                          Image.asset(addS.tempDose.picture, width: 40, height: 40),
                           const SizedBox(height: 40),
                           Text(
-                            dose.import ? "(โรงพยาบาล)" : "(ของฉัน)",
+                            addS.tempDose.import ? "(โรงพยาบาล)" : "(ของฉัน)",
                             style: const TextStyle(
                               color: Colors.black,
                               fontSize: 16,
@@ -181,6 +199,54 @@ class AddSingleNotification extends StatelessWidget {
               ),
             ),
             const Spacer(),
+            Row(
+              children: [
+                SizedBox(
+                  width: 181,
+                  height: 70,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<DrugProvider>().removeDose(addS.tempDose);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF0000),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      "ลบรายการยา",
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                SizedBox(
+                  width: 181,
+                  height: 70,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<DrugProvider>().updatedDose(addS.tempDose);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF94B4C1),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      "บันทึก",
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 70),
           ],
         ),
       ),

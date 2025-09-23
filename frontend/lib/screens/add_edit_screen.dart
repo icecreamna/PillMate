@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:frontend/enums/drug_form.dart';
 import 'package:frontend/enums/drug_time.dart';
 import 'package:frontend/providers/add_edit_provider.dart';
+import 'package:frontend/providers/add_single_notification_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -82,6 +83,21 @@ class AddEditViewState extends State<AddEditView> {
   final _descriptionController = TextEditingController();
   final _amountPerDoseController = TextEditingController();
   final _frequencyController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final addP = context.read<AddEditProvider>();
+      if (addP.editDose != null && addP.pageFrom == "edit") {
+        final d = addP.editDose!;
+        _nameDrugController.text = d.name;
+        _descriptionController.text = d.description;
+        _amountPerDoseController.text = d.amountPerDose;
+        _frequencyController.text = d.frequency;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -382,6 +398,9 @@ class AddEditViewState extends State<AddEditView> {
                     }
 
                     final newDose = DoseTest(
+                      id: addP.pageFrom == "edit" && addP.editDose != null
+                          ? addP.editDose!.id
+                          : "",
                       name: _nameDrugController.text.isEmpty
                           ? "-"
                           : _nameDrugController.text,
@@ -389,10 +408,10 @@ class AddEditViewState extends State<AddEditView> {
                           ? "-"
                           : _descriptionController.text,
                       import: false,
-                      numberOfTake: _amountPerDoseController.text.isEmpty
+                      amountPerDose: _amountPerDoseController.text.isEmpty
                           ? "-"
                           : _amountPerDoseController.text,
-                      takePerDay: _frequencyController.text.isEmpty
+                      frequency: _frequencyController.text.isEmpty
                           ? "-"
                           : _frequencyController.text,
                       instruction: addP.selectTime.label,
@@ -400,7 +419,13 @@ class AddEditViewState extends State<AddEditView> {
                       unit: addP.selectedUnit ?? '-',
                     );
 
-                    context.read<DrugProvider>().addDose(newDose);
+                    if (addP.pageFrom == "edit" && addP.editDose != null) {
+                      context
+                          .read<AddSingleNotificationProvider>()
+                          .updatedTempDose(newDose);
+                    } else {
+                      context.read<DrugProvider>().addDose(newDose);
+                    }
                     _amountPerDoseController.clear();
                     _frequencyController.clear();
                     _nameDrugController.clear();
