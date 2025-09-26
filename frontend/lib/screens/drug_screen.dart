@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
 import 'package:frontend/providers/add_edit_provider.dart';
+import 'package:frontend/providers/add_group_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/screens/add_edit_screen.dart';
+import 'package:frontend/screens/add_group_drug.dart';
 import 'package:frontend/screens/all_drug_screen.dart';
 import 'package:frontend/screens/group_drug_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -97,9 +99,7 @@ class DrugScreen extends StatelessWidget {
                   : Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsetsGeometry.symmetric(
-                            horizontal: 7,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 9),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -148,7 +148,28 @@ class DrugScreen extends StatelessWidget {
                                           width: 32,
                                           height: 45,
                                           child: RawMaterialButton(
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => MultiProvider(
+                                                    providers: [
+                                                      ChangeNotifierProvider.value(
+                                                        value: context
+                                                            .read<
+                                                              DrugProvider
+                                                            >(),
+                                                      ),
+                                                      ChangeNotifierProvider(
+                                                        create: (context) =>
+                                                            AddGroupProvider(),
+                                                      ),
+                                                    ],
+                                                    child: const AddGroupDrug(),
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                             shape: const CircleBorder(),
                                             fillColor: const Color(0xFFFF92DB),
                                             child: const Icon(
@@ -189,8 +210,7 @@ class DrugScreen extends StatelessWidget {
                                 value: context.read<DrugProvider>(),
                               ),
                               ChangeNotifierProvider(
-                                create: (_) =>
-                                    AddEditProvider(pageFrom: "add"),
+                                create: (_) => AddEditProvider(pageFrom: "add"),
                               ),
                             ],
                             child: const AddEditView(),

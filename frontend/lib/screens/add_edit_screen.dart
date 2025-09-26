@@ -8,6 +8,8 @@ import 'package:frontend/providers/drug_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
 
+import '../models/dose.dart';
+
 // class AddEditScreen extends StatelessWidget {
 //   const AddEditScreen({super.key});
 
@@ -31,7 +33,7 @@ import 'package:frontend/utils/colors.dart' as color;
 // }
 
 class AddEditView extends StatefulWidget {
-  final DoseTest? dose;
+  final Dose? dose;
   const AddEditView({super.key, this.dose});
 
   @override
@@ -249,6 +251,7 @@ class AddEditViewState extends State<AddEditView> {
                           ],
                           decoration: InputDecoration(
                             labelText: "ครั้งละ",
+                            border: _borderInput(Colors.grey),
                             enabledBorder: _borderInput(Colors.grey),
                             focusedBorder: _borderInput(Colors.grey),
                             disabledBorder: _borderInput(Colors.grey),
@@ -397,7 +400,7 @@ class AddEditViewState extends State<AddEditView> {
                       return;
                     }
 
-                    final newDose = DoseTest(
+                    final newDose = Dose(
                       id: addP.pageFrom == "edit" && addP.editDose != null
                           ? addP.editDose!.id
                           : "",

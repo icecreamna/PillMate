@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_form.dart';
 import 'package:frontend/enums/drug_time.dart';
-import 'package:frontend/providers/drug_provider.dart';
+
+import '../models/dose.dart';
 
 class AddEditProvider extends ChangeNotifier {
   final String pageFrom;
@@ -9,7 +10,7 @@ class AddEditProvider extends ChangeNotifier {
   DrugForm selectedForm;
   String? selectedUnit;
 
-  DoseTest? editDose;
+  Dose? editDose;
 
   AddEditProvider({
     required this.pageFrom,
@@ -23,7 +24,7 @@ class AddEditProvider extends ChangeNotifier {
   }
   }
 
-  void _loadDose(DoseTest dose){
+  void _loadDose(Dose dose){
     selectedUnit = dose.unit;
     selectTime = DrugTime.values.firstWhere((dt) => dt.label == dose.instruction,orElse: () => DrugTime.beforeMeal,);
     selectedForm = DrugForm.values.firstWhere((df) => df.image == dose.picture ,orElse: () => DrugForm.tablet,);

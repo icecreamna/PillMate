@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/providers/drug_provider.dart';
+import '../models/dose.dart';
 
 class AddSingleNotificationProvider extends ChangeNotifier{
 
-late DoseTest _tempDose ; 
+late Dose _tempDose ; 
 
-DoseTest get tempDose => _tempDose;
+Dose get tempDose => _tempDose;
 
-AddSingleNotificationProvider(DoseTest dose){
+AddSingleNotificationProvider(Dose dose){
   _tempDose = dose;
 }
 
-void updatedTempDose(DoseTest newDose){ 
+void updatedTempDose(Dose newDose){ 
   _tempDose = newDose;
   notifyListeners();
 }

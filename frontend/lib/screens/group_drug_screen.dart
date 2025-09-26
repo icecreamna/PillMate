@@ -9,10 +9,22 @@ class GroupDrugScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // final p = context.read<DrugProvider>();
 
-    return const SizedBox(
-      child:Text(
-        "Hello"
-      )
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 384,
+            height: 125,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey,width: 1)
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
