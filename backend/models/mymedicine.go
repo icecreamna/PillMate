@@ -17,6 +17,8 @@ type MyMedicine struct {
 	AmountPerTime 	string `gorm:"not null" json:"amount_per_time"` //ครั้งละ กี่ หน่วย
 	TimesPerDay 	string `gorm:"not null" json:"times_per_day"` //วันละกี่ครั้ง
 	Source 		 	string `gorm:"check:source IN ('manual','hospital')" json:"source"`
+	PrescriptionID  *uint `gorm:"index" json:"prescription_id,omitempty"`
+
 
 	Patient   		Patient `gorm:"foreignKey:PatientID"`
 	Form 			Form `gorm:"foreignKey:FormID"`

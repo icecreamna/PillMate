@@ -56,16 +56,32 @@ func UpdateMyMedicine(db *gorm.DB, patientID, mymedicineID uint, in *models.MyMe
 	return &out, nil
 }
 
-// DELETE: ลบรายการยา (ถ้าโมเดลไม่มี gorm.DeletedAt จะเป็น hard delete)
+// DELETE: ลบรายการยา 
+// ถ้า Source = "hospital" และมี PrescriptionID -> เซ็ต prescriptions.app_sync_status = false
 func DeleteMyMedicine(db *gorm.DB, patientID, mymedicineID uint) error {
-	currentMymedicine := db.
-		Where("id = ? AND patient_id = ?", mymedicineID, patientID).
-		Delete(&models.MyMedicine{})
-	if currentMymedicine.Error != nil {
-		return currentMymedicine.Error
-	}
-	if currentMymedicine.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
+	return db.Transaction(func(tx *gorm.DB) error {
+		var myMedicine models.MyMedicine
+
+		// 1) โหลดรายการยาที่เป็นของ patient นี้
+		if err := tx.Where("id = ? AND patient_id = ?", mymedicineID, patientID).
+			First(&myMedicine).Error; err != nil {
+			return err // รวมถึง gorm.ErrRecordNotFound
+		}
+
+		// 2) ลบ (soft delete ถ้ามี DeletedAt)
+		if err := tx.Delete(&myMedicine).Error; err != nil {
+			return err
+		}
+
+		// 3) ถ้ามาจากโรงพยาบาลและมี PrescriptionID -> rollback สถานะซิงก์
+		if myMedicine.Source == "hospital" && myMedicine.PrescriptionID != nil {
+			if err := tx.Model(&models.Prescription{}).
+				Where("id = ?", *myMedicine.PrescriptionID).
+				Update("app_sync_status", false).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

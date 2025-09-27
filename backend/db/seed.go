@@ -256,6 +256,7 @@ func SeedInitialData(db *gorm.DB) {
 		}
 	}
 
+	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
 	prescriptions := []models.Prescription{
 		{
 			IDCardNumber:   "1101700203451",
