@@ -5,6 +5,7 @@ import (
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
+	
 )
 
 
@@ -220,7 +221,65 @@ func SeedInitialData(db *gorm.DB) {
 	for _, medicine := range medicines {
     if err := db.Create(&medicine).Error; err != nil {
         log.Println("Seed medicineinfo error:", err)
-    }
+    }}
+
+	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
+
+	// --- Seed Hospitals ---
+	hospitals := []models.Hospital{
+		{HospitalName: "โรงพยาบาลตัวอย่าง A"},
+		{HospitalName: "โรงพยาบาลตัวอย่าง B"},
 	}
+	for i := range hospitals {
+		if err := db.FirstOrCreate(&hospitals[i],
+			models.Hospital{HospitalName: hospitals[i].HospitalName},
+		).Error; err != nil {
+			log.Println("Seed hospital error:", err)
+		}
+	}
+	
+	// --- Seed WebAdmins (หมอ / แอดมิน) ---
+	admins := []models.WebAdmin{
+		{
+			Username:  "doctor@test.com",
+			Password:  "1234", 
+			FirstName: "ยาดม",
+			LastName:  "หงไทย",
+			Role:      "doctor",
+			
+		}}
+	for i := range admins {
+		if err := db.FirstOrCreate(&admins[i],
+			models.WebAdmin{Username: admins[i].Username},
+		).Error; err != nil {
+			log.Println("Seed webadmin error:", err)
+		}
+	}
+
+	prescriptions := []models.Prescription{
+		{
+			IDCardNumber:   "1101700203451",
+			MedicineInfoID: 1,                 // Paracetamol 500mg
+			AmountPerTime:  "1",               // ครั้งละ 1 หน่วย
+			TimesPerDay:    "3",               // วันละ 3 ครั้ง
+			HospitalID:     1,
+			DoctorID:       1,
+			AppSyncStatus:  false,             // ยังไม่ซิงค์
+		},
+		{
+			IDCardNumber:   "1101700203451",
+			MedicineInfoID: 2,                 // PROBUFEN 400
+			AmountPerTime:  "1",
+			TimesPerDay:    "3",               // (เช่น ทุก 8 ชม.)
+			HospitalID:     1,
+			DoctorID:       1,
+			AppSyncStatus:  false,
+		},
+	}
+	if err := db.Create(&prescriptions).Error; err != nil {
+	log.Fatal("seed prescriptions failed: ", err)
+	}
+	// ------ ลบถึงตรงนี้ ----------------------------------------------------------------------------------------------
+
 	log.Println("Seed ข้อมูลสำเร็จ")
 }

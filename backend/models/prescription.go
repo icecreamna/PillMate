@@ -3,6 +3,7 @@ package models
 import (
 	
 	"time"
+	"gorm.io/gorm"
 )
 
 // ใบสั่งยา
@@ -16,8 +17,20 @@ type Prescription struct {
 	DoctorID  		uint `gorm:"not null" json:"doctor_id"`
 	CreatedAt 		time.Time `json:"created_at"` //วันเวลาที่ออกใบสั่งยา
 	AppSyncStatus 	bool `gorm:"default:false" json:"app_sync_status"` // false=ยังไม่ซิงค์
+	SyncUntil       time.Time  `gorm:"not null" json:"sync_until"` // ซิงค์ได้ถึงแค่วันที่กำหนด
 
 	MedicineInfo 	MedicineInfo `gorm:"foreignKey:MedicineInfoID"`
 	Hospital 		Hospital `gorm:"foreignKey:HospitalID"`
 	WebAdmin 		WebAdmin `gorm:"foreignKey:DoctorID"`
+}
+
+// ตั้งค่าอัตโนมัติ: ถ้าไม่ได้ส่ง SyncUntil มา → ใช้ CreatedAt + 60 วัน
+func (p *Prescription) BeforeCreate(tx *gorm.DB) (err error) {
+    if p.CreatedAt.IsZero() {
+        p.CreatedAt = time.Now() 
+    }
+    if p.SyncUntil.IsZero() {
+        p.SyncUntil = p.CreatedAt.AddDate(0, 0, 60)
+    }
+    return nil
 }
