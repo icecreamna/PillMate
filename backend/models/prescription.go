@@ -17,7 +17,7 @@ type Prescription struct {
 	DoctorID  		uint `gorm:"not null" json:"doctor_id"`
 	CreatedAt 		time.Time `json:"created_at"` //วันเวลาที่ออกใบสั่งยา
 	AppSyncStatus 	bool `gorm:"default:false" json:"app_sync_status"` // false=ยังไม่ซิงค์
-	SyncUntil       time.Time  `gorm:"not null" json:"sync_until"` // ซิงค์ได้ถึงแค่วันที่กำหนด
+	SyncUntil       time.Time  `gorm:"not null" json:"sync_until"` // ซิงค์ได้ถึงแค่วันที่กำหนด: 60 วัน
 
 	MedicineInfo 	MedicineInfo `gorm:"foreignKey:MedicineInfoID"`
 	Hospital 		Hospital `gorm:"foreignKey:HospitalID"`

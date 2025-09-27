@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"errors"
 	"gorm.io/gorm"
+	"time"
 )
 
 func SetupMyMedicineRoutes(api fiber.Router) {
@@ -63,6 +64,97 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 				"times_per_day":   created.TimesPerDay,
 				"source":          created.Source,
 			},
+		})
+	})
+
+	// POST /api/my-medicine/sync-from-prescription
+	// Body: { "id_card_number": "1101700203451" }
+	api.Post("/my-medicine/sync-from-prescription", func(c *fiber.Ctx) error {
+		type Req struct {
+			IDCardNumber string `json:"id_card_number"`
+		}
+		var req Req
+		if err := c.BodyParser(&req); err != nil || len(req.IDCardNumber) != 13 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id_card_number"})
+		}
+
+		// 1) หา patient จากเลขบัตร
+		var patient models.Patient
+		if err := db.DB.
+			Where("id_card_number = ?", req.IDCardNumber).
+			First(&patient).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "patient not found"})
+		}
+
+		// 2) ดึง prescriptions ที่ยังไม่ซิงก์ (และยังไม่หมดเขตซิงก์ ถ้ามีฟิลด์ SyncUntil)
+		now := time.Now()
+		var prescriptions []models.Prescription
+		q := db.DB.Where("id_card_number = ? AND app_sync_status = ?", req.IDCardNumber, false)
+		// ถ้ามีฟิลด์ SyncUntil ใช้บรรทัดด้านล่างด้วย
+		q = q.Where("sync_until >= ?", now)
+
+		if err := q.Find(&prescriptions).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		if len(prescriptions) == 0 {
+			return c.JSON(fiber.Map{"message": "no prescriptions to sync", "synced": 0})
+		}
+
+		created := make([]fiber.Map, 0, len(prescriptions))
+
+		// 3) ทำเป็น transaction: สร้าง MyMedicine จากแต่ละใบสั่งยา แล้วมาร์ก sync = true
+		if err := db.DB.Transaction(func(tx *gorm.DB) error {
+			for _, p := range prescriptions {
+				// โหลดข้อมูลยาอ้างอิง
+				var mi models.MedicineInfo
+				if err := tx.First(&mi, p.MedicineInfoID).Error; err != nil {
+					return err
+				}
+
+				// เตรียม MyMedicine จาก prescription + medicine info
+				mm := models.MyMedicine{
+					PatientID:      patient.ID,
+					MedName:        mi.MedName,
+					Properties:     mi.Properties,
+					FormID:         mi.FormID,
+					UnitID:         mi.UnitID,
+					InstructionID:  mi.InstructionID, // ถ้ามี Instruction ใน prescription เอง ให้สลับมาใช้ p.InstructionID
+					AmountPerTime:  p.AmountPerTime,
+					TimesPerDay:    p.TimesPerDay,
+					Source:         "hospital",
+				}
+
+				if err := tx.Create(&mm).Error; err != nil {
+					return err
+				}
+
+				// มาร์ก prescription ว่าซิงก์แล้ว
+				if err := tx.Model(&p).Update("app_sync_status", true).Error; err != nil {
+					return err
+				}
+
+				created = append(created, fiber.Map{
+					"mymedicine_id":   mm.ID,
+					"prescription_id": p.ID,
+					"med_name":        mm.MedName,
+					"form_id":         mm.FormID,
+					"unit_id":         mm.UnitID,
+					"instruction_id":  mm.InstructionID,
+					"amount_per_time": mm.AmountPerTime,
+					"times_per_day":   mm.TimesPerDay,
+					"source":          mm.Source,
+				})
+			}
+			return nil
+		}); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		return c.JSON(fiber.Map{
+			"message": "sync from prescriptions successful",
+			"patient_id": patient.ID,
+			"synced":  len(created),
+			"data":    created,
 		})
 	})
 
