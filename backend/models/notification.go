@@ -18,7 +18,7 @@ type NotiFormat struct {
 type NotiInfo struct {
     ID   				uint `gorm:"primaryKey" json:"id"`
 	MyMedicineID    	uint `gorm:"default:null" json:"my_medicine_id"`
-	GroupMedicineID 	uint `gorm:"default:null" json:"group_medicine_id"`
+	GroupID 	uint `gorm:"default:null" json:"group_medicine_id"`
 	StartDate 			time.Time `gorm:"type:date" json:"start_date"`
 	EndDate 			time.Time `gorm:"type:date" json:"end_date"`
 	NotiFormatID		uint `gorm:"not null" json:"noti_format_id"`
@@ -30,7 +30,7 @@ type NotiInfo struct {
 	CyclePattern  		pq.Int64Array `gorm:"type:int[];default:null" json:"cycle_pattern"` // ตัวอย่าง: [21,7]
 
 	MyMedicine 			MyMedicine `gorm:"foreignKey:MyMedicineID"`
-	GroupMedicine 		GroupMedicine `gorm:"foreignKey:GroupMedicineID"`
+	Group				Group `gorm:"foreignKey:GroupID"`
 	NotiFormat			NotiFormat `gorm:"foreignKey:NotiFormatID"`
 }
 
@@ -39,7 +39,7 @@ type NotiItem struct {
     ID   			uint `gorm:"primaryKey" json:"id"`
 	PatientID 		uint `gorm:"not null" json:"patient_id"`
 	MyMedicineID    uint  `gorm:"not null" json:"my_medicine_id"`
-	GroupMedicineID uint `gorm:"default:null" json:"group_medicine_id"`
+	GroupID 		uint `gorm:"default:null" json:"group_medicine_id"`
 	NotiInfoID 		uint `gorm:"default:null" json:"noti_info_id"`
 	MedName 	 	string `gorm:"type:varchar(255);not null" json:"med_name"` // ชื่อยา
 	GroupName 	 	string `gorm:"type:varchar(255);not null" json:"group_name"` // ชื่อกลุ่ม
@@ -56,7 +56,7 @@ type NotiItem struct {
 
 	Patient   		Patient `gorm:"foreignKey:PatientID"`
 	MyMedicine 		MyMedicine `gorm:"foreignKey:MyMedicineID"`
-	GroupMedicine 	GroupMedicine `gorm:"foreignKey:GroupMedicineID"`
+	Group 			Group `gorm:"foreignKey:GroupID"`
 	NotiInfo 		NotiInfo `gorm:"foreignKey:NotiInfoID"`
 	Form 			Form `gorm:"foreignKey:FormID"`
     Unit 			Unit `gorm:"foreignKey:UnitID"`

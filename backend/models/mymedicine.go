@@ -5,6 +5,15 @@ import(
 	"time"
 )
 
+// กลุ่ม 
+type Group struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	PatientID uint           `gorm:"not null;index" json:"patient_id"`
+	GroupName string         `gorm:"type:varchar(255);not null" json:"group_name"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
 // ยาของฉัน
 type MyMedicine struct {
 	ID           	uint `gorm:"primaryKey" json:"id"`
@@ -18,8 +27,9 @@ type MyMedicine struct {
 	TimesPerDay 	string `gorm:"not null" json:"times_per_day"` //วันละกี่ครั้ง
 	Source 		 	string `gorm:"check:source IN ('manual','hospital')" json:"source"`
 	PrescriptionID  *uint `gorm:"index" json:"prescription_id,omitempty"`
+	GroupID 		*uint `gorm:"index" json:"group_id,omitempty"`
 
-
+	Group   		Group `gorm:"foreignKey:GroupID"`
 	Patient   		Patient `gorm:"foreignKey:PatientID"`
 	Form 			Form `gorm:"foreignKey:FormID"`
     Unit 			Unit `gorm:"foreignKey:UnitID"`
@@ -28,16 +38,4 @@ type MyMedicine struct {
 	UpdatedAt 		time.Time      `json:"updated_at"`
 	DeletedAt 		gorm.DeletedAt `gorm:"index" json:"-"`
 
-}
-
-// กลุ่มยาของฉัน
-type GroupMedicine struct {
-	ID           	uint `gorm:"primaryKey" json:"id"`
-	MyMedicineID    uint `gorm:"not null" json:"my_medicine_id"`//ยาที่อยู่ในกลุ่ม
-	GroupName 	 	string `gorm:"type:varchar(255);not null" json:"group_name"` // ชื่อกลุ่ม
-
-	MyMedicine   	MyMedicine `gorm:"foreignKey:MyMedicineID"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }

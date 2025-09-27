@@ -258,28 +258,27 @@ func SeedInitialData(db *gorm.DB) {
 
 	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
 	prescriptions := []models.Prescription{
-		{
-			IDCardNumber:   "1101700203451",
-			MedicineInfoID: 1,                 // Paracetamol 500mg
-			AmountPerTime:  "1",               // ครั้งละ 1 หน่วย
-			TimesPerDay:    "3",               // วันละ 3 ครั้ง
-			HospitalID:     1,
-			DoctorID:       1,
-			AppSyncStatus:  false,             // ยังไม่ซิงค์
-		},
-		{
-			IDCardNumber:   "1101700203451",
-			MedicineInfoID: 2,                 // PROBUFEN 400
-			AmountPerTime:  "1",
-			TimesPerDay:    "3",               // (เช่น ทุก 8 ชม.)
-			HospitalID:     1,
-			DoctorID:       1,
-			AppSyncStatus:  false,
-		},
+	{ IDCardNumber: "1101700203451", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	{ IDCardNumber: "1101700203451", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
 	}
-	if err := db.Create(&prescriptions).Error; err != nil {
-	log.Fatal("seed prescriptions failed: ", err)
-	}
+
+	for i := range prescriptions {
+		key := models.Prescription{
+			IDCardNumber:   prescriptions[i].IDCardNumber,
+			MedicineInfoID: prescriptions[i].MedicineInfoID,
+			HospitalID:     prescriptions[i].HospitalID,
+			DoctorID:       prescriptions[i].DoctorID,
+		}
+		attrs := models.Prescription{
+			AmountPerTime: prescriptions[i].AmountPerTime,
+			TimesPerDay:   prescriptions[i].TimesPerDay,
+			AppSyncStatus: false,
+		}
+		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
+			log.Fatal("seed prescriptions failed: ", err)
+		}
+}
+
 	// ------ ลบถึงตรงนี้ ----------------------------------------------------------------------------------------------
 
 	log.Println("Seed ข้อมูลสำเร็จ")

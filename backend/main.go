@@ -30,6 +30,7 @@ func main() {
 
 	routes.SetupMyMedicineRoutes(api)
 	routes.SetupMedicineInfoRoutes(api)
+	routes.SetupGroupMedicineRoutes(api)
 	
 
 	port := os.Getenv("PORT")
