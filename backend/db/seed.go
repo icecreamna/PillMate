@@ -8,6 +8,8 @@ import (
 	
 )
 
+// uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
+func UintPtr(v uint) *uint { return &v }
 
 
 func SeedInitialData(db *gorm.DB) {
@@ -155,8 +157,8 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "บรรเทาอาการปวดลดไข้",
         Strength: "500mg",
         FormID: 1,
-        UnitID: 1, 
-        InstructionID: 2, 
+        UnitID: UintPtr(1), 
+        InstructionID: UintPtr(2), 
 		// MedStatus: "active",
     },
 
@@ -166,8 +168,8 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
         Strength: "400 mg",
         FormID: 2,
-        UnitID: 2, 
-        InstructionID: 2, 
+        UnitID: UintPtr(2), 
+        InstructionID: UintPtr(2), 
     },
 
 	{
@@ -176,8 +178,8 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "ละลายเสมหะและบรรเทาอาการไอ",
         Strength: "4 mg/5 ml",
         FormID: 3,
-        UnitID: 3, 
-        InstructionID: 2, 
+        UnitID: UintPtr(3), 
+        InstructionID: UintPtr(2), 
     },
 
 	{
@@ -202,8 +204,8 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
         Strength: "100 iu/1ml",
         FormID: 4,
-        UnitID: 7, 
-        InstructionID: 1, 
+        UnitID: UintPtr(7), 
+        InstructionID: UintPtr(1), 
     },
 
 	{
@@ -212,7 +214,7 @@ func SeedInitialData(db *gorm.DB) {
         Properties: "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
         Strength: "(0.3 G+0.1 G)/100 ML",
         FormID: 6,
-        UnitID: 12, 
+        UnitID: UintPtr(12), 
     },
     
     // ...ใส่ยาอีกตามต้องการ
