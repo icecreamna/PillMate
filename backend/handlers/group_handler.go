@@ -78,16 +78,50 @@ func GetGroup(db *gorm.DB, patientID, groupID uint) (*GroupDetail, error) {
 }
 
 //
-// READ: ดึงรายการกลุ่มทั้งหมดของผู้ป่วย (ไม่รวมสมาชิก)
-//
-func GetGroups(db *gorm.DB, patientID uint) ([]models.Group, error) {
-	var groups []models.Group
-	if err := db.Where("patient_id = ?", patientID).Find(&groups).Error; err != nil {
-		return nil, err
-	}
-	return groups, nil
+// READ: ดึงรายการกลุ่มทั้งหมดของผู้ป่วย (พร้อมจำนวนสมาชิก)
+// DTO สำหรับตอบกลับ (กลุ่ม + จำนวนนับสมาชิก)
+type GroupWithCount struct {
+    Group       models.Group `json:"group"`
+    MemberCount int64        `json:"member_count"`
 }
 
+// READ: ดึงรายการกลุ่มทั้งหมดของผู้ป่วย (รวมจำนวนสมาชิก)
+func GetGroups(db *gorm.DB, patientID uint) ([]GroupWithCount, error) {
+    // 1) ดึงกลุ่มทั้งหมดของผู้ป่วย
+    var groups []models.Group
+    if err := db.Where("patient_id = ?", patientID).Find(&groups).Error; err != nil {
+        return nil, err
+    }
+
+    // 2) นับจำนวนสมาชิกต่อ group_id ครั้งเดียว
+    var counts []struct {
+        GroupID uint  `gorm:"column:group_id"`
+        C       int64 `gorm:"column:c"`
+    }
+    if err := db.Model(&models.MyMedicine{}).
+        Select("group_id, COUNT(*) AS c").
+        Where("patient_id = ? AND group_id IS NOT NULL", patientID).
+        Group("group_id").
+        Scan(&counts).Error; err != nil {
+        return nil, err
+    }
+
+    // 3) ทำ map สำหรับ lookup
+    m := make(map[uint]int64, len(counts))
+    for _, row := range counts {
+        m[row.GroupID] = row.C
+    }
+
+    // 4) ประกอบผลลัพธ์
+    out := make([]GroupWithCount, 0, len(groups))
+    for _, g := range groups {
+        out = append(out, GroupWithCount{
+            Group:       g,
+            MemberCount: m[g.ID], // ถ้าไม่พบใน map => 0
+        })
+    }
+    return out, nil
+}
 //
 // UPDATE: เปลี่ยนชื่อกลุ่ม (optional) + ตั้งสมาชิก “ชุดสุดท้าย”
 //

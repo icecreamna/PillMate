@@ -52,7 +52,7 @@ func SetupGroupMedicineRoutes(api fiber.Router) {
 		})
 	})
 
-	// LIST GROUPS (no members)
+	// LIST GROUPS (with member_count)
 	// GET /api/groups
 	api.Get("/groups", func(c *fiber.Ctx) error {
 		patientID, ok := c.Locals("patient_id").(uint)
@@ -60,7 +60,7 @@ func SetupGroupMedicineRoutes(api fiber.Router) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
-		items, err := handlers.GetGroups(db.DB, patientID)
+		items, err := handlers.GetGroups(db.DB, patientID) // ตอนนี้คืน []GroupWithCount แล้ว
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
