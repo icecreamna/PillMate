@@ -17,17 +17,17 @@ type NotiFormat struct {
 // ข้อมูลแจ้งเตือน
 type NotiInfo struct {
     ID   				uint `gorm:"primaryKey" json:"id"`
-	MyMedicineID    	uint `gorm:"default:null" json:"my_medicine_id"`
-	GroupID 	uint `gorm:"default:null" json:"group_medicine_id"`
+	MyMedicineID    	*uint `json:"my_medicine_id"`
+	GroupID 			*uint `json:"group_id"`
 	StartDate 			time.Time `gorm:"type:date" json:"start_date"`
 	EndDate 			time.Time `gorm:"type:date" json:"end_date"`
 	NotiFormatID		uint `gorm:"not null" json:"noti_format_id"`
-	Times        		pq.StringArray  `gorm:"type:text[]" json:"times"` // ["08:00","12:00","20:00"]	
-	IntervalHours		int `gorm:"default:null" json:"interval_hours"` // แจ้งเตือนทุกกี่ชั่วโมง
-	TimesPerDay 	    int `gorm:"default:null" json:"times_per_day"` //กี่ครั้งต่อวัน
-	IntervalDay			int `gorm:"default:null" json:"interval_day"` // แจ้งเตือนทุกกี่วัน
-	DaysOfWeek 			pq.Int64Array `gorm:"type:int[]" json:"days_of_week"`// วันที่จะแจ้งเตือน อาทิตย์=0 … เสาร์=6
-	CyclePattern  		pq.Int64Array `gorm:"type:int[];default:null" json:"cycle_pattern"` // ตัวอย่าง: [21,7]
+
+	Times        		*pq.StringArray  `gorm:"type:text[]" json:"times"` // ["08:00","12:00","20:00"]	
+	IntervalHours		*int `json:"interval_hours"` // แจ้งเตือนทุกกี่ชั่วโมง
+	TimesPerDay 	    *int `json:"times_per_day"` //กี่ครั้งต่อวัน
+	IntervalDay			*int `json:"interval_day"` // แจ้งเตือนทุกกี่วัน
+	CyclePattern  		*pq.Int64Array  `gorm:"type:int[]" json:"cycle_pattern"` // ตัวอย่าง: [21,7]
 
 	MyMedicine 			MyMedicine `gorm:"foreignKey:MyMedicineID"`
 	Group				Group `gorm:"foreignKey:GroupID"`

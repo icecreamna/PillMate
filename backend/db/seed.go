@@ -137,8 +137,7 @@ func SeedInitialData(db *gorm.DB) {
 	notiformats := []models.NotiFormat{
 		{FormatName: "เวลาเฉพาะ (Fixed Times)"},
 		{FormatName: "ทุกกี่ชั่วโมง (Interval)"},
-		{FormatName: "วันเว้นวัน / ทุกกี่วัน"},
-		{FormatName: "รายสัปดาห์ (Weekly)"},
+		{FormatName: "วันเว้นวัน / ทุกกี่วัน (EveryNDays)"},
 		{FormatName: "ทานต่อเนื่อง/พักยา (Cycle)"},
 		
 	}
