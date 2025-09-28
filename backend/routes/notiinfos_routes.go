@@ -17,8 +17,8 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 	// POST /api/noti/fixed-times
 	// Body (ตัวอย่าง):
 	// {
-	//   "my_medicine_id": 12,           
-	//   "group_id": 3,                  
+	//   "my_medicine_id": 12,        // optional   
+	//   "group_id": 3,               // optional เลือกอย่างใดอย่างหนึ่งว่าจะส่งอะไร
 	//   "start_date": "2025-10-01",
 	//   "end_date": "2025-10-31",
 	//   "times": ["08:00","20:00"]      // >= 1 เวลา

@@ -17,8 +17,35 @@ const (
 )
 
 // ===== Helper: ตรวจช่วงวันที่ =====
-func validateRange(s, e time.Time) error {
-	if !s.IsZero() && !e.IsZero() && e.Before(s) {
+func validateRange(startDate, endDate time.Time) error {
+	if !startDate.IsZero() && !endDate.IsZero() && endDate.Before(startDate) {
+		return gorm.ErrInvalidData
+	}
+	return nil
+}
+
+const dateLayout = "2006-01-02"
+
+// ===================== Helpers: target & uniqueness =====================
+
+// ต้องเลือกอย่างใดอย่างหนึ่ง (XOR) ระหว่าง my_medicine_id กับ group_id
+func validateExclusiveTarget(myMedicineID, groupID *uint) bool {
+	return (myMedicineID != nil && groupID == nil) || (myMedicineID == nil && groupID != nil)
+}
+
+// ห้ามมี NotiInfo ซ้ำสำหรับ target เดียวกัน (ยา 1 ตัวหรือกลุ่ม 1 กลุ่ม)
+func ensureNoExistingNotiForTarget(tx *gorm.DB, myMedicineID, groupID *uint) error {
+	var count int64
+	query := tx.Model(&models.NotiInfo{})
+	if myMedicineID != nil {
+		query = query.Where("my_medicine_id = ?", *myMedicineID)
+	} else {
+		query = query.Where("group_id = ?", *groupID)
+	}
+	if err := query.Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
 		return gorm.ErrInvalidData
 	}
 	return nil
@@ -30,41 +57,41 @@ func validateRange(s, e time.Time) error {
 
 // Fixed Times
 type CreateNotiFixedTimesReq struct {
-	MyMedicineID *uint     `json:"my_medicine_id"`
-	GroupID      *uint     `json:"group_id"`
-	StartDate    time.Time `json:"start_date"`
-	EndDate      time.Time `json:"end_date"`
-	Times        []string  `json:"times"` // ["08:00","12:00"]
+	MyMedicineID *uint    `json:"my_medicine_id"`
+	GroupID      *uint    `json:"group_id"`
+	StartDate    string   `json:"start_date"`
+	EndDate      string   `json:"end_date"`
+	Times        []string `json:"times"` // ["08:00","12:00"]
 }
 
 // Interval (every N hours)
 type CreateNotiIntervalReq struct {
-	MyMedicineID  *uint     `json:"my_medicine_id"`
-	GroupID       *uint     `json:"group_id"`
-	StartDate     time.Time `json:"start_date"`
-	EndDate       time.Time `json:"end_date"`
-	IntervalHours int       `json:"interval_hours"` // > 0
-	TimesPerDay   *int      `json:"times_per_day"`  // optional
+	MyMedicineID  *uint   `json:"my_medicine_id"`
+	GroupID       *uint   `json:"group_id"`
+	StartDate     string  `json:"start_date"`
+	EndDate       string  `json:"end_date"`
+	IntervalHours int     `json:"interval_hours"` // > 0
+	TimesPerDay   *int    `json:"times_per_day"`  // optional
 }
 
 // Every N days
 type CreateNotiEveryNDaysReq struct {
-	MyMedicineID *uint     `json:"my_medicine_id"`
-	GroupID      *uint     `json:"group_id"`
-	StartDate    time.Time `json:"start_date"`
-	EndDate      time.Time `json:"end_date"`
-	IntervalDay  int       `json:"interval_day"` // > 0
-	Times        []string  `json:"times"`
+	MyMedicineID *uint    `json:"my_medicine_id"`
+	GroupID      *uint    `json:"group_id"`
+	StartDate    string   `json:"start_date"`
+	EndDate      string   `json:"end_date"`
+	IntervalDay  int      `json:"interval_day"` // > 0
+	Times        []string `json:"times"`
 }
 
 // Cycle (e.g., 21 on / 7 off)
 type CreateNotiCycleReq struct {
-	MyMedicineID *uint     `json:"my_medicine_id"`
-	GroupID      *uint     `json:"group_id"`
-	StartDate    time.Time `json:"start_date"`
-	EndDate      time.Time `json:"end_date"`
-	CyclePattern []int64   `json:"cycle_pattern"` // เช่น [21,7]
-	Times        []string  `json:"times"`
+	MyMedicineID *uint   `json:"my_medicine_id"`
+	GroupID      *uint   `json:"group_id"`
+	StartDate    string  `json:"start_date"`
+	EndDate      string  `json:"end_date"`
+	CyclePattern []int64 `json:"cycle_pattern"` // เช่น [21,7]
+	Times        []string `json:"times"`
 }
 
 // ===================================================================
@@ -72,21 +99,40 @@ type CreateNotiCycleReq struct {
 // ===================================================================
 
 func CreateNotiFixedTimes(db *gorm.DB, req CreateNotiFixedTimesReq) (*models.NotiInfo, error) {
-	if len(req.Times) == 0 {
+	// ต้องเลือก target อย่างใดอย่างหนึ่ง
+	if !validateExclusiveTarget(req.MyMedicineID, req.GroupID) {
 		return nil, gorm.ErrInvalidData
 	}
-	if err := validateRange(req.StartDate, req.EndDate); err != nil {
+	// ห้ามซ้ำต่อ target
+	if err := ensureNoExistingNotiForTarget(db, req.MyMedicineID, req.GroupID); err != nil {
 		return nil, err
 	}
 
-	t := pq.StringArray(req.Times)
+	if len(req.Times) == 0 {
+		return nil, gorm.ErrInvalidData
+	}
+
+	startDate, err := time.Parse(dateLayout, req.StartDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	endDate, err := time.Parse(dateLayout, req.EndDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+
+	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
-		StartDate:     req.StartDate,
-		EndDate:       req.EndDate,
+		StartDate:     startDate,
+		EndDate:       endDate,
 		NotiFormatID:  NotiFormatFixedTimes,
-		Times:         &t,
+		Times:         &timesArr,
 		IntervalHours: nil,
 		TimesPerDay:   nil,
 		IntervalDay:   nil,
@@ -99,18 +145,35 @@ func CreateNotiFixedTimes(db *gorm.DB, req CreateNotiFixedTimesReq) (*models.Not
 }
 
 func CreateNotiInterval(db *gorm.DB, req CreateNotiIntervalReq) (*models.NotiInfo, error) {
+	if !validateExclusiveTarget(req.MyMedicineID, req.GroupID) {
+		return nil, gorm.ErrInvalidData
+	}
+	if err := ensureNoExistingNotiForTarget(db, req.MyMedicineID, req.GroupID); err != nil {
+		return nil, err
+	}
+
 	if req.IntervalHours <= 0 {
 		return nil, gorm.ErrInvalidData
 	}
-	if err := validateRange(req.StartDate, req.EndDate); err != nil {
+
+	startDate, err := time.Parse(dateLayout, req.StartDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	endDate, err := time.Parse(dateLayout, req.EndDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+
+	if err := validateRange(startDate, endDate); err != nil {
 		return nil, err
 	}
 
 	item := models.NotiInfo{
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
-		StartDate:     req.StartDate,
-		EndDate:       req.EndDate,
+		StartDate:     startDate,
+		EndDate:       endDate,
 		NotiFormatID:  NotiFormatInterval,
 		IntervalHours: &req.IntervalHours,
 		TimesPerDay:   req.TimesPerDay,
@@ -125,23 +188,40 @@ func CreateNotiInterval(db *gorm.DB, req CreateNotiIntervalReq) (*models.NotiInf
 }
 
 func CreateNotiEveryNDays(db *gorm.DB, req CreateNotiEveryNDaysReq) (*models.NotiInfo, error) {
-	if req.IntervalDay <= 0 || len(req.Times) == 0 {
+	if !validateExclusiveTarget(req.MyMedicineID, req.GroupID) {
 		return nil, gorm.ErrInvalidData
 	}
-	if err := validateRange(req.StartDate, req.EndDate); err != nil {
+	if err := ensureNoExistingNotiForTarget(db, req.MyMedicineID, req.GroupID); err != nil {
 		return nil, err
 	}
 
-	i := req.IntervalDay
-	t := pq.StringArray(req.Times)
+	if req.IntervalDay <= 0 || len(req.Times) == 0 {
+		return nil, gorm.ErrInvalidData
+	}
+
+	startDate, err := time.Parse(dateLayout, req.StartDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	endDate, err := time.Parse(dateLayout, req.EndDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+
+	intervalDay := req.IntervalDay
+	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
-		StartDate:     req.StartDate,
-		EndDate:       req.EndDate,
+		StartDate:     startDate,
+		EndDate:       endDate,
 		NotiFormatID:  NotiFormatEveryNDays,
-		IntervalDay:   &i,
-		Times:         &t,
+		IntervalDay:   &intervalDay,
+		Times:         &timesArr,
 		IntervalHours: nil,
 		TimesPerDay:   nil,
 		CyclePattern:  nil,
@@ -153,23 +233,40 @@ func CreateNotiEveryNDays(db *gorm.DB, req CreateNotiEveryNDaysReq) (*models.Not
 }
 
 func CreateNotiCycle(db *gorm.DB, req CreateNotiCycleReq) (*models.NotiInfo, error) {
-	if len(req.CyclePattern) == 0 || len(req.Times) == 0 {
+	if !validateExclusiveTarget(req.MyMedicineID, req.GroupID) {
 		return nil, gorm.ErrInvalidData
 	}
-	if err := validateRange(req.StartDate, req.EndDate); err != nil {
+	if err := ensureNoExistingNotiForTarget(db, req.MyMedicineID, req.GroupID); err != nil {
 		return nil, err
 	}
 
-	cp := pq.Int64Array(req.CyclePattern)
-	t := pq.StringArray(req.Times)
+	if len(req.CyclePattern) == 0 || len(req.Times) == 0 {
+		return nil, gorm.ErrInvalidData
+	}
+
+	startDate, err := time.Parse(dateLayout, req.StartDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	endDate, err := time.Parse(dateLayout, req.EndDate)
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+
+	cyclePatternArr := pq.Int64Array(req.CyclePattern)
+	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
-		StartDate:     req.StartDate,
-		EndDate:       req.EndDate,
+		StartDate:     startDate,
+		EndDate:       endDate,
 		NotiFormatID:  NotiFormatCycle,
-		CyclePattern:  &cp,
-		Times:         &t,
+		CyclePattern:  &cyclePatternArr,
+		Times:         &timesArr,
 		IntervalHours: nil,
 		TimesPerDay:   nil,
 		IntervalDay:   nil,
@@ -185,17 +282,17 @@ func CreateNotiCycle(db *gorm.DB, req CreateNotiCycleReq) (*models.NotiInfo, err
 // ===================================================================
 
 func ListNotiInfos(db *gorm.DB, filter map[string]any) ([]models.NotiInfo, error) {
-	q := db.Model(&models.NotiInfo{}).
+	query := db.Model(&models.NotiInfo{}).
 		Preload("NotiFormat").
 		Preload("MyMedicine").
 		Preload("Group")
 
-	for k, v := range filter {
-		q = q.Where(k+" = ?", v)
+	for col, val := range filter {
+		query = query.Where(col+" = ?", val)
 	}
 
 	var items []models.NotiInfo
-	if err := q.Order("id").Find(&items).Error; err != nil {
+	if err := query.Order("id").Find(&items).Error; err != nil {
 		return nil, err
 	}
 	return items, nil

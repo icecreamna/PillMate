@@ -4,6 +4,7 @@ import(
 
 	"time"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 	
 )
 
@@ -29,6 +30,10 @@ type NotiInfo struct {
 	IntervalDay			*int `json:"interval_day"` // แจ้งเตือนทุกกี่วัน
 	CyclePattern  		*pq.Int64Array  `gorm:"type:int[]" json:"cycle_pattern"` // ตัวอย่าง: [21,7]
 
+	CreatedAt     		time.Time      `json:"created_at"`                 
+    UpdatedAt     		time.Time      `json:"updated_at"`
+    DeletedAt     		gorm.DeletedAt `gorm:"index" json:"-"`
+
 	MyMedicine 			MyMedicine `gorm:"foreignKey:MyMedicineID"`
 	Group				Group `gorm:"foreignKey:GroupID"`
 	NotiFormat			NotiFormat `gorm:"foreignKey:NotiFormatID"`
@@ -52,7 +57,10 @@ type NotiItem struct {
 	TakenStatus		bool `gorm:"default:false" json:"taken_status"` //สถานะการกินยา
 	TakenTimeAt		time.Time `gorm:"autoCreateTime" json:"taken_time_at"` //วันเวลาที่เปลี่ยนสถานะ
 	NotifyStatus	bool `gorm:"default:false" json:"notify_status"` //สถานะการแจ้งเตือน default:false = ยังไม่แจ้งเตือน
+	
 	CreatedAt 		time.Time `json:"created_at"` //วันเวลาที่สร้างรายการแจ้งเตือน
+	UpdatedAt     		time.Time      `json:"updated_at"`
+    DeletedAt     		gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Patient   		Patient `gorm:"foreignKey:PatientID"`
 	MyMedicine 		MyMedicine `gorm:"foreignKey:MyMedicineID"`
