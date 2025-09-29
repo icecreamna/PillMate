@@ -33,8 +33,8 @@ import '../models/dose.dart';
 // }
 
 class AddEditView extends StatefulWidget {
-  final Dose? dose;
-  const AddEditView({super.key, this.dose});
+  // final Dose? dose;
+  const AddEditView({super.key});
 
   @override
   State<AddEditView> createState() => AddEditViewState();

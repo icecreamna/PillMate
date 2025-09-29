@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/dose.dart';
 
 class AddGroupProvider extends ChangeNotifier {
+  List<String> _selectedList = [];
 
-final Map<String,List<Dose>> _groupSelected = {};
-bool _doseSelect = false;
+  List<String> get selectedList => _selectedList;
 
-bool get doseSelected => _doseSelect;
+  void setSelectedList(List<String> list) {
+    _selectedList = list;
+    debugPrint("เลือกมา${list.length}");
+    notifyListeners();
+  }
 
-
-void toggleCheckbox(){
-  _doseSelect = !_doseSelect;
-}
-
+  void removeSelected(String id) {
+    _selectedList.removeWhere((d) => d == id,);
+    notifyListeners();
+  }
 }

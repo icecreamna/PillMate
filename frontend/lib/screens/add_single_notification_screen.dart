@@ -222,7 +222,7 @@ class _AddSingleNotificationViewState
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF0000),
-                        elevation: 3,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -249,7 +249,7 @@ class _AddSingleNotificationViewState
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF94B4C1),
-                          elevation: 3,
+                          elevation: 4,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5),
                           ),
@@ -272,7 +272,7 @@ class _AddSingleNotificationViewState
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF94B4C1),
-                        elevation: 3,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),

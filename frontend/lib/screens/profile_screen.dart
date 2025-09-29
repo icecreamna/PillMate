@@ -308,7 +308,7 @@ class ProfileScreen extends StatelessWidget {
                                                     50,
                                                   ),
                                                   shadowColor: Colors.black,
-                                                  elevation: 3,
+                                                  elevation: 4,
                                                   backgroundColor: const Color(
                                                     0xFF03B200,
                                                   ),

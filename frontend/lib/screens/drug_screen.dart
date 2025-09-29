@@ -4,7 +4,7 @@ import 'package:frontend/providers/add_edit_provider.dart';
 import 'package:frontend/providers/add_group_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/screens/add_edit_screen.dart';
-import 'package:frontend/screens/add_group_drug.dart';
+import 'package:frontend/screens/add_group_drug_screen.dart';
 import 'package:frontend/screens/all_drug_screen.dart';
 import 'package:frontend/screens/group_drug_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -51,7 +51,7 @@ class DrugScreen extends StatelessWidget {
                                     backgroundColor: const Color(0xFFFFDF6A),
                                     padding: EdgeInsets.zero,
                                     shadowColor: Colors.black,
-                                    elevation: 3,
+                                    elevation: 4,
                                     shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.zero,
                                     ),
@@ -121,7 +121,7 @@ class DrugScreen extends StatelessWidget {
                                                 0xFFFFDF6A,
                                               ),
                                               padding: EdgeInsets.zero,
-                                              elevation: 3,
+                                              elevation: 4,
                                               shadowColor: Colors.black,
                                               shape:
                                                   const RoundedRectangleBorder(
@@ -161,7 +161,7 @@ class DrugScreen extends StatelessWidget {
                                                             >(),
                                                       ),
                                                       ChangeNotifierProvider(
-                                                        create: (context) =>
+                                                        create: (_) =>
                                                             AddGroupProvider(),
                                                       ),
                                                     ],

@@ -11,9 +11,31 @@ class DrugProvider extends ChangeNotifier {
   final List<Dose> _all = [
     Dose(
       id: "1",
-      name: "paracetamol",
+      name: "paracetamolss",
       description: "fattu",
       import: true,
+      amountPerDose: "1",
+      frequency: "3",
+      instruction: "หลังอาหาร",
+      unit: "เม็ด",
+      picture: "assets/images/pill.png",
+    ),
+    Dose(
+      id: "2",
+      name: "paracetamoleee",
+      description: "fattu",
+      import: false,
+      amountPerDose: "1",
+      frequency: "3",
+      instruction: "หลังอาหาร",
+      unit: "เม็ด",
+      picture: "assets/images/pill.png",
+    ),
+    Dose(
+      id: "3",
+      name: "paracetamoleaa",
+      description: "fattu",
+      import: false,
       amountPerDose: "1",
       frequency: "3",
       instruction: "หลังอาหาร",
@@ -34,13 +56,13 @@ class DrugProvider extends ChangeNotifier {
   void addDose(Dose newDose) {
     final dose = newDose.copyWith(id: _uuid.v4());
     _all.add(dose);
-    print("มี ${_all.length}");
+    debugPrint("มี ${_all.length}");
     notifyListeners();
   }
 
   void removeDose(Dose dose) {
     _all.removeWhere((d) => d.id == dose.id);
-    print("มี ${_all.length}");
+    debugPrint("มี ${_all.length}");
     notifyListeners();
   }
 
@@ -52,5 +74,5 @@ class DrugProvider extends ChangeNotifier {
     }
   }
 
-  
+
 }

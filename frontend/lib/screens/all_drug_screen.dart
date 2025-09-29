@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/drug_provider.dart';
-import 'package:frontend/screens/add_single_notification.dart';
+import 'package:frontend/screens/add_single_notification_screen.dart';
 import 'package:provider/provider.dart';
 
 class AllDrugScreen extends StatelessWidget {
