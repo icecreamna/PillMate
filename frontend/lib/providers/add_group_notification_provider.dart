@@ -1,20 +1,25 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-class AddGroupProvider extends ChangeNotifier {
-  List<String> _selectedList = [];
-
-  List<String> get selectedList => _selectedList;
-
+class AddGroupNotificationProvider extends ChangeNotifier {
   String listError = "";
+  late String _keyName;
+  late List<String> _value;
 
+  String get keyName => _keyName;
+  List<String> get value => _value;
+
+  AddGroupNotificationProvider(String key, List<String> value) {
+    _keyName = key;
+    _value = List.from(value);
+  }
   void setSelectedList(List<String> list) {
-    _selectedList = list;
+    _value = list;
     debugPrint("เลือกมา${list.length}");
     notifyListeners();
   }
 
   void removeSelected(String id) {
-    _selectedList.removeWhere((d) => d == id);
+    _value.removeWhere((d) => d == id);
     notifyListeners();
   }
 

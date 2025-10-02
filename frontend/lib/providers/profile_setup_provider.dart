@@ -39,6 +39,7 @@ class ProfileSetupProvider extends ChangeNotifier {
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     }
+    
   }
   @override
   void dispose() {

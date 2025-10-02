@@ -195,6 +195,7 @@ class _AddSingleNotificationViewState
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF55FF00),
+                  elevation: 4,
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5),

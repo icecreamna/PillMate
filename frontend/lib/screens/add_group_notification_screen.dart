@@ -1,43 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/providers/add_group_provider.dart';
+import 'package:frontend/providers/add_group_notification_provider.dart';
+// import 'package:frontend/providers/add_group_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:provider/provider.dart';
 
-class AddGroupDrug extends StatefulWidget {
-  const AddGroupDrug({super.key});
+class AddGroupNotificationScreen extends StatelessWidget {
+  const AddGroupNotificationScreen({super.key});
 
   @override
-  State<AddGroupDrug> createState() => _AddGroupDrugState();
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (context) {
+        return _AddGroupNotificationView();
+      },
+    );
+  }
 }
 
-class _AddGroupDrugState extends State<AddGroupDrug> {
+class _AddGroupNotificationView extends StatefulWidget {
+  @override
+  State<_AddGroupNotificationView> createState() =>
+      _AddGroupNotificationScreenState();
+}
+
+class _AddGroupNotificationScreenState
+    extends State<_AddGroupNotificationView> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameGroup;
-  bool _initialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameGroup = TextEditingController();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      final dp = context.read<DrugProvider>();
-      final defaultName = "กลุ่ม ${dp.groups.length + 1}";
-      _nameGroup.text = defaultName;
-      _initialized = true;
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameGroup.dispose();
-    super.dispose();
-  }
 
   UnderlineInputBorder _inputBorder(Color c) {
     return UnderlineInputBorder(borderSide: BorderSide(color: c, width: 1));
@@ -46,16 +35,16 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
   @override
   Widget build(BuildContext context) {
     final dp = context.watch<DrugProvider>();
-    final agp = context.watch<AddGroupProvider>();
-
+    // final agp = context.watch<AddGroupProvider>();
+    final addG = context.watch<AddGroupNotificationProvider>();
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
         foregroundColor: Colors.white,
         title: const Text(
-          "สร้างกลุ่มยา",
-          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+          "กลุ่มยา",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
         ),
       ),
       body: Padding(
@@ -72,7 +61,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                 border: Border.all(color: Colors.grey, width: 1),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -80,21 +69,12 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                     Form(
                       key: _formKey,
                       child: TextFormField(
-                        controller: _nameGroup,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "กรุณากรอกค่า";
-                          }
-                          if (dp.groups.containsKey(value)) {
-                            return "ชื่อกลุ่ม $value มีอยู่แล้ว";
-                          }
-                          return null;
-                        },
+                        enabled: false,
                         decoration: InputDecoration(
-                          hint: const Text(
-                            "กลุ่ม 1",
-                            style: TextStyle(
-                              color: Color(0xFF959595),
+                          hint: Text(
+                            addG.keyName,
+                            style: const TextStyle(
+                              color: Colors.black,
                               fontSize: 20,
                             ),
                           ),
@@ -122,7 +102,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                     final hospitalDrugs = dp.doseAll
                         .where((d) => d.import)
                         .toList();
-                    final prevChosen = agp.selectedList;
+                    final prevChosen = addG.value;
                     List<bool> selectedMy = List.generate(
                       myDrugs.length,
                       (i) => prevChosen.contains(myDrugs[i].id),
@@ -305,7 +285,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                   },
                 );
                 if (chosen != null) {
-                  agp.setSelectedList(chosen);
+                  addG.setSelectedList(chosen);
                 }
               },
               child: Container(
@@ -332,20 +312,20 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
             ),
             const SizedBox(height: 10),
             Visibility(
-              visible: agp.listError.isNotEmpty,
+              visible: addG.listError.isNotEmpty,
               child: Text(
-                agp.listError,
+                addG.listError,
                 style: const TextStyle(color: Color(0xFFFF0000), fontSize: 12),
               ),
             ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
-              height: 300,
+              height: 150,
               child: ListView.builder(
-                itemCount: agp.selectedList.length,
+                itemCount: addG.value.length,
                 itemBuilder: (context, index) {
-                  final selectId = agp.selectedList[index];
+                  final selectId = addG.value[index];
                   final dose = dp.doseAll.firstWhere((d) => d.id == selectId);
                   return Column(
                     children: [
@@ -378,7 +358,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                               child: RawMaterialButton(
                                 fillColor: const Color(0xFFFF0000),
                                 onPressed: () {
-                                  agp.removeSelected(selectId);
+                                  addG.removeSelected(selectId);
                                 },
                                 shape: const CircleBorder(),
                                 child: const Icon(
@@ -397,38 +377,92 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                 },
               ),
             ),
-            const Spacer(),
-            Container(
-              width: 384,
-              height: 70,
-              margin: const EdgeInsets.only(bottom: 60),
+            const SizedBox(height: 30),
+            const Text("การแจ้งเตือน", style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 15),
+            const Text(
+              "ยังไม่มีข้อมูลการแจ้งเตือน",
+              style: TextStyle(color: Color(0xFF959595), fontSize: 20),
+            ),
+            const SizedBox(height: 90),
+            SizedBox(
+              width: 120,
+              height: 35,
               child: ElevatedButton(
-                onPressed: () {
-                  bool hasError = false ;
-                  if (!_formKey.currentState!.validate()) hasError = true;
-                  if (agp.selectedList.length < 2) {
-                    hasError = true; 
-                    agp.setListError();
-                  }else {
-                    agp.clearListError();
-                  }
-                  if(hasError) return ;
-
-                  dp.addGroup(_nameGroup.text, agp.selectedList);
-                  Navigator.pop(context);
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF94B4C1),
+                  backgroundColor: const Color(0xFF55FF00),
                   elevation: 4,
-                  shape: BeveledRectangleBorder(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
                 child: const Text(
-                  "สร้าง",
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  "เพิ่มการแจ้งเตือน",
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                  maxLines: 1,
                 ),
               ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Container(
+                  width: 181,
+                  height: 70,
+                  margin: const EdgeInsets.only(bottom: 60),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      dp.removeGroup(addG.keyName);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF0000),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      "ลบรายการยา",
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15,),
+                Container(
+                  width: 181,
+                  height: 70,
+                  margin: const EdgeInsets.only(bottom: 60),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      bool hasError = false;
+                      if (addG.value.length < 2) {
+                        hasError = true;
+                        addG.setListError();
+                      } else {
+                        addG.clearListError();
+                      }
+                      if (hasError) return;
+
+                      dp.updatedDoseGroup(addG.keyName, addG.value);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF94B4C1),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                    child: const Text(
+                      "บันทึก",
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

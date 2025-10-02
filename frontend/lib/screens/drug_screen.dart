@@ -165,7 +165,7 @@ class DrugScreen extends StatelessWidget {
                                                             AddGroupProvider(),
                                                       ),
                                                     ],
-                                                    child: const AddGroupDrug(),
+                                                    child:  const AddGroupDrug(),
                                                   ),
                                                 ),
                                               );

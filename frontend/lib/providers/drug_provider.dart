@@ -8,6 +8,10 @@ class DrugProvider extends ChangeNotifier {
 
   DrugTab get page => _page;
 
+  final Map<String, List<String>> _groups = {};
+
+  Map<String, List<String>> get groups => _groups;
+
   final List<Dose> _all = [
     Dose(
       id: "1",
@@ -74,5 +78,18 @@ class DrugProvider extends ChangeNotifier {
     }
   }
 
+  void addGroup(String groupName, List<String> listDrugIds) {
+    _groups[groupName] = List.from(listDrugIds);
+    notifyListeners();
+  }
 
+  void updatedDoseGroup(String groupName, List<String> listDrugIds) {
+    _groups[groupName] = List.from(listDrugIds);
+    notifyListeners();
+  }
+
+  void removeGroup(String groupName) {
+    _groups.removeWhere((key, _) => key == groupName);
+    notifyListeners();
+  }
 }
