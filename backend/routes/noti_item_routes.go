@@ -2,6 +2,7 @@ package routes
 
 import (
 	"errors"
+	"fmt"      
 	"strconv"
 	"strings"
 	"time"
@@ -23,7 +24,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   /api/noti-items?my_medicine_id=12&taken_status=true
 	//   /api/noti-items?group_id=3&noti_info_id=44&notify_status=false
 	api.Get("/noti-items", func(ctx *fiber.Ctx) error {
-		// ⛑️ auth: ดึง patient_id จาก Locals เสมอ
+		// auth: ดึง patient_id จาก Locals เสมอ
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -73,13 +74,94 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			filter.NotifyStatus = &notified
 		}
 
-		// ✅ บังคับใช้ patientID จาก Locals ที่ระดับ handlers
+		// บังคับใช้ patientID จาก Locals ที่ระดับ handlers
 		notiItems, err := handlers.ListNotiItems(db.DB, patientID, filter)
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
+
 		// ส่งเฉพาะฟิลด์ที่ต้องการด้วย DTO (ตัด relations/ฟิลด์ว่าง)
-		return ctx.JSON(fiber.Map{"data": dto.NotiItemsToDTO(notiItems)})
+		dtoList := dto.NotiItemsToDTO(notiItems)
+
+		// ===== สร้าง 2 ก้อน: data (เดี่ยว) + group_cards (กลุ่ม) =====
+		// ก้อน data: เอาเฉพาะที่ "ไม่มีกลุ่ม"
+		flats := make([]dto.NotiItemDTO, 0, len(dtoList))
+
+		// ก้อน group_cards: รวมด้วย (group_id, notify_date, notify_time)
+		type GroupLine struct {
+			NotiItemID    uint   `json:"noti_item_id"`
+			MyMedicineID  uint   `json:"my_medicine_id"`
+			MedName       string `json:"med_name"`
+			AmountPerTime string `json:"amount_per_time"`
+			FormID        uint   `json:"form_id"`
+			UnitID        *uint  `json:"unit_id,omitempty"`
+			InstructionID *uint  `json:"instruction_id,omitempty"`
+		}
+		type GroupCard struct {
+			GroupID       uint        `json:"group_id"`
+			GroupName     string      `json:"group_name,omitempty"`
+			PatientID     uint        `json:"patient_id"`
+			NotifyDate    string      `json:"notify_date"`   // "YYYY-MM-DD"
+			NotifyTime    string      `json:"notify_time"`   // "HH:MM"
+			TakenStatus   bool        `json:"taken_status"`  // true = ทุกชิ้น taken
+			NotifyStatus  bool        `json:"notify_status"` // true = ทุกชิ้น notified
+			NotiInfoID    uint        `json:"noti_info_id"`
+			Items         []GroupLine `json:"items"`
+		}
+		groupMap := map[string]*GroupCard{}
+
+		for i, raw := range notiItems {
+			d := dtoList[i] // DTO ที่ map แล้ว (มี GroupID ใน DTO)
+
+			if raw.GroupID == nil {
+				// ไม่มี group -> ใส่ก้อน data
+				flats = append(flats, d)
+				continue
+			}
+
+			key := fmt.Sprintf("%d|%s|%s", *raw.GroupID, d.NotifyDate, d.NotifyTime)
+			card, ok := groupMap[key]
+			if !ok {
+				card = &GroupCard{
+					GroupID:      *raw.GroupID,
+					GroupName:    raw.GroupName,
+					PatientID:    raw.PatientID,
+					NotifyDate:   d.NotifyDate,
+					NotifyTime:   d.NotifyTime,
+					TakenStatus:  true, // เริ่มจาก true แล้ว AND ลงไป
+					NotifyStatus: true, // เริ่มจาก true แล้ว AND ลงไป
+					NotiInfoID:   d.NotiInfoID,
+					Items:        []GroupLine{},
+				}
+				groupMap[key] = card
+			}
+
+			card.Items = append(card.Items, GroupLine{
+				NotiItemID:    d.ID,
+				MyMedicineID:  d.MyMedicineID,
+				MedName:       d.MedName,
+				AmountPerTime: d.AmountPerTime,
+				FormID:        d.FormID,
+				UnitID:        d.UnitID,
+				InstructionID: d.InstructionID,
+			})
+
+			// สถานะรวมการ์ด: true ก็ต่อเมื่อ "ทุกชิ้น" เป็น true
+			card.TakenStatus = card.TakenStatus && d.TakenStatus
+			card.NotifyStatus = card.NotifyStatus && d.NotifyStatus
+		}
+
+		// map -> slice
+		groupCards := make([]GroupCard, 0, len(groupMap))
+		for _, c := range groupMap {
+			groupCards = append(groupCards, *c)
+		}
+
+		// ส่งสองก้อนกลับไป
+		return ctx.JSON(fiber.Map{
+			"data":        flats,      // เฉพาะรายการที่ไม่มีกลุ่ม
+			"group_cards": groupCards, // รวมกลุ่มตาม group_id + date + time
+		})
 	})
 
 	// UPDATE — Mark Taken (เซ็ต/ยกเลิก “ทานแล้ว”)
@@ -126,7 +208,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   "notified": true
 	// }
 	api.Patch("/noti-items/:id/notified", func(ctx *fiber.Ctx) error {
-		// ⛑️ auth
+		// auth
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -164,7 +246,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   "to_date": "2025-10-15"
 	// }
 	api.Post("/noti-items/generate-range", func(ctx *fiber.Ctx) error {
-		// ⛑️ auth
+		// auth
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -193,7 +275,6 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"data": dto.NotiItemsToDTO(created)})
 	})
 
-
 	// GENERATE — เติมล่วงหน้า N วันนับจากวันนี้ (rolling window)
 	// POST /api/noti-items/generate-days-ahead
 	// Body (ตัวอย่าง):
@@ -201,7 +282,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   "days": 14
 	// }
 	api.Post("/noti-items/generate-days-ahead", func(ctx *fiber.Ctx) error {
-		// ⛑️ auth
+		// auth
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})

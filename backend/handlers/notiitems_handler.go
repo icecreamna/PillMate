@@ -74,46 +74,74 @@ func ListNotiItems(db *gorm.DB, patientID uint, f ListNotiItemsFilter) ([]models
 //                Update: เปลี่ยนสถานะ taken/notify
 // ===================================================================
 
-// MarkNotiItemTaken: เซ็ต/ยกเลิกสถานะ “ทานแล้ว”
+// MarkNotiItemTaken: เซ็ต/ยกเลิกสถานะ “ทานแล้ว” (รองรับอัปเดตทั้งกลุ่มใน slot)
 func MarkNotiItemTaken(db *gorm.DB, patientID, notiItemID uint, taken bool) (*models.NotiItem, error) {
 	var item models.NotiItem
-	// จำกัดสิทธิ์: ต้องเป็นรายการของผู้ป่วยคนนี้เท่านั้น
+	// จำกัดสิทธิ์: ต้องเป็นของผู้ป่วยคนนี้เท่านั้น
 	if err := db.Where("id = ? AND patient_id = ?", notiItemID, patientID).First(&item).Error; err != nil {
 		return nil, err
 	}
 
-	updateFields := map[string]any{
-		"taken_status": taken,
-	}
+	nowLocal := time.Now().In(time.Local)
+	var takenTime *time.Time
 	if taken {
-		nowLocal := time.Now().In(time.Local)
-		updateFields["taken_time_at"] = &nowLocal
+		takenTime = &nowLocal
 	} else {
-		// ถ้าอยากล้างเวลา เมื่อยกเลิก ให้ตั้งค่าเป็น NULL ได้เพราะเป็น *time.Time
-		updateFields["taken_time_at"] = nil
+		takenTime = nil
 	}
 
-	if err := db.Model(&item).Updates(updateFields).Error; err != nil {
-		return nil, err
+	// ถ้าเป็นรายการใน "กลุ่ม" -> อัปเดตทั้งชุดใน slot เดียวกัน
+	if item.GroupID != nil {
+		if err := db.Model(&models.NotiItem{}).
+			Where("patient_id = ? AND group_id = ? AND noti_info_id = ? AND notify_date = ? AND notify_time = ?",
+				patientID, *item.GroupID, item.NotiInfoID, item.NotifyDate, item.NotifyTime).
+			Updates(map[string]any{
+				"taken_status":  taken,
+				"taken_time_at": takenTime,
+			}).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		// เดี่ยว: อัปเดตเฉพาะรายการนี้
+		if err := db.Model(&item).Updates(map[string]any{
+			"taken_status":  taken,
+			"taken_time_at": takenTime,
+		}).Error; err != nil {
+			return nil, err
+		}
 	}
-	// อ่านกลับยืนยันผล โดยยังคงจำกัดสิทธิ์เดิม
+
+	// อ่านกลับรายการที่กด (ใช้ตอบกลับ)
 	if err := db.Where("id = ? AND patient_id = ?", notiItemID, patientID).First(&item).Error; err != nil {
 		return nil, err
 	}
 	return &item, nil
 }
 
-// MarkNotiItemNotified: เซ็ต/ยกเลิก “แจ้งเตือนแล้ว”
+// MarkNotiItemNotified: เซ็ต/ยกเลิก “แจ้งเตือนแล้ว” (รองรับอัปเดตทั้งกลุ่มใน slot)
 func MarkNotiItemNotified(db *gorm.DB, patientID, notiItemID uint, notified bool) (*models.NotiItem, error) {
 	var item models.NotiItem
-	// จำกัดสิทธิ์: ต้องเป็นรายการของผู้ป่วยคนนี้เท่านั้น
+	// จำกัดสิทธิ์: ต้องเป็นของผู้ป่วยคนนี้เท่านั้น
 	if err := db.Where("id = ? AND patient_id = ?", notiItemID, patientID).First(&item).Error; err != nil {
 		return nil, err
 	}
-	if err := db.Model(&item).Update("notify_status", notified).Error; err != nil {
-		return nil, err
+
+	if item.GroupID != nil {
+		// อัปเดตทั้งชุดใน slot เดียวกัน
+		if err := db.Model(&models.NotiItem{}).
+			Where("patient_id = ? AND group_id = ? AND noti_info_id = ? AND notify_date = ? AND notify_time = ?",
+				patientID, *item.GroupID, item.NotiInfoID, item.NotifyDate, item.NotifyTime).
+			Update("notify_status", notified).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		// เดี่ยว
+		if err := db.Model(&item).Update("notify_status", notified).Error; err != nil {
+			return nil, err
+		}
 	}
-	// อ่านกลับยืนยันผล โดยยังคงจำกัดสิทธิ์เดิม
+
+	// อ่านกลับรายการที่กด
 	if err := db.Where("id = ? AND patient_id = ?", notiItemID, patientID).First(&item).Error; err != nil {
 		return nil, err
 	}
