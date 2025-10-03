@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/add_edit_provider.dart';
+import 'package:frontend/providers/add_notification_provider.dart';
 import 'package:frontend/providers/add_single_notification_provider.dart';
 import 'package:frontend/screens/add_edit_screen.dart';
+import 'package:frontend/screens/add_notification_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:provider/provider.dart';
@@ -192,7 +194,24 @@ class _AddSingleNotificationViewState
               width: 120,
               height: 35,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MultiProvider(
+                        providers: [
+                          ChangeNotifierProvider(
+                            create: (_) => AddNotificationProvider(
+                              pageFrom: "single",
+                              dose: addS.tempDose,
+                            ),
+                          ),
+                        ],
+                        child: const AddNotificationScreen(),
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF55FF00),
                   elevation: 4,
