@@ -9,6 +9,7 @@ import (
 
 	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
+	
 )
 
 func SetupNotiInfosRoutes(api fiber.Router) {
@@ -28,7 +29,13 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
 		}
-		item, err := handlers.CreateNotiFixedTimes(db.DB, body)
+
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
+		item, err := handlers.CreateNotiFixedTimes(db.DB, patientID, body)
 		if err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrInvalidData) { status = fiber.StatusBadRequest }
@@ -53,7 +60,13 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
 		}
-		item, err := handlers.CreateNotiInterval(db.DB, body)
+
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
+		item, err := handlers.CreateNotiInterval(db.DB, patientID, body)
 		if err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrInvalidData) { status = fiber.StatusBadRequest }
@@ -78,7 +91,13 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
 		}
-		item, err := handlers.CreateNotiEveryNDays(db.DB, body)
+
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
+		item, err := handlers.CreateNotiEveryNDays(db.DB, patientID, body)
 		if err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrInvalidData) { status = fiber.StatusBadRequest }
@@ -103,7 +122,13 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
 		}
-		item, err := handlers.CreateNotiCycle(db.DB, body)
+
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
+		item, err := handlers.CreateNotiCycle(db.DB, patientID, body)
 		if err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrInvalidData) { status = fiber.StatusBadRequest }
@@ -120,6 +145,11 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 	//   /api/noti-infos?format_id=4
 	//   /api/noti-infos?group_id=3&format_id=2
 	api.Get("/noti-infos", func(c *fiber.Ctx) error {
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
 		filter := map[string]any{}
 		if v := c.Query("my_medicine_id"); v != "" {
 			if id, err := strconv.ParseUint(v, 10, 64); err == nil { filter["my_medicine_id"] = uint(id) }
@@ -130,7 +160,8 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 		if v := c.Query("format_id"); v != "" {
 			if id, err := strconv.ParseUint(v, 10, 64); err == nil { filter["noti_format_id"] = uint(id) }
 		}
-		items, err := handlers.ListNotiInfos(db.DB, filter)
+
+		items, err := handlers.ListNotiInfos(db.DB, patientID, filter)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -140,11 +171,16 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 	// GET ONE
 	// GET /api/noti-infos/:id
 	api.Get("/noti-infos/:id", func(c *fiber.Ctx) error {
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
 		id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || id == 0 {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 		}
-		item, err := handlers.GetNotiInfo(db.DB, uint(id))
+		item, err := handlers.GetNotiInfo(db.DB, patientID, uint(id))
 		if err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrRecordNotFound) { status = fiber.StatusNotFound }
@@ -157,11 +193,16 @@ func SetupNotiInfosRoutes(api fiber.Router) {
 	// DELETE
 	// DELETE /api/noti-infos/:id
 	api.Delete("/noti-infos/:id", func(c *fiber.Ctx) error {
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		}
+
 		id, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || id == 0 {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 		}
-		if err := handlers.DeleteNotiInfo(db.DB, uint(id)); err != nil {
+		if err := handlers.DeleteNotiInfo(db.DB, patientID, uint(id)); err != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(err, gorm.ErrRecordNotFound) { status = fiber.StatusNotFound }
 			return c.Status(status).JSON(fiber.Map{"error": err.Error()})
