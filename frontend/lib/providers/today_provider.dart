@@ -33,7 +33,11 @@ class TodayProvider extends ChangeNotifier {
 
   DateTime get selected => _selected;
 
-  String get dateLabel => DateFormat("MMM d, yyyy").format(_selected);
+  String get dateLabel {
+    final thDate = DateFormat("d MMMM yyyy", "th_TH").format(_selected);
+    final buddhistYear = _selected.year + 543;
+    return thDate.replaceAll('${_selected.year}', '$buddhistYear');
+  }
 
   // String getTimeHourMinute(String key) => key.split("|").first;
   // String getInstruction(String key) => key.split("|").last;
@@ -69,7 +73,11 @@ class TodayProvider extends ChangeNotifier {
     DoseGroup(
       nameGroup: "กลุ่ม 4",
       key: "13:00-ก่อนอาหาร",
-      doses: [Dose(name: "ยา4", unit: "3 เม็ด"),Dose(name: "ยา5", unit: "5 ช้อน"),Dose(name: "ยาบ้า", unit: "100 ขวด")],
+      doses: [
+        Dose(name: "ยา4", unit: "3 เม็ด"),
+        Dose(name: "ยา5", unit: "5 ช้อน"),
+        Dose(name: "ยาบ้า", unit: "100 ขวด"),
+      ],
       at: DateTime(2025, 9, 14, 13, 0),
       instruction: "ก่อนอาหาร",
     ),
@@ -108,6 +116,7 @@ class TodayProvider extends ChangeNotifier {
       helpText: 'เลือกวันที่',
       cancelText: 'ยกเลิก',
       confirmText: 'ตกลง',
+      locale: const Locale('th', 'TH'),
     );
     if (picked != null) {
       _selected = DateTime(picked.year, picked.month, picked.day);

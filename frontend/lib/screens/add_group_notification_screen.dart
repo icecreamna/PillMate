@@ -406,7 +406,7 @@ class _AddGroupNotificationScreenState
                       builder: (_) => MultiProvider(
                         providers: [
                           ChangeNotifierProvider(
-                            create: (context) => AddNotificationProvider(
+                            create: (_) => AddNotificationProvider(
                               pageFrom: "group",
                               keyName: addG.keyName,
                               value: addG.value,

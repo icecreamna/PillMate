@@ -28,8 +28,7 @@ class InfoAppoinment {
 }
 
 class ProfileProvider extends ChangeNotifier {
-
-   InfoUser _user = InfoUser(
+  InfoUser _user = InfoUser(
     firstName: "Kittabeth",
     lastName: "Chompoonich",
     idCard: "1739841323333",
@@ -45,14 +44,17 @@ class ProfileProvider extends ChangeNotifier {
   InfoUser get user => _user;
   InfoAppoinment get appointment => _appoinment;
 
-  String get appointmentDay =>
-      DateFormat("MMM d, yyyy").format(_appoinment.dateTime);
+  String get appointmentDay {
+    final thDate = DateFormat("d MMMM yyyy", "th_TH").format(_appoinment.dateTime);
+    final buddhistYear = _appoinment.dateTime.year + 543;
+    return thDate.replaceAll('${_appoinment.dateTime.year}', '$buddhistYear');
+  }
 
   String get appointmentHourMinute =>
       DateFormat("HH:mm").format(_appoinment.hourMinute);
 
-  void updateUser(InfoUser newUser){
-    _user = newUser ;
+  void updateUser(InfoUser newUser) {
+    _user = newUser;
     notifyListeners();
   }
 }

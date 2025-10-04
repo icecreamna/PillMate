@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:frontend/screens/splash_screen.dart';
 
 
@@ -16,6 +17,17 @@ class MyApp extends StatelessWidget {
       home: const SplashScreen(),
       theme: ThemeData(fontFamily: "NotoSansThai"),
       debugShowCheckedModeBanner: false,
+
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('th', 'TH'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('th', 'TH'),
     );
   }
 }
