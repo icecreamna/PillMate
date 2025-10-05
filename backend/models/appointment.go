@@ -21,7 +21,7 @@ type Appointment struct {
 	Note 			string 	  `gorm:"default:null" json:"properties"` // เช่นต้องงดอาหาร
 
 	
-	Hospital Hospital `gorm:"foreignKey:HospitalID"`
+	Hospital 		Hospital `gorm:"foreignKey:HospitalID"`
 	WebAdmin 		WebAdmin `gorm:"foreignKey:DoctorID"`
 
 	AppSyncStatus bool `gorm:"default:false" json:"app_sync_status"` // false=ยังไม่ซิงค์
