@@ -34,6 +34,7 @@ func main() {
 	routes.SetupNotiInfosRoutes(api)
 	routes.SetupNotiItemsRoutes(api)
 	routes.SetupNotifyRoutes(api)
+	routes.SetupProfileRoutes(api)
 	
 
 	port := os.Getenv("PORT")

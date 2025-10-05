@@ -38,6 +38,31 @@ func SetupPatientRoutes(app *fiber.App) {
 
 	})
 
+	// กรอกข้อมูลผู้ใช้ที่เหลือ
+	// PUT /patient/:id/profile
+	app.Put("/patient/:id/profile", func(c *fiber.Ctx) error {
+		// ดึง id จาก path
+		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+		if err != nil || patientID == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid patient id"})
+		}
+
+		// parse body
+		var req models.Patient
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+		}
+
+		// update ตรง ๆ
+		if err := db.DB.Model(&models.Patient{}).
+			Where("id = ?", patientID).
+			Updates(req).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "update failed"})
+		}
+
+		return c.JSON(fiber.Map{"message": "profile updated"})
+	})
+
 }
 
 func SetupOTPRoutes(app *fiber.App) {
@@ -93,30 +118,7 @@ func SetupOTPRoutes(app *fiber.App) {
 		return c.JSON(fiber.Map{"message":"OTP verified successfully"})
 	})
 
-	// กรอกข้อมูลผู้ใช้ที่เหลือ
-	// PUT /patient/:id/profile
-	app.Put("/patient/:id/profile", func(c *fiber.Ctx) error {
-		// ดึง id จาก path
-		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
-		if err != nil || patientID == 0 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid patient id"})
-		}
-
-		// parse body
-		var req models.Patient
-		if err := c.BodyParser(&req); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
-		}
-
-		// update ตรง ๆ
-		if err := db.DB.Model(&models.Patient{}).
-			Where("id = ?", patientID).
-			Updates(req).Error; err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "update failed"})
-		}
-
-		return c.JSON(fiber.Map{"message": "profile updated"})
-	})
+	
 }
 
 func SetupForgotPasswordRoutes(app *fiber.App) {
