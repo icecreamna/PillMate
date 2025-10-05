@@ -171,7 +171,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   "taken": true
 	// }
 	api.Patch("/noti-items/:id/taken", func(ctx *fiber.Ctx) error {
-		// ⛑️ auth
+		// auth
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})

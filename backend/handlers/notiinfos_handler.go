@@ -503,9 +503,21 @@ func GetNotiInfo(db *gorm.DB, patientID, id uint) (*NotiInfoResp, error) {
 // ===================================================================
 
 // ลบเฉพาะเรคคอร์ดที่เป็นของผู้ป่วยคนนั้น (where id + EXISTS)
+// และลบ NotiItem ที่ผูกกับ NotiInfo นั้น ๆ ไปด้วย
 func DeleteNotiInfo(db *gorm.DB, patientID, id uint) error {
-	// ใช้ subquery จำกัดสิทธิ์ก่อนค่อยลบ
-	sub := db.Model(&models.NotiInfo{}).
+	tx := db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// หา noti_info.id ที่ "ผู้ป่วยคนนี้" มีสิทธิ์ลบ (จำกัดด้วย EXISTS)
+	var allowedID uint
+	if err := tx.Model(&models.NotiInfo{}).
 		Select("id").
 		Where("id = ?", id).
 		Where(`
@@ -521,8 +533,27 @@ func DeleteNotiInfo(db *gorm.DB, patientID, id uint) error {
 					WHERE g.id = noti_infos.group_id AND g.patient_id = ?
 				)
 			)
-		`, patientID, patientID)
+		`, patientID, patientID).
+		Take(&allowedID).Error; err != nil {
+		// ไม่พบ หรือไม่มีสิทธิ์
+		tx.Rollback()
+		return err
+	}
 
-	return db.Where("id IN (?)", sub).
-		Delete(&models.NotiInfo{}).Error
+	// ลบลูก (noti_items) ที่อ้างถึง noti_info_id นี้ก่อน
+	if err := tx.Where("noti_info_id = ?", allowedID).
+		Delete(&models.NotiItem{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// ลบแม่ (noti_infos)
+	if err := tx.Where("id = ?", allowedID).
+		Delete(&models.NotiInfo{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
+
