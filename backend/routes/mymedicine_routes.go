@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"errors"
 	"gorm.io/gorm"
-	"time"
+	
+	"strings"
 )
 
 func SetupMyMedicineRoutes(api fiber.Router) {
@@ -68,32 +69,31 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 	})
 
 	// POST /api/my-medicine/sync-from-prescription
-	// Body: { "id_card_number": "1101700203451" }
+	// ดึง prescriptions ของผู้ใช้ที่ล็อกอิน (อิงจาก id_card_number ในตาราง patients) แล้วซิงก์เข้า my_medicines
 	api.Post("/my-medicine/sync-from-prescription", func(c *fiber.Ctx) error {
-		type SyncFromPrescriptionRequest struct {
-			IDCardNumber string `json:"id_card_number"`
-		}
-		var req SyncFromPrescriptionRequest
-		if err := c.BodyParser(&req); err != nil || len(req.IDCardNumber) != 13 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id_card_number"})
+		// auth
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
-		// 1) หา patient จากเลขบัตร
-		var patient models.Patient
-		if err := db.DB.
-			Where("id_card_number = ?", req.IDCardNumber).
-			First(&patient).Error; err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "patient not found"})
+		// 1) โหลดเลขบัตรของผู้ใช้ที่ล็อกอิน
+		var me models.Patient
+		if err := db.DB.Select("id_card_number").Where("id = ?", patientID).First(&me).Error; err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		idCard := strings.TrimSpace(me.IDCardNumber)
+		if idCard == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing id_card_number for this account"})
 		}
 
-		// 2) ดึง prescriptions ที่ยังไม่ซิงก์ และยังไม่หมดเขตซิงก์ (ถ้ามีฟิลด์ SyncUntil)
-		now := time.Now()
+		// 2) ดึง prescriptions ที่ยังไม่ซิงก์
 		var prescriptions []models.Prescription
-		query := db.DB.
-			Where("id_card_number = ? AND app_sync_status = ?", req.IDCardNumber, false).
-			Where("sync_until >= ?", now)
-
-		if err := query.Find(&prescriptions).Error; err != nil {
+		if err := db.DB.
+			Where("id_card_number = ? AND app_sync_status = ?", idCard, false).
+			// ถ้ามีฟิลด์ SyncUntil และอยากเช็คหมดอายุ ให้ปลดคอมเมนต์และ import time
+			// Where("sync_until >= ?", time.Now()).
+			Find(&prescriptions).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 		if len(prescriptions) == 0 {
@@ -102,50 +102,50 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 
 		createdMyMedicines := make([]fiber.Map, 0, len(prescriptions))
 
-		// 3) ทำเป็น transaction: สร้าง MyMedicine จากแต่ละใบสั่งยา แล้วมาร์ก sync = true
+		// 3) ทำเป็น transaction: สร้าง MyMedicine ทีละใบสั่งยา แล้วมาร์ก prescription.app_sync_status = true
 		if err := db.DB.Transaction(func(tx *gorm.DB) error {
-			for _, prescription := range prescriptions {
+			for _, p := range prescriptions {
 				// โหลดข้อมูลยาอ้างอิง
-				var medicineInfo models.MedicineInfo
-				if err := tx.First(&medicineInfo, prescription.MedicineInfoID).Error; err != nil {
+				var mi models.MedicineInfo
+				if err := tx.First(&mi, p.MedicineInfoID).Error; err != nil {
 					return err
 				}
 
 				// เตรียม MyMedicine จาก prescription + medicine info
-				myMedicine := models.MyMedicine{
-					PatientID:      patient.ID,
-					MedName:        medicineInfo.MedName,
-					Properties:     medicineInfo.Properties,
-					FormID:         medicineInfo.FormID,
-					UnitID:         medicineInfo.UnitID,
-					InstructionID:  medicineInfo.InstructionID, // หรือ prescription.InstructionID ถ้าจะใช้ตามใบสั่งยา
-					AmountPerTime:  prescription.AmountPerTime,
-					TimesPerDay:    prescription.TimesPerDay,
+				mm := models.MyMedicine{
+					PatientID:      patientID,
+					MedName:        mi.MedName,
+					Properties:     mi.Properties,
+					FormID:         mi.FormID,
+					UnitID:         mi.UnitID,
+					InstructionID:  mi.InstructionID, // หรือใช้จาก p ถ้ามีใน prescription
+					AmountPerTime:  p.AmountPerTime,
+					TimesPerDay:    p.TimesPerDay,
 					Source:         "hospital",
-					PrescriptionID: &prescription.ID, // ผูกใบสั่งยาไว้
+					PrescriptionID: &p.ID,
 				}
 
-				if err := tx.Create(&myMedicine).Error; err != nil {
+				if err := tx.Create(&mm).Error; err != nil {
 					return err
 				}
 
-				// อัปเดตสถานะ prescription เป็นซิงก์แล้ว
+				// มาร์ก prescription ว่าถูกซิงก์แล้ว
 				if err := tx.Model(&models.Prescription{}).
-					Where("id = ?", prescription.ID).
+					Where("id = ?", p.ID).
 					Update("app_sync_status", true).Error; err != nil {
 					return err
 				}
 
 				createdMyMedicines = append(createdMyMedicines, fiber.Map{
-					"mymedicine_id":   myMedicine.ID,
-					"prescription_id": prescription.ID,
-					"med_name":        myMedicine.MedName,
-					"form_id":         myMedicine.FormID,
-					"unit_id":         myMedicine.UnitID,
-					"instruction_id":  myMedicine.InstructionID,
-					"amount_per_time": myMedicine.AmountPerTime,
-					"times_per_day":   myMedicine.TimesPerDay,
-					"source":          myMedicine.Source,
+					"mymedicine_id":   mm.ID,
+					"prescription_id": p.ID,
+					"med_name":        mm.MedName,
+					"form_id":         mm.FormID,
+					"unit_id":         mm.UnitID,
+					"instruction_id":  mm.InstructionID,
+					"amount_per_time": mm.AmountPerTime,
+					"times_per_day":   mm.TimesPerDay,
+					"source":          mm.Source,
 				})
 			}
 			return nil
@@ -155,11 +155,12 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 
 		return c.JSON(fiber.Map{
 			"message":    "sync from prescriptions successful",
-			"patient_id": patient.ID,
+			"patient_id": patientID,
 			"synced":     len(createdMyMedicines),
 			"data":       createdMyMedicines,
 		})
 	})
+
 
 
 	// GET /api/forms/:id/units  (ดึงด้วย id)
