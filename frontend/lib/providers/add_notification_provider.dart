@@ -9,9 +9,9 @@ class AddNotificationProvider extends ChangeNotifier {
   final List<String>? value;
   DateTime? _startDate;
   DateTime? _endDate;
-  String? _selectedType;
+  String _selectedType = '';
 
-  String? get selectedType => _selectedType;
+  String get selectedType => _selectedType;
   String get startDate => _startDate != null
       ? DateFormat('d MMM yyyy', 'th').format(_startDate!)
       : '';
@@ -26,7 +26,7 @@ class AddNotificationProvider extends ChangeNotifier {
   });
 
   void setSelectType(String type) {
-    _selectedType = type;
+    _selectedType = type ;
     notifyListeners();
   }
 
@@ -34,8 +34,8 @@ class AddNotificationProvider extends ChangeNotifier {
     final picked = await showDatePicker(
       context: context,
       initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      firstDate: DateTime.now(),
+      lastDate: _endDate ?? DateTime(2100),
       helpText: 'เลือกวันเริ่มต้น',
       cancelText: 'ยกเลิก',
       confirmText: 'ตกลง',
@@ -51,9 +51,8 @@ class AddNotificationProvider extends ChangeNotifier {
     final picked = await showDatePicker(
       context: context,
       initialDate: _endDate ?? (_startDate ?? DateTime.now()),
-      firstDate: DateTime(2000),
+      firstDate: _startDate ?? DateTime.now(),
       lastDate: DateTime(2100),
-      helpText: 'เลือกวันสิ้นสุด',
       cancelText: 'ยกเลิก',
       confirmText: 'ตกลง',
       locale: const Locale('th', 'TH'),
