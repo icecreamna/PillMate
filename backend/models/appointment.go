@@ -18,13 +18,10 @@ type Appointment struct {
 	AppointmentTime time.Time `gorm:"type:time" json:"appointment_time"`
 	HospitalID      uint      `gorm:"not null" json:"hospital_id"`
 	DoctorID  		uint 	  `gorm:"not null" json:"doctor_id"`
-	Note 			string 	  `gorm:"default:null" json:"properties"` // เช่นต้องงดอาหาร
+	Note 			string 	  `gorm:"default:null" json:"note"` // เช่นต้องงดอาหาร
 
-	
 	Hospital 		Hospital `gorm:"foreignKey:HospitalID"`
 	WebAdmin 		WebAdmin `gorm:"foreignKey:DoctorID"`
-
-	AppSyncStatus bool `gorm:"default:false" json:"app_sync_status"` // false=ยังไม่ซิงค์
 }
 
 // สร้างการแจ้งเตือนนัดพบแพทย์

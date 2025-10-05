@@ -69,3 +69,4 @@ func NotiItemsToDTOWithSymptoms(items []models.NotiItem, symMap map[uint]uint) [
 	}
 	return out
 }
+   

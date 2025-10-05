@@ -5,6 +5,7 @@ import (
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
+	"time"
 	
 )
 
@@ -278,7 +279,37 @@ func SeedInitialData(db *gorm.DB) {
 		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
 			log.Fatal("seed prescriptions failed: ", err)
 		}
-}
+	}
+
+	// --- Seed Appointments ---
+	appointments := []models.Appointment{
+		{
+			IDCardNumber:    "1101700203452",
+			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
+			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
+			HospitalID:      1,
+			DoctorID:        1,
+			Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+		},
+	}
+
+	for i := range appointments {
+		key := models.Appointment{
+			IDCardNumber:    appointments[i].IDCardNumber,
+			AppointmentDate: appointments[i].AppointmentDate,
+			AppointmentTime: appointments[i].AppointmentTime,
+			HospitalID:      appointments[i].HospitalID,
+			DoctorID:        appointments[i].DoctorID,
+		}
+		attrs := models.Appointment{
+			Note: appointments[i].Note,
+		}
+		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
+			log.Println("seed appointments failed:", err)
+		}
+	}
+
+
 
 	// ------ ลบถึงตรงนี้ ----------------------------------------------------------------------------------------------
 
