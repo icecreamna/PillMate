@@ -13,6 +13,7 @@ import (
 	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/dto" // ใช้ DTO ตัดข้อมูลส่วนเกิน
+	"github.com/fouradithep/pillmate/models"
 )
 
 func SetupNotiItemsRoutes(api fiber.Router) {
@@ -80,8 +81,30 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 
-		// ส่งเฉพาะฟิลด์ที่ต้องการด้วย DTO (ตัด relations/ฟิลด์ว่าง)
-		dtoList := dto.NotiItemsToDTO(notiItems)
+		// ====== ดึง symptom ของ items เหล่านี้ครั้งเดียว แล้วทำ map: noti_item_id -> symptom_id
+		ids := make([]uint, 0, len(notiItems))
+		for _, it := range notiItems {
+			ids = append(ids, it.ID)
+		}
+		symMap := map[uint]uint{}
+		if len(ids) > 0 {
+			var rows []struct {
+				ID         uint
+				NotiItemID uint
+			}
+			if err := db.DB.Model(&models.Symptom{}).
+				Where("patient_id = ? AND noti_item_id IN ?", patientID, ids).
+				Select("id, noti_item_id").
+				Scan(&rows).Error; err != nil {
+				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+			}
+			for _, r := range rows {
+				symMap[r.NotiItemID] = r.ID
+			}
+		}
+
+		// ส่งเฉพาะฟิลด์ที่ต้องการด้วย DTO (ตัด relations/ฟิลด์ว่าง) + ผนวกสถานะ symptom (ระดับ item)
+		dtoList := dto.NotiItemsToDTOWithSymptoms(notiItems, symMap)
 
 		// ===== สร้าง 2 ก้อน: data (เดี่ยว) + group_cards (กลุ่ม) =====
 		// ก้อน data: เอาเฉพาะที่ "ไม่มีกลุ่ม"
@@ -98,20 +121,25 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			InstructionID *uint  `json:"instruction_id,omitempty"`
 		}
 		type GroupCard struct {
-			GroupID       uint        `json:"group_id"`
-			GroupName     string      `json:"group_name,omitempty"`
-			PatientID     uint        `json:"patient_id"`
-			NotifyDate    string      `json:"notify_date"`   // "YYYY-MM-DD"
-			NotifyTime    string      `json:"notify_time"`   // "HH:MM"
-			TakenStatus   bool        `json:"taken_status"`  // true = ทุกชิ้น taken
-			NotifyStatus  bool        `json:"notify_status"` // true = ทุกชิ้น notified
-			NotiInfoID    uint        `json:"noti_info_id"`
-			Items         []GroupLine `json:"items"`
+			GroupID      uint        `json:"group_id"`
+			GroupName    string      `json:"group_name,omitempty"`
+			PatientID    uint        `json:"patient_id"`
+			NotifyDate   string      `json:"notify_date"`   // "YYYY-MM-DD"
+			NotifyTime   string      `json:"notify_time"`   // "HH:MM"
+			TakenStatus  bool        `json:"taken_status"`  // true = ทุกชิ้น taken
+			NotifyStatus bool        `json:"notify_status"` // true = ทุกชิ้น notified
+			NotiInfoID   uint        `json:"noti_info_id"`
+
+			// สรุปอาการ “ระดับการ์ดกลุ่ม” (ไม่อยู่ใน items)
+			HasSymptom bool  `json:"has_symptom"`
+			SymptomID  *uint `json:"symptom_id,omitempty"`
+
+			Items []GroupLine `json:"items"`
 		}
 		groupMap := map[string]*GroupCard{}
 
 		for i, raw := range notiItems {
-			d := dtoList[i] // DTO ที่ map แล้ว (มี GroupID ใน DTO)
+			d := dtoList[i] // DTO ที่ map แล้ว (มี has_symptom / symptom_id สำหรับสรุปที่ระดับการ์ด)
 
 			if raw.GroupID == nil {
 				// ไม่มี group -> ใส่ก้อน data
@@ -131,6 +159,8 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 					TakenStatus:  true, // เริ่มจาก true แล้ว AND ลงไป
 					NotifyStatus: true, // เริ่มจาก true แล้ว AND ลงไป
 					NotiInfoID:   d.NotiInfoID,
+					HasSymptom:   false,
+					SymptomID:    nil,
 					Items:        []GroupLine{},
 				}
 				groupMap[key] = card
@@ -149,6 +179,12 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			// สถานะรวมการ์ด: true ก็ต่อเมื่อ "ทุกชิ้น" เป็น true
 			card.TakenStatus = card.TakenStatus && d.TakenStatus
 			card.NotifyStatus = card.NotifyStatus && d.NotifyStatus
+
+			// สรุปอาการไว้ที่ระดับการ์ด: ถ้ามี item ไหนมีอาการ ก็ถือว่าการ์ดมีอาการ
+			if d.HasSymptom && !card.HasSymptom {
+				card.HasSymptom = true
+				card.SymptomID = d.SymptomID
+			}
 		}
 
 		// map -> slice
@@ -160,9 +196,10 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		// ส่งสองก้อนกลับไป
 		return ctx.JSON(fiber.Map{
 			"data":        flats,      // เฉพาะรายการที่ไม่มีกลุ่ม
-			"group_cards": groupCards, // รวมกลุ่มตาม group_id + date + time
+			"group_cards": groupCards, // รวมกลุ่มตาม group_id + date + time (พร้อมสรุปอาการระดับการ์ด)
 		})
 	})
+
 
 	// UPDATE — Mark Taken (เซ็ต/ยกเลิก “ทานแล้ว”)
 	// PATCH /api/noti-items/:id/taken
