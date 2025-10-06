@@ -76,7 +76,11 @@ func SetupOTPRoutes(app *fiber.App) {
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error":"failed to issue otp"})
 		}
-		return c.JSON(fiber.Map{"message":"OTP created and stored", "verification_id": vc.ID, "otp_expires_at": vc.ExpiresAt})
+		return c.JSON(fiber.Map{
+			"message": "OTP created and emailed",
+			"verification_id": vc.ID,
+			"otp_expires_at": vc.ExpiresAt,
+		})
 	})
 
 	// POST /patient/:id/otp/resend
@@ -92,7 +96,11 @@ func SetupOTPRoutes(app *fiber.App) {
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error":"failed to issue otp"})
 		}
-		return c.JSON(fiber.Map{"message":"New OTP created and stored", "verification_id": vc.ID, "otp_expires_at": vc.ExpiresAt})
+		return c.JSON(fiber.Map{
+			"message": "New OTP created and emailed",
+			"verification_id": vc.ID,
+			"otp_expires_at": vc.ExpiresAt,
+		})
 	})
 
 	// POST /patient/:id/otp/verify  (body: { "otp_code": "123456" })
