@@ -23,7 +23,7 @@ func SetupAppointmentRoutes(api fiber.Router) {
 	// อิงสิทธิ์จาก patient_id -> โหลด id_card_number แล้วคิวรีด้วย (id, id_card_number)
 	// =========================================================
 	api.Get("/appointment/:id", func(c *fiber.Ctx) error {
-		// auth
+		// ⛑️ auth
 		patientID, ok := c.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -65,12 +65,9 @@ func SetupAppointmentRoutes(api fiber.Router) {
 	// LIST
 	// GET /api/appointments?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD&hospital_id=&doctor_id=
 	// หมายเหตุ: ใช้ id_card_number จากผู้ใช้ที่ล็อกอินเพื่อจำกัดเรคคอร์ด
-	// ตัวอย่าง:
-	//   /api/appointments?date_from=2025-10-01&date_to=2025-10-31
-	//   /api/appointments?hospital_id=1
 	// =========================================================
 	api.Get("/appointments", func(c *fiber.Ctx) error {
-		// auth
+		// ⛑️ auth
 		patientID, ok := c.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -98,6 +95,8 @@ func SetupAppointmentRoutes(api fiber.Router) {
 		const ymd = "2006-01-02"
 
 		q := db.DB.Model(&models.Appointment{}).
+			Preload("Hospital").
+			Preload("WebAdmin").
 			Where("id_card_number = ?", me.IDCardNumber)
 
 		// กรองช่วงวันที่ (ถ้าส่งมา)
@@ -108,7 +107,6 @@ func SetupAppointmentRoutes(api fiber.Router) {
 		}
 		if dateToStr != "" {
 			if t, err := time.ParseInLocation(ymd, dateToStr, time.Local); err == nil {
-				// appointment_date เป็น DATE ก็เปรียบเทียบ <= t ได้ตรง ๆ
 				q = q.Where("appointment_date <= ?", t)
 			}
 		}
