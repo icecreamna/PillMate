@@ -23,6 +23,7 @@ func main() {
 	routes.SetupForgotPasswordRoutes(app)
 	routes.SetupPasswordRoutes(app)
 	routes.SetupAuthRoutes(app)
+	routes.SetupInitialDataRoutes(app)
 
 	// ---------- Protected (ต้องล็อกอิน) ----------
 	// ทุกอย่างใต้ /api จะต้องผ่าน AuthRequired

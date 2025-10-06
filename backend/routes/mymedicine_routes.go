@@ -162,35 +162,6 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 	})
 
 
-
-	// GET /api/forms/:id/units  (ดึงด้วย id)
-	api.Get("/forms/:id/units", func(c *fiber.Ctx) error {
-	formID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid form id"})
-	}
-
-	var form models.Form
-	if err := db.DB.
-		Preload("Units", func(tx *gorm.DB) *gorm.DB {
-			return tx.Select("units.id, units.unit_name").Order("units.unit_name ASC")
-		}).
-		First(&form, formID).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	// คืนหน่วยที่เชื่อมกับรูปแบบยานั้นๆ
-	type UnitLite struct {
-		ID       uint   `json:"id"`
-		UnitName string `json:"unit_name"`
-	}
-	units := make([]UnitLite, 0, len(form.Units))
-	for _, u := range form.Units {
-		units = append(units, UnitLite{ID: u.ID, UnitName: u.UnitName})
-	}
-	return c.JSON(fiber.Map{"form_id": formID, "units": units})
-})
-
 	// Read All
 	// GET /api/my-medicines
 	api.Get("/my-medicines", func(c *fiber.Ctx) error {
