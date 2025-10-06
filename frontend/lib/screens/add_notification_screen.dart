@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/add_notification_provider.dart';
+import 'package:frontend/providers/cycle_time_provider.dart';
+import 'package:frontend/providers/daily_weekly_provider.dart';
 import 'package:frontend/providers/fixed_time_provider.dart';
+import 'package:frontend/providers/interval_provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
-import 'package:frontend/widgets/Interval_time_widget.dart';
+import 'package:frontend/widgets/interval_time_widget.dart';
 import 'package:frontend/widgets/cycle_time_widget.dart';
 import 'package:frontend/widgets/daily_weekly_time_widget.dart';
 import 'package:frontend/widgets/fixed_time_widget.dart';
@@ -295,30 +298,25 @@ class AddNotificationScreen extends StatelessWidget {
                   child: const FixedTimeWidget(),
                 ),
               ],
-              if (addN.selectedType == "Interval") const IntervalTimeWidget(),
-              if (addN.selectedType == "DailyWeekly")
-                const DailyWeeklyTimeWidget(),
-              if (addN.selectedType == "Cycle") const CycleTimeWidget(),
-              const SizedBox(height: 60,) ,
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    elevation: 4,
-                    backgroundColor: const Color(0xFF55FF00),
-                    minimumSize: const Size(175, 38),
-                    shape: BeveledRectangleBorder(
-                      borderRadius: BorderRadius.circular(5)
-                    )
-                  ),
-                  child: const Text(
-                    "เพิ่มการแจ้งเตือน",
-                    style: TextStyle(color: Colors.white, fontSize: 24),
-                  ),
+              if (addN.selectedType == "Interval") ...[
+                ChangeNotifierProvider(
+                  create: (_) => IntervalProvider(),
+                  child: const IntervalTimeWidget(),
                 ),
-              ),
+              ],
+              if (addN.selectedType == "DailyWeekly") ...[
+                ChangeNotifierProvider(
+                  create: (_) => DailyWeeklyProvider(),
+                  child: const DailyWeeklyTimeWidget(),
+                ),
+              ],
+                
+              if (addN.selectedType == "Cycle") ...[
+                ChangeNotifierProvider(
+                  create: (_) => CycleTimeProvider(),
+                  child: const CycleTimeWidget(),
+                ),
+              ],
             ],
           ),
         ),
