@@ -1,0 +1,41 @@
+package handlers
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+	"github.com/fouradithep/pillmate/models"
+)
+
+var appLoc = func() *time.Location {
+	l, _ := time.LoadLocation("Asia/Bangkok")
+	return l
+}()
+
+func now() time.Time { return time.Now().In(appLoc) }
+
+// เลือก NotiItem ที่ถึงเวลาในหน้าต่าง N นาทีจาก "ตอนนี้"
+func GetDueNow(db *gorm.DB, patientID uint, windowMinutes int) ([]models.NotiItem, error) {
+	if windowMinutes <= 0 {
+		windowMinutes = 1
+	}
+
+	nowLocal := now() // ใช้ helper ให้เป็นมาตรฐาน
+	today := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, appLoc)
+
+	// time-only (ปี 0001, UTC) ให้ตรงกับตอนบันทึก NotifyTime
+	startT := time.Date(1, 1, 1, nowLocal.Hour(), nowLocal.Minute(), 0, 0, time.UTC)
+
+	endLocal := nowLocal.Add(time.Duration(windowMinutes) * time.Minute)
+	endT := time.Date(1, 1, 1, endLocal.Hour(), endLocal.Minute(), 59, 0, time.UTC) // รวมปลายช่วง
+
+	var out []models.NotiItem
+	err := db.Model(&models.NotiItem{}).
+		Where("patient_id = ? AND notify_status = FALSE", patientID).
+		Where("notify_date = ?", today).
+		Where("notify_time >= ? AND notify_time <= ?", startT, endT).
+		Order("notify_date, notify_time, id").
+		Find(&out).Error
+
+	return out, err
+}
