@@ -85,6 +85,7 @@ class _CycleTimeWidgetState extends State<CycleTimeWidget> {
                       focusedErrorBorder: _borderInput(const Color(0xFF8D8D8D)),
                     ),
                     controller: _inTakeDaysController,
+                    onChanged: (val) => context.read<CycleTimeProvider>().setInTakeText(val),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -125,6 +126,8 @@ class _CycleTimeWidgetState extends State<CycleTimeWidget> {
                       focusedErrorBorder: _borderInput(const Color(0xFF8D8D8D)),
                     ),
                     controller: _breakDaysController,
+                    onChanged: (val) =>
+                        context.read<CycleTimeProvider>().setBreakText(val),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -241,28 +244,6 @@ class _CycleTimeWidgetState extends State<CycleTimeWidget> {
               );
             }),
             const SizedBox(height: 60),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  final breakDayValid = provider.validateBreakDays(_breakDaysController.text);
-                  final inTakeDayValid = provider.validateInTakeDays(_inTakeDaysController.text);
-                  if(!breakDayValid || !inTakeDayValid) return ;
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 4,
-                  backgroundColor: const Color(0xFF55FF00),
-                  minimumSize: const Size(175, 38),
-                  shape: BeveledRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: const Text(
-                  "เพิ่มการแจ้งเตือน",
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-              ),
-            ),
           ],
         );
       },

@@ -136,25 +136,7 @@ class FixedTimeWidget extends StatelessWidget {
               );
             }),
             const SizedBox(height: 60,) ,
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 4,
-                  backgroundColor: const Color(0xFF55FF00),
-                  minimumSize: const Size(175, 38),
-                  shape: BeveledRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: const Text(
-                  "เพิ่มการแจ้งเตือน",
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-              ),
-            ),
+           
           ],
         );
       },

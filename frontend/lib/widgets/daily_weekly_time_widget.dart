@@ -82,6 +82,9 @@ class _DailyWeeklyTimeWidgetState extends State<DailyWeeklyTimeWidget> {
                       focusedErrorBorder: _borderInput(const Color(0xFF8D8D8D)),
                     ),
                     controller: _notiEveryController,
+                    onChanged: (val) => context
+                        .read<DailyWeeklyProvider>()
+                        .setNotiEveryText(val),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -91,7 +94,10 @@ class _DailyWeeklyTimeWidgetState extends State<DailyWeeklyTimeWidget> {
                   visible: provider.notiEveryError.isNotEmpty,
                   child: Text(
                     provider.notiEveryError,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFFFF0000)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFFF0000),
+                    ),
                   ),
                 ),
               ],
@@ -194,26 +200,6 @@ class _DailyWeeklyTimeWidgetState extends State<DailyWeeklyTimeWidget> {
               );
             }),
             const SizedBox(height: 60),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  if(!provider.validateNotiEvery(_notiEveryController.text)) return ;
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  elevation: 4,
-                  backgroundColor: const Color(0xFF55FF00),
-                  minimumSize: const Size(175, 38),
-                  shape: BeveledRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-                child: const Text(
-                  "เพิ่มการแจ้งเตือน",
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-              ),
-            ),
           ],
         );
       },

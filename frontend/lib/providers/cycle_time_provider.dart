@@ -6,6 +6,8 @@ class CycleTimeProvider extends ChangeNotifier {
     const TimeOfDay(hour: 13, minute: 0),
     const TimeOfDay(hour: 20, minute: 0),
   ];
+  String? inTakeText;
+  String? breakText;
 
   String _breakDaysError = "";
   String _inTakeDaysError = "";
@@ -13,6 +15,16 @@ class CycleTimeProvider extends ChangeNotifier {
   List<TimeOfDay> get times => _times;
   String get breakDayError => _breakDaysError;
   String get inTakeDaysError => _inTakeDaysError;
+
+  void setInTakeText(String val) {
+  inTakeText = val;
+  notifyListeners();
+}
+
+void setBreakText(String val) {
+  breakText = val;
+  notifyListeners();
+}
 
   void addTimeOfDay() {
     _times.add(const TimeOfDay(hour: 8, minute: 0));
@@ -40,7 +52,7 @@ class CycleTimeProvider extends ChangeNotifier {
       _breakDaysError = "กรุณากรอกค่า";
       notifyListeners();
       return false;
-    }else if(int.parse(bd.trim()) < 1){
+    } else if (int.parse(bd.trim()) < 1) {
       _breakDaysError = "ค่าต้องมากกว่า 0";
       notifyListeners();
       return false;
@@ -52,16 +64,15 @@ class CycleTimeProvider extends ChangeNotifier {
 
   bool validateInTakeDays(String bd) {
     if (bd.trim().isEmpty) {
-      
       _inTakeDaysError = "กรุณากรอกค่า";
       notifyListeners();
       return false;
-    }else if(int.parse(bd.trim()) < 1){
+    } else if (int.parse(bd.trim()) < 1) {
       _inTakeDaysError = "ค่าต้องมากกว่า 0";
       notifyListeners();
       return false;
     }
-    _inTakeDaysError = "" ;
+    _inTakeDaysError = "";
     notifyListeners();
     return true;
   }

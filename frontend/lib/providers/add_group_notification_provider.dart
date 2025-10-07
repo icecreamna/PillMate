@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:frontend/models/notification_info.dart';
 
 class AddGroupNotificationProvider extends ChangeNotifier {
   String listError = "";
@@ -7,6 +8,9 @@ class AddGroupNotificationProvider extends ChangeNotifier {
 
   String get keyName => _keyName;
   List<String> get value => _value;
+
+  NotificationInfo? _savedNotification;
+  NotificationInfo? get savedNotification => _savedNotification;
 
   AddGroupNotificationProvider(String key, List<String> value) {
     _keyName = key;
@@ -32,4 +36,14 @@ class AddGroupNotificationProvider extends ChangeNotifier {
     listError = "";
     notifyListeners();
   }
+
+  void saveNotification(NotificationInfo info) {
+    _savedNotification = info;
+    notifyListeners();
+  }
+
+  void clearNotification() {
+  _savedNotification = null;
+  notifyListeners();
+}
 }

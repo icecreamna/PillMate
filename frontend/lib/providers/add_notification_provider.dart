@@ -12,11 +12,20 @@ class AddNotificationProvider extends ChangeNotifier {
   String _selectedType = '';
 
   String get selectedType => _selectedType;
-  String get startDate => _startDate != null
-      ? DateFormat('d MMM yyyy', 'th').format(_startDate!)
-      : '';
-  String get endDate =>
-      _endDate != null ? DateFormat('d MMM yyyy', 'th').format(_endDate!) : '';
+
+  String get startDate {
+    if (_startDate == null) return '';
+    final thaiYear = _startDate!.year + 543;
+    final monthName = DateFormat.MMM('th').format(_startDate!);
+    return '${_startDate!.day} $monthName $thaiYear';
+  }
+
+  String get endDate {
+    if (_endDate == null) return '';
+    final thaiYear = _endDate!.year + 543;
+    final monthName = DateFormat.MMM('th').format(_endDate!);
+    return '${_endDate!.day} $monthName $thaiYear';
+  }
 
   AddNotificationProvider({
     required this.pageFrom,
@@ -26,7 +35,7 @@ class AddNotificationProvider extends ChangeNotifier {
   });
 
   void setSelectType(String type) {
-    _selectedType = type ;
+    _selectedType = type;
     notifyListeners();
   }
 
@@ -62,4 +71,6 @@ class AddNotificationProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  
 }

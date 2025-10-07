@@ -3,13 +3,25 @@ import 'package:flutter/material.dart';
 class IntervalProvider extends ChangeNotifier {
   TimeOfDay _times = const TimeOfDay(hour: 8, minute: 0);
 
-  TimeOfDay get times => _times;
+  String? hourText;
+  String? takeText;
 
   String _errorHour = "";
   String _errorTake = "";
 
+  TimeOfDay get times => _times;
   String get errorHour => _errorHour;
   String get errorTake => _errorTake;
+
+  void setHourText(String val) {
+    hourText = val;
+    notifyListeners();
+  }
+
+  void setTakeText(String val) {
+    takeText = val;
+    notifyListeners();
+  }
 
   bool validateHour(String hour) {
     if (hour.trim().isEmpty) {

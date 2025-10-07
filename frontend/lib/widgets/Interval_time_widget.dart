@@ -86,6 +86,8 @@ class _IntervalTimeWidgetState extends State<IntervalTimeWidget> {
                     focusedErrorBorder: _borderInput(const Color(0xFF8D8D8D)),
                   ),
                   controller: _hourController,
+                  onChanged: (value) =>
+                      context.read<IntervalProvider>().setHourText(value),
                 ),
               ),
               const SizedBox(width: 10),
@@ -126,6 +128,8 @@ class _IntervalTimeWidgetState extends State<IntervalTimeWidget> {
                     focusedErrorBorder: _borderInput(const Color(0xFF8D8D8D)),
                   ),
                   controller: _numberOfTakeController,
+                  onChanged: (val) =>
+                      context.read<IntervalProvider>().setTakeText(val),
                 ),
               ),
               const SizedBox(width: 10),
@@ -183,28 +187,6 @@ class _IntervalTimeWidgetState extends State<IntervalTimeWidget> {
             ],
           ),
           const SizedBox(height: 60),
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                final validHour = provider.validateHour(_hourController.text);
-                final validTake = provider.validateTake(_numberOfTakeController.text);
-                if (!validTake || !validHour) return;
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                elevation: 4,
-                backgroundColor: const Color(0xFF55FF00),
-                minimumSize: const Size(175, 38),
-                shape: BeveledRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-              child: const Text(
-                "เพิ่มการแจ้งเตือน",
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-          ),
         ],
       ),
     );

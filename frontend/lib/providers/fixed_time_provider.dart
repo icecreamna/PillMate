@@ -29,4 +29,15 @@ class FixedTimeProvider extends ChangeNotifier {
   final minute = time.minute.toString().padLeft(2, '0');
   return '$hour:$minute น.';
 }
+
+bool validateNoDuplicate() {
+    final seen = <String>{};
+    for (final t in _times) {
+      final formatted = "${t.hour}:${t.minute}";
+      if (seen.contains(formatted)) return false;
+      seen.add(formatted);
+    }
+    return true;
+  }
+
 }
