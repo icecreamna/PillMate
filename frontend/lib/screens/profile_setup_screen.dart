@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/providers/profile_setup_provider.dart';
 import 'package:frontend/screens/register_screen.dart';
+import 'package:frontend/services/profile_service.dart';
 import 'package:frontend/widgets/filled_button_custom.dart';
 import 'package:frontend/widgets/text_field_input.dart';
 import 'package:provider/provider.dart';
@@ -13,9 +14,15 @@ class ProfileSetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final int patientId = args["patient_id"];
+
     return ChangeNotifierProvider(
-      create: (context) => ProfileSetupProvider(),
+      create: (context) => ProfileSetupProvider(
+        profileService: ProfileService(),
+        patientId: patientId,
+      ),
       child: _ProfileSetUpView(),
     );
   }
@@ -30,7 +37,7 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
   final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    final p = context.read<ProfileSetupProvider>();
+    final p = context.watch<ProfileSetupProvider>();
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
       body: SafeArea(
@@ -81,21 +88,23 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
                         Consumer<ProfileSetupProvider>(
                           builder: (_, error, _) {
                             return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 27),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Visibility(
-                                visible: error.hasError[0].isNotEmpty,
-                                child: Text(
-                                  error.hasError[0],
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFFF0000),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 27,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Visibility(
+                                  visible: error.hasError[0].isNotEmpty,
+                                  child: Text(
+                                    error.hasError[0],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFFF0000),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
+                            );
                           },
                         ),
                         const SizedBox(height: 5),
@@ -112,21 +121,23 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
                         Consumer<ProfileSetupProvider>(
                           builder: (_, error, _) {
                             return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 27),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Visibility(
-                                visible: error.hasError[1].isNotEmpty,
-                                child: Text(
-                                  error.hasError[1],
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFFF0000),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 27,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Visibility(
+                                  visible: error.hasError[1].isNotEmpty,
+                                  child: Text(
+                                    error.hasError[1],
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFFF0000),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
+                            );
                           },
                         ),
                         const SizedBox(height: 5),
@@ -195,10 +206,10 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
                         ),
                         const Spacer(),
                         FilledButtonCustom(
-                          text: "ลงทะเบียน",
-                          onPressed: () => context
-                              .read<ProfileSetupProvider>()
-                              .checkSetUp(context),
+                          text: p.isLoading ? "กำลังบันทึก..." : "ลงทะเบียน",
+                          onPressed: p.isLoading
+                              ? null
+                              : () => p.checkSetUp(context),
                         ),
                         const SizedBox(height: 30),
                         Padding(

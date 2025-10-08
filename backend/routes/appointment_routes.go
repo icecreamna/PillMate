@@ -45,12 +45,15 @@ func SetupAppointmentRoutes(api fiber.Router) {
 			}
 			return c.Status(status).JSON(fiber.Map{"error": err.Error()})
 		}
-		if strings.TrimSpace(me.IDCardNumber) == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing id_card_number for this account"})
+		if me.IDCardNumber == nil || strings.TrimSpace(*me.IDCardNumber) == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "missing id_card_number for this account",
+			})
 		}
+		idCard := strings.TrimSpace(*me.IDCardNumber)
 
 		// ดึงใบนัดหนึ่งรายการ (ยืนยันด้วย id + id_card_number)
-		appointment, getErr := handlers.GetAppointment(db.DB, appointmentID, me.IDCardNumber)
+		appointment, getErr := handlers.GetAppointment(db.DB, appointmentID, idCard)
 		if getErr != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(getErr, gorm.ErrRecordNotFound) {
@@ -82,9 +85,13 @@ func SetupAppointmentRoutes(api fiber.Router) {
 			}
 			return c.Status(status).JSON(fiber.Map{"error": err.Error()})
 		}
-		if strings.TrimSpace(me.IDCardNumber) == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing id_card_number for this account"})
+		if me.IDCardNumber == nil || strings.TrimSpace(*me.IDCardNumber) == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "missing id_card_number for this account",
+			})
 		}
+
+		idCard := strings.TrimSpace(*me.IDCardNumber)
 
 		// อ่าน query params
 		dateFromStr := strings.TrimSpace(c.Query("date_from"))
@@ -97,7 +104,7 @@ func SetupAppointmentRoutes(api fiber.Router) {
 		q := db.DB.Model(&models.Appointment{}).
 			Preload("Hospital").
 			Preload("WebAdmin").
-			Where("id_card_number = ?", me.IDCardNumber)
+			Where("id_card_number = ?", idCard)
 
 		// กรองช่วงวันที่ (ถ้าส่งมา)
 		if dateFromStr != "" {

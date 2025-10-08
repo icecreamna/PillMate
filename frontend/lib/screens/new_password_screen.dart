@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/new_password_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/filled_button_custom.dart';
 import 'package:frontend/widgets/text_field_input.dart';
@@ -11,8 +12,17 @@ class NewPasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final String email = args['email'];
+    final int patientId = args["patient_id"];
+
     return ChangeNotifierProvider(
-      create: (_) => NewPasswordProvider(),
+      create: (_) => NewPasswordProvider(
+        authService: AuthService(),
+        email: email,
+        patientId: patientId,
+      ),
       child: _NewPasswordView(),
     );
   }
@@ -37,12 +47,10 @@ class _NewPasswordScreenState extends State<_NewPasswordView> {
 
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final email = args['email'];
+    final npp = context.read<NewPasswordProvider>();
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
-      body: SafeArea( 
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
@@ -89,7 +97,7 @@ class _NewPasswordScreenState extends State<_NewPasswordView> {
                               ),
                               const SizedBox(width: 15),
                               Text(
-                                email,
+                                npp.email,
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 16,
@@ -169,14 +177,37 @@ class _NewPasswordScreenState extends State<_NewPasswordView> {
                         const Spacer(),
                         FilledButtonCustom(
                           text: "ตกลง",
-                          onPressed: () => _formKey.currentState!.validate()
-                              ? Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginScreen(),
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+
+                            final provider = context
+                                .read<NewPasswordProvider>();
+                            final res = await provider.resetPassword(
+                              _passwordController.text.trim(),
+                            );
+
+                            if (!mounted) return;
+                            if (res != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "อัปเดตรหัสผ่านของ ${provider.email} เสร็จสิ้น",
+                                    style: const TextStyle(color: Colors.white),
                                   ),
-                                )
-                              : null,
+                                  backgroundColor: Colors.green,
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                              await Future.delayed(const Duration(seconds: 1));
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                              );
+                            }
+                          },
                         ),
                         const SizedBox(height: 30),
                         Padding(

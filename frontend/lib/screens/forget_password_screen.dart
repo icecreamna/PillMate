@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/enums/page_type.dart';
-import 'package:frontend/providers/new_password_provider.dart';
+// import 'package:frontend/providers/new_password_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/screens/otp_screens.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/widgets/filled_button_custom.dart';
 import 'package:frontend/widgets/text_field_input.dart';
-import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+// import 'package:provider/provider.dart';
 
 import '../../../../utils/colors.dart' as color;
 
@@ -15,10 +17,7 @@ class ForgetPasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => NewPasswordProvider(),
-      child: _ForgetPasswordView(),
-    );
+    return _ForgetPasswordView();
   }
 }
 
@@ -30,11 +29,52 @@ class _ForgetPasswordView extends StatefulWidget {
 class _ForgetPasswordScreenState extends State<_ForgetPasswordView> {
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
+  final _service = AuthService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
     emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onSubmit(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _isLoading = true;
+    });
+    final email = emailController.text.trim();
+
+    final patientId = await _service.requestPaientId(email);
+
+    if (patientId == null) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("ไม่พบอีเมลนี้ในระบบ ❌"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    await http.post(
+      Uri.parse("${AuthService.baseURL}/patient/$patientId/otp/request"),
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const OtpScreens(),
+        settings: RouteSettings(
+          arguments: {
+            "otpType": PageType.forgot,
+            "email": email,
+            "patient_id": patientId,
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -114,21 +154,10 @@ class _ForgetPasswordScreenState extends State<_ForgetPasswordView> {
                         ),
                         const Spacer(),
                         FilledButtonCustom(
-                          text: "ถัดไป",
-                          onPressed: () => _formKey.currentState!.validate()
-                              ? Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const OtpScreens(),
-                                    settings: RouteSettings(
-                                      arguments: {
-                                        "otpType": PageType.forgot,
-                                        "email": emailController.text,
-                                      },
-                                    ),
-                                  ),
-                                )
-                              : null,
+                          text: _isLoading ? "กำลังตรวจสอบ..." : "ถัดไป",
+                          onPressed: _isLoading
+                              ? null
+                              : () => _onSubmit(context),
                         ),
                         const SizedBox(height: 30),
                         Padding(

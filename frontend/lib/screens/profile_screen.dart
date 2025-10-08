@@ -27,10 +27,7 @@ class ProfileScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         title: const Text(
           "ข้อมูลผู้ใช้",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
       body: Container(
@@ -477,14 +474,37 @@ class ProfileScreen extends StatelessWidget {
             const Spacer(),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
-                },
+                onPressed: p.isLoading
+                    ? null
+                    : () async {
+                        final success = await p.logout();
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("ออกจากระบบสำเร็จ ✅"),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          await Future.delayed(
+                            const Duration(milliseconds: 800),
+                          );
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("ออกจากระบบไม่สำเร็จ ❌"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[300],
                   minimumSize: const Size(389, 50),

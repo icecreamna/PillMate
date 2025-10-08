@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"errors"
 	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/models"
-	"strconv"
-	"errors"
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
-	
+	"strconv"
+
 	"strings"
 )
 
@@ -16,17 +16,17 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 
 	// add MyMedicine
 	// POST /api/my-medicine
-// 	 Body 
-// {
-//   "med_name": "Paracetamol",
-//   "properties": "แก้ปวด ลดไข้",
-//   "form_id": 1,
-//   "unit_id": 1,
-//   "instruction_id": 2,
-//   "amount_per_time": "1",
-//   "times_per_day": "3",
-//   "source": "manual"
-// }
+	// 	 Body
+	// {
+	//   "med_name": "Paracetamol",
+	//   "properties": "แก้ปวด ลดไข้",
+	//   "form_id": 1,
+	//   "unit_id": 1,
+	//   "instruction_id": 2,
+	//   "amount_per_time": "1",
+	//   "times_per_day": "3",
+	//   "source": "manual"
+	// }
 	api.Post("/my-medicine", func(c *fiber.Ctx) error {
 		// ดึง patient_id ที่ middleware ใส่ไว้
 		patientID, ok := c.Locals("patient_id").(uint)
@@ -82,9 +82,17 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 		if err := db.DB.Select("id_card_number").Where("id = ?", patientID).First(&me).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
-		idCard := strings.TrimSpace(me.IDCardNumber)
+		var idCard string
+		if me.IDCardNumber != nil {
+			idCard = strings.TrimSpace(*me.IDCardNumber)
+		} else {
+			idCard = ""
+		}
+
 		if idCard == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing id_card_number for this account"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "missing id_card_number for this account",
+			})
 		}
 
 		// 2) ดึง prescriptions ที่ยังไม่ซิงก์
@@ -161,7 +169,6 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 		})
 	})
 
-
 	// Read All
 	// GET /api/my-medicines
 	api.Get("/my-medicines", func(c *fiber.Ctx) error {
@@ -175,9 +182,9 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "message": "Get MyMedicines Successful",
-        "data":    mymedicines, // << ส่งทั้ง slice กลับไปเลย
-    	})
+			"message": "Get MyMedicines Successful",
+			"data":    mymedicines, // << ส่งทั้ง slice กลับไปเลย
+		})
 	})
 
 	// Read One

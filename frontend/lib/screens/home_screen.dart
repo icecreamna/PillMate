@@ -6,6 +6,7 @@ import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/screens/drug_screen.dart';
 import 'package:frontend/screens/profile_screen.dart';
 import 'package:frontend/screens/today_screen.dart';
+import 'package:frontend/services/auth_service.dart';
 
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:provider/provider.dart';
@@ -38,7 +39,7 @@ class _HomeViewState extends State<_HomeView> {
       child: const DrugScreen(),
     ),
     ChangeNotifierProvider(
-      create: (context) => ProfileProvider(),
+      create: (_) => ProfileProvider(AuthService()),
       child:  ProfileScreen(),
     ),
   ];
