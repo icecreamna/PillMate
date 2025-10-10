@@ -60,3 +60,18 @@
   box-shadow: 0 1px 0 rgba(0,0,0,.06);
 }
 .addBtn:hover { background: #16a34a; }
+/* ทำให้หัวข้อกับปุ่มอยู่บรรทัดเดียวกัน */
+.headerRow{
+  display:flex;
+  align-items:center;
+  gap:12px;              /* ระยะห่างระหว่างหัวข้อกับปุ่ม */
+  margin-bottom:12px;
+  /* ถ้าอยากให้ปุ่มชิดขวา ให้ใช้: justify-content: space-between; */
+}
+
+.title{
+  margin:0;
+  font-size:28px;
+  font-weight:800;
+  color:#111;
+}

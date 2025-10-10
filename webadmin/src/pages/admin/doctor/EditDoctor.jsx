@@ -1,7 +1,7 @@
 // src/pages/doctor/EditDoctor.jsx
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import styles from "../../styles/admin/EditDoctor.module.css";
+import styles from "../../../styles/admin/doctor/EditDoctor.module.css";
 
 const mock = [
   {

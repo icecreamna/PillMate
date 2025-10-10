@@ -2,10 +2,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
-import DoctorList from './pages/admin/DoctorList.jsx'
-import AddDoctor from './pages/admin/AddDoctor.jsx'
-import EditDoctor from './pages/admin/EditDoctor.jsx'
-import ResetDoctorPassword from './pages/admin/ResetDoctorPassword.jsx'
+import DoctorList from './pages/admin/doctor/DoctorList.jsx'
+import AddDoctor from './pages/admin/doctor/AddDoctor.jsx'
+import EditDoctor from './pages/admin/doctor/EditDoctor.jsx'
+import ResetDoctorPassword from './pages/admin/doctor/ResetDoctorPassword.jsx'
+import MedicineList from './pages/admin/medicine/MedicineList.jsx'
+import AddMedicine from './pages/admin/medicine/AddMedicine.jsx'
+import ViewMedicine from './pages/admin/medicine/ViewMedicine.jsx'
+import EditMedicine from './pages/admin/medicine/EditMedicine.jsx'
 
 function PrivateRoute({ children, needRole }) {
   const token = localStorage.getItem('auth_token')
@@ -36,11 +40,22 @@ export default function App() {
           </PrivateRoute>
         }
       >
+        {/* หน้าเริ่มต้นภายใต้ /admin แสดงรายการหมอ */}
         <Route index element={<DoctorList />} />
         <Route path="add" element={<AddDoctor />} />
         <Route path=":id/edit" element={<EditDoctor />} />
         <Route path=":id/reset-password" element={<ResetDoctorPassword />} />
-        <Route path="medicine-info" element={<div style={{ padding: 16 }}>MedicineInfo</div>} />
+
+        {/* Medicine */}
+        <Route path="medicine-info" element={<MedicineList />} />
+        <Route path="medicine-info/add" element={<AddMedicine />} />
+        <Route path="medicine-info/:id" element={<ViewMedicine />} />
+        <Route path="medicine-info/:id/edit" element={<EditMedicine />} /> 
+        {/* ตัวอย่างเส้นทางที่จะเพิ่มต่อไป:
+        <Route path="medicine-info/add" element={<AddMedicine />} />
+        <Route path="medicine-info/:id" element={<ViewMedicine />} />
+        <Route path="medicine-info/:id/edit" element={<EditMedicine />} />
+        */}
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

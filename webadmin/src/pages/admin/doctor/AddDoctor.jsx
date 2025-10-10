@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "../../styles/admin/AddDoctor.module.css";
+import styles from "../../../styles/admin/doctor/AddDoctor.module.css";
 
 export default function AddDoctor() {
   const nav = useNavigate();

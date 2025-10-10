@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import styles from "../../styles/admin/ResetDoctorPassword.module.css";
+import styles from "../../../styles/admin/doctor/ResetDoctorPassword.module.css";
 
 export default function ResetDoctorPassword() {
   const { id } = useParams();
