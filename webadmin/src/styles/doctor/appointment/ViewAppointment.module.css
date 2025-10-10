@@ -1,0 +1,25 @@
+.header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.title{ margin:0; font-size:28px; font-weight:800; color:#111; }
+.back{ height:32px; padding:0 12px; border-radius:8px; border:1px solid #93c5fd; background:#dbeafe; color:#1e3a8a; cursor:pointer; }
+
+.meta{ display:flex; align-items:center; gap:8px; margin:6px 0 12px; }
+.badge{
+  display:inline-block; background:#111827; color:#fff; border-radius:999px;
+  padding:4px 10px; font-weight:700; font-size:12px;
+}
+.name{ font-size:18px; font-weight:700; color:#111; }
+
+.tableWrap{ border:1px solid #d1d5db; border-radius:10px; overflow:hidden; }
+.table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:15px; color:#111; }
+.table th,.table td{ padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left; }
+.table thead th{ background:#6b7280; color:#fff; font-weight:700; }
+.table tbody tr:nth-child(even){ background:#f9fafb; }
+
+.note{ color:#111; }
+.statusCell{ text-align:right; }
+
+.latestRow{ background:#ecfdf5 !important; }               /* แถวล่าสุดสีเขียวอ่อน */
+.latestBadge{
+  display:inline-block; padding:2px 8px; border-radius:999px;
+  background:#22c55e; color:#fff; font-weight:700; font-size:12px;
+}

@@ -15,8 +15,12 @@ export default function Login() {
     // หลัง mock login หรือหลังเรียก API สำเร็จ
     localStorage.setItem("auth_token", "demo-token");
     localStorage.setItem("email", username || "super_admin@pillmate.com");
-    localStorage.setItem("role", "superadmin"); // ← ใช้ superadmin
-    nav("/admin", { replace: true }); // ← ไปโซนผู้ดูแล
+
+    // localStorage.setItem("role", "superadmin"); // ← ใช้ superadmin
+    // nav("/admin", { replace: true }); // ← ไปโซนผู้ดูแล
+    localStorage.setItem("role", "doctor"); // ← ใช้ doctor
+    nav("/doc", { replace: true }); // ← ไปโซนหมอ
+
   };
 
   return (

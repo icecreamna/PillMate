@@ -1,0 +1,68 @@
+.header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.title{ margin:0; font-size:28px; font-weight:800; color:#111; }
+.back{ height:32px; padding:0 12px; border-radius:8px; border:1px solid #93c5fd; background:#dbeafe; color:#1e3a8a; cursor:pointer; }
+
+.tableWrap{ border:1px solid #d1d5db; border-radius:10px; overflow:hidden; }
+.table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:15px; color:#111; }
+.table th,.table td{ padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left; }
+.table thead th{ background:#6b7280; color:#fff; font-weight:700; }
+.table tbody tr:nth-child(even){ background:#f9fafb; }
+
+.actions{ display:flex; justify-content:center; }
+.specify{
+  height:24px; padding:0 10px; font-size:12px; border-radius:8px;
+  border:1px solid #06b6d4; background:#67e8f9; color:#0f172a; cursor:pointer;
+}
+.specify:hover{ background:#22d3ee; }
+
+/* checkbox ให้สีเขียว */
+.checkbox{ width:16px; height:16px; accent-color:#16a34a; cursor:pointer; }
+
+/* ถ้ายกเลิกติ๊ก ให้จางลงเล็กน้อย */
+.dim td{ color:#475569; opacity:.7; }
+
+/* แจ้งเตือน */
+.error{
+  background:#fee2e2; border:1px solid #fecaca; color:#991b1b;
+  padding:10px 12px; border-radius:8px; margin:12px 0 0; max-width:600px;
+}
+
+.footer{ display:flex; justify-content:center; margin-top:24px; }
+.submit{
+  min-width:160px; height:38px; border:none; border-radius:8px;
+  background:#16a34a; color:#fff; font-weight:700; cursor:pointer;
+}
+.submit:hover{ background:#15803d; }
+.submit:disabled{ opacity:.7; cursor:not-allowed; }
+
+/* ==== Modal (ใหม่) ==== */
+.modalOverlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center; z-index:50;
+}
+.modal{
+  width:min(520px, 92vw); background:#fff; border-radius:12px; padding:20px 20px 16px;
+  position:relative; box-shadow:0 20px 40px rgba(0,0,0,.25);
+}
+.modalClose{
+  position:absolute; right:10px; top:6px; font-size:28px; line-height:1; border:none; background:transparent; cursor:pointer;
+}
+.modalHead{ display:grid; gap:10px; margin:8px 0 14px; font-size:18px; color:#111; }
+
+.box{
+  border:1px solid #e5e7eb; border-radius:10px; padding:14px; background:#fff;
+}
+.boxTitle{ font-weight:700; margin-bottom:12px; }
+.row{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.label{ display:grid; gap:6px; width:220px; }
+.input{
+  height:36px; border:1px solid #d1d5db; border-radius:8px; padding:0 10px; font-size:16px;
+}
+.unit{ color:#111; }
+
+.modalActions{ display:flex; justify-content:center; margin-top:16px; }
+.confirm{
+  min-width:160px; height:38px; border:none; border-radius:8px;
+  background:#16a34a; color:#fff; font-weight:700; cursor:pointer;
+}
+.confirm:hover{ background:#15803d; }
