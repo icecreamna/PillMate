@@ -1,0 +1,62 @@
+.tableWrap {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;   /* บังคับ column ให้ตรงกับ head */
+}
+
+.table th, .table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;      /* จัดให้อยู่ซ้ายเหมือนกันหมด */
+}
+
+.table th {
+  background: #6b7280;   /* เทาเข้ม */
+  color: #fff;
+  font-weight: 600;
+}
+
+.table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* สีปุ่มในคอลัมน์ Action */
+.edit {
+  background: #3b82f6;      /* ฟ้า */
+  border: 1px solid #2563eb;
+  color: #fff;
+}
+.edit:hover { background: #2563eb; }
+
+.delete {
+  background: #ef4444;      /* แดง */
+  border: 1px solid #b91c1c;
+  color: #fff;
+}
+.delete:hover { background: #b91c1c; }
+
+/* ปุ่ม Add Doctor */
+.addBtn {
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;   /* เขียว */
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
+}
+.addBtn:hover { background: #16a34a; }

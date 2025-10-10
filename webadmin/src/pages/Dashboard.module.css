@@ -1,0 +1,18 @@
+.wrap {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg,#f8fafc,#eef2f7);
+}
+.card {
+  width: min(92vw, 720px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+.title { margin: 0 0 8px 0; }
+.logoutBtn {
+  margin-top: 16px; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid #e5e7eb; background: #111827; color: #fff; cursor: pointer;
+}
