@@ -10,11 +10,11 @@ type SymptomDTO struct {
 	ID           uint   `json:"id"`
 	PatientID    uint   `json:"patient_id"`
 	MyMedicineID uint   `json:"my_medicine_id"`
-	GroupID      *uint  `json:"group_id,omitempty"` 
+	GroupID      *uint  `json:"group_id,omitempty"`
 	NotiItemID   uint   `json:"noti_item_id"`
 	SymptomNote  string `json:"symptom_note"`
 
-	CreatedAt string `json:"created_at"` 
+	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
 

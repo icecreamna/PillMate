@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/enums/drug_form.dart';
-import 'package:frontend/enums/drug_time.dart';
+import 'package:frontend/models/drug_form.dart';
+
 import 'package:frontend/providers/add_edit_provider.dart';
 import 'package:frontend/providers/add_single_notification_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
@@ -83,29 +83,35 @@ class AddEditViewState extends State<AddEditView> {
 
   final _nameDrugController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _amountPerDoseController = TextEditingController();
+  final _amountPerTimeController = TextEditingController();
   final _frequencyController = TextEditingController();
 
+  bool _initializedText = false;
+
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final addP = context.read<AddEditProvider>();
-      if (addP.editDose != null && addP.pageFrom == "edit") {
-        final d = addP.editDose!;
-        _nameDrugController.text = d.name;
-        _descriptionController.text = d.description;
-        _amountPerDoseController.text = d.amountPerDose;
-        _frequencyController.text = d.frequency;
-      }
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final addP = context.read<AddEditProvider>();
+
+    // ✅ เซ็ตค่า text หลัง loadInitialData เสร็จ และเฉพาะตอน edit เท่านั้น
+    if (!_initializedText &&
+        !addP.isLoading &&
+        addP.pageFrom == "edit" &&
+        addP.editDose != null) {
+      final d = addP.editDose!;
+      _nameDrugController.text = d.name;
+      _descriptionController.text = d.description;
+      _amountPerTimeController.text = d.amountPerDose;
+      _frequencyController.text = d.frequency;
+      _initializedText = true;
+    }
   }
 
   @override
   void dispose() {
     _nameDrugController.dispose();
     _descriptionController.dispose();
-    _amountPerDoseController.dispose();
+    _amountPerTimeController.dispose();
     _frequencyController.dispose();
     super.dispose();
   }
@@ -113,6 +119,10 @@ class AddEditViewState extends State<AddEditView> {
   @override
   Widget build(BuildContext context) {
     final addP = context.watch<AddEditProvider>();
+
+    if (addP.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
@@ -192,12 +202,12 @@ class AddEditViewState extends State<AddEditView> {
                     height: 109,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
-                      children: DrugForm.values.map((df) {
+                      children: addP.forms.map((df) {
                         return GestureDetector(
                           onTap: () {
-                            _amountPerDoseController.clear();
+                            _amountPerTimeController.clear();
                             _frequencyController.clear();
-                            context.read<AddEditProvider>().setSelectForm(df);
+                            addP.setSelectForm(df);
                           },
                           child: Container(
                             width: 77,
@@ -227,7 +237,7 @@ class AddEditViewState extends State<AddEditView> {
                               children: [
                                 Image.asset(df.image, height: 40, width: 40),
                                 const Spacer(),
-                                Text(df.label),
+                                Text(df.name),
                               ],
                             ),
                           ),
@@ -265,14 +275,14 @@ class AddEditViewState extends State<AddEditView> {
                             }
                             return null;
                           },
-                          controller: _amountPerDoseController,
+                          controller: _amountPerTimeController,
                         ),
                       ),
                       const SizedBox(width: 15),
                       SizedBox(
                         width: 171,
                         height: 50,
-                        child: DropdownButtonFormField<String>(
+                        child: DropdownButtonFormField<DrugUnitModel>(
                           value: addP.selectedUnit,
                           decoration: InputDecoration(
                             label: const Text("หน่วย"),
@@ -281,18 +291,19 @@ class AddEditViewState extends State<AddEditView> {
                               borderSide: const BorderSide(color: Colors.grey),
                             ),
                           ),
-                          items: addP.selectedForm.unit.map((unit) {
+                          items: (addP.selectedForm?.units ?? []).map((unit) {
+                            final unitName = unit.name ?? "ไม่ระบุหน่วย";
                             return DropdownMenuItem(
                               value: unit,
-                              child: Text(unit),
+                              child: Text(unitName),
                             );
                           }).toList(),
                           onChanged: (unit) {
                             if (unit != null) {
                               if (unit == addP.selectedUnit) return;
-                              _amountPerDoseController.clear();
+                              _amountPerTimeController.clear();
                               _frequencyController.clear();
-                              context.read<AddEditProvider>().setUnit(unit);
+                              addP.setUnit(unit);
                             }
                             return;
                           },
@@ -350,10 +361,10 @@ class AddEditViewState extends State<AddEditView> {
                       crossAxisCount: 2,
                       childAspectRatio: 3,
                       physics: const NeverScrollableScrollPhysics(),
-                      children: DrugTime.values.map((dt) {
+                      children: addP.times.map((dt) {
                         return GestureDetector(
                           onTap: () {
-                            context.read<AddEditProvider>().setSelectTime(dt);
+                            addP.setSelectTime(dt);
                           },
                           child: Container(
                             width: 171,
@@ -380,7 +391,7 @@ class AddEditViewState extends State<AddEditView> {
                             ),
                             child: Center(
                               child: Text(
-                                dt.label,
+                                dt.name,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
@@ -395,45 +406,59 @@ class AddEditViewState extends State<AddEditView> {
                 ]),
                 const SizedBox(height: 15),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (!_formKey.currentState!.validate()) {
                       return;
                     }
-
-                    final newDose = Dose(
-                      id: addP.pageFrom == "edit" && addP.editDose != null
-                          ? addP.editDose!.id
-                          : "",
-                      name: _nameDrugController.text.isEmpty
-                          ? "-"
-                          : _nameDrugController.text,
-                      description: _descriptionController.text.isEmpty
-                          ? "-"
-                          : _descriptionController.text,
-                      import: false,
-                      amountPerDose: _amountPerDoseController.text.isEmpty
-                          ? "-"
-                          : _amountPerDoseController.text,
-                      frequency: _frequencyController.text.isEmpty
-                          ? "-"
-                          : _frequencyController.text,
-                      instruction: addP.selectTime.label,
-                      picture: addP.selectedForm.image,
-                      unit: addP.selectedUnit ?? '-',
-                    );
-
                     if (addP.pageFrom == "edit" && addP.editDose != null) {
-                      context
-                          .read<AddSingleNotificationProvider>()
-                          .updatedTempDose(newDose);
+                      final success = await addP.editMedicine(
+                        id: int.parse(addP.editDose!.id),
+                        name: _nameDrugController.text.trim(),
+                        properties: _descriptionController.text.trim(),
+                        amountPerTime: _amountPerTimeController.text.trim(),
+                        timePerDay: _frequencyController.text.trim(),
+                        selectedFormId:
+                            addP.selectedForm?.id ?? addP.editDose!.formId ?? 0,
+                        selectedUnitId:
+                            addP.selectedUnit?.id ?? addP.editDose!.unitId ?? 0,
+                        selectTimeId:
+                            addP.selectTime?.id ??
+                            addP.editDose!.instructionId ??
+                            0,
+                      );
+                      if (success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("✅ แก้ไขยาเรียบร้อย")),
+                        );
+                        Navigator.pop(context,true);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("❌ แก้ไขยาไม่สำเร็จ")),
+                        );
+                      }
                     } else {
-                      context.read<DrugProvider>().addDose(newDose);
+                      final success = await addP.addMedicine(
+                        name: _nameDrugController.text.trim(),
+                        properties: _descriptionController.text.trim(),
+                        amountPerTime: _amountPerTimeController.text.trim(),
+                        timePerDay: _frequencyController.text.trim(),
+                      );
+
+                      if (success && context.mounted) {
+                        _amountPerTimeController.clear();
+                        _frequencyController.clear();
+                        _nameDrugController.clear();
+                        _descriptionController.clear();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("✅ เพิ่มยาเรียบร้อย")),
+                        );
+                        Navigator.pop(context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("❌ เพิ่มยาไม่สำเร็จ")),
+                        );
+                      }
                     }
-                    _amountPerDoseController.clear();
-                    _frequencyController.clear();
-                    _nameDrugController.clear();
-                    _descriptionController.clear();
-                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF94B4C1),

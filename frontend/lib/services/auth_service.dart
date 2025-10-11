@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 
 class AuthService {
   static const baseURL = "http://10.0.2.2:8080";
+  static String? jwtToken;
 
   Future<Map<String, dynamic>> register({
     required String email,
@@ -10,10 +11,12 @@ class AuthService {
   }) async {
     final uri = Uri.parse("$baseURL/register");
 
+    final lowerEmail = email.trim().toLowerCase();
+
     final resp = await http.post(
       uri,
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
+      body: jsonEncode({"email": lowerEmail, "password": password}),
     );
 
     if (resp.statusCode != 200) {
@@ -32,15 +35,18 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    final lowerEmail = email.trim().toLowerCase();
     final res = await http.post(
       Uri.parse("$baseURL/login"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "password": password}),
+      body: jsonEncode({"email": lowerEmail, "password": password}),
     );
 
     if (res.statusCode == 200) {
       print("✅ Login success: ${res.body}");
-      return jsonDecode(res.body);
+      final data = jsonDecode(res.body);
+      jwtToken = data["token"];
+      return data;
     } else {
       print("❌ Login failed (${res.statusCode}): ${res.body}");
       return null;
@@ -49,6 +55,7 @@ class AuthService {
 
   Future<bool> logout() async {
     try {
+      jwtToken = null;
       final res = await http.post(
         Uri.parse("$baseURL/logout"),
         headers: {"Content-Type": "application/json"},

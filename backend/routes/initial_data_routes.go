@@ -41,7 +41,7 @@ func SetupInitialDataRoutes(app *fiber.App) {
 	})
 
 	// GET /form/:id
-	app.Get("/form/:id", func(c *fiber.Ctx) error {
+	app.Get("/forms/:id", func(c *fiber.Ctx) error {
 		formID, err := parseIDParam(c, "id")
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).

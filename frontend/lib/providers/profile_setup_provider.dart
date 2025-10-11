@@ -41,7 +41,7 @@ class ProfileSetupProvider extends ChangeNotifier {
 
     _isLoading = true;
     notifyListeners();
-    final success = await profileService.updateProfile(
+    final success = await profileService.setUpProfile(
       patientId: patientId,
       firstName: firstnameController.text.trim(),
       lastName: lastnameController.text.trim(),

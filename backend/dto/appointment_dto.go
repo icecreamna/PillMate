@@ -12,8 +12,8 @@ type AppointmentDTO struct {
 	AppointmentDate  string `json:"appointment_date"` // "YYYY-MM-DD"
 	AppointmentTime  string `json:"appointment_time"` // "HH:MM"
 
-	HospitalID       uint   `json:"hospital_id"`
-	HospitalName     string `json:"hospital_name,omitempty"`
+	// HospitalID       uint   `json:"hospital_id"`
+	// HospitalName     string `json:"hospital_name,omitempty"`
 
 	DoctorID         uint   `json:"doctor_id"`
 	DoctorFirstName  string `json:"doctor_first_name,omitempty"`
@@ -29,8 +29,8 @@ func AppointmentToDTO(a models.Appointment) AppointmentDTO {
 		AppointmentDate:  a.AppointmentDate.Format("2006-01-02"),
 		AppointmentTime:  a.AppointmentTime.In(time.UTC).Format("15:04"),
 
-		HospitalID:       a.HospitalID,
-		HospitalName:     a.Hospital.HospitalName,
+		// HospitalID:       a.HospitalID,
+		// HospitalName:     a.Hospital.HospitalName,
 
 		DoctorID:         a.DoctorID,
 		DoctorFirstName:  a.WebAdmin.FirstName,

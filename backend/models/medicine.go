@@ -56,3 +56,5 @@ type MedicineInfo struct {
     DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+
+

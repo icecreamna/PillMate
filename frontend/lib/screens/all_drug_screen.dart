@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/add_edit_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
 import 'package:frontend/screens/add_single_notification_screen.dart';
 import 'package:provider/provider.dart';
@@ -27,8 +28,15 @@ class AllDrugScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider.value(
-                        value: context.read<DrugProvider>(),
+                      builder: (_) => MultiProvider(
+                        providers: [
+                          ChangeNotifierProvider.value(
+                            value: context.read<DrugProvider>(),
+                          ),
+                          ChangeNotifierProvider(
+                            create: (_) => AddEditProvider(pageFrom: "edit"),
+                          ),
+                        ],
                         child: AddSingleNotification(dose: d),
                       ),
                     ),

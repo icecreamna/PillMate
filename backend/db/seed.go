@@ -3,15 +3,14 @@ package db
 import (
 	"log"
 
+	"time"
+
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
-	"time"
-	
 )
 
 // uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
 func UintPtr(v uint) *uint { return &v }
-
 
 func SeedInitialData(db *gorm.DB) {
 	// seed ข้อมูล Form
@@ -128,7 +127,6 @@ func SeedInitialData(db *gorm.DB) {
 		{InstructionName: "หลังอาหาร"},
 		{InstructionName: "พร้อมอาหาร"},
 		{InstructionName: "ก่อนนอน"},
-		
 	}
 	for _, instruction := range instructions {
 		if err := db.FirstOrCreate(&instruction, models.Instruction{InstructionName: instruction.InstructionName}).Error; err != nil {
@@ -142,7 +140,6 @@ func SeedInitialData(db *gorm.DB) {
 		{FormatName: "ทุกกี่ชั่วโมง (Interval)"},
 		{FormatName: "วันเว้นวัน / ทุกกี่วัน (EveryNDays)"},
 		{FormatName: "ทานต่อเนื่อง/พักยา (Cycle)"},
-		
 	}
 	for _, notiformat := range notiformats {
 		if err := db.FirstOrCreate(&notiformat, models.NotiFormat{FormatName: notiformat.FormatName}).Error; err != nil {
@@ -152,103 +149,103 @@ func SeedInitialData(db *gorm.DB) {
 
 	// seed ข้อมูล MedicineInfo
 	medicines := []models.MedicineInfo{
-    {
-        MedName: "Paracetamol",
-        GenericName: "Acetaminophen",
-        Properties: "บรรเทาอาการปวดลดไข้",
-        Strength: "500mg",
-        FormID: 1,
-        UnitID: UintPtr(1), 
-        InstructionID: UintPtr(2), 
-		// MedStatus: "active",
-    },
+		{
+			MedName:       "Paracetamol",
+			GenericName:   "Acetaminophen",
+			Properties:    "บรรเทาอาการปวดลดไข้",
+			Strength:      "500mg",
+			FormID:        1,
+			UnitID:        UintPtr(1),
+			InstructionID: UintPtr(2),
+			// MedStatus: "active",
+		},
 
-	{
-        MedName: "PROBUFEN 400",
-        GenericName: "Ibuprofen",
-        Properties: "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
-        Strength: "400 mg",
-        FormID: 2,
-        UnitID: UintPtr(2), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "PROBUFEN 400",
+			GenericName:   "Ibuprofen",
+			Properties:    "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
+			Strength:      "400 mg",
+			FormID:        2,
+			UnitID:        UintPtr(2),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "ไบโซลวอน สำหรับเด็ก",
-        GenericName: "bromhexine",
-        Properties: "ละลายเสมหะและบรรเทาอาการไอ",
-        Strength: "4 mg/5 ml",
-        FormID: 3,
-        UnitID: UintPtr(3), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "ไบโซลวอน สำหรับเด็ก",
+			GenericName:   "bromhexine",
+			Properties:    "ละลายเสมหะและบรรเทาอาการไอ",
+			Strength:      "4 mg/5 ml",
+			FormID:        3,
+			UnitID:        UintPtr(3),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "COUNTERPAIN COOL",
-        GenericName: "menthol",
-        Properties: "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
-        Strength: "4%",
-        FormID: 5, 
-    },
+		{
+			MedName:     "COUNTERPAIN COOL",
+			GenericName: "menthol",
+			Properties:  "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
+			Strength:    "4%",
+			FormID:      5,
+		},
 
-	{
-        MedName: "ยาทาแก้ผดผื่นคัน คาลาไมน์",
-        GenericName: "calamine+zinc oxide",
-        Properties: "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
-        Strength: "(10 G+5 G)/100 ML",
-        FormID: 5, 
-    },
+		{
+			MedName:     "ยาทาแก้ผดผื่นคัน คาลาไมน์",
+			GenericName: "calamine+zinc oxide",
+			Properties:  "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
+			Strength:    "(10 G+5 G)/100 ML",
+			FormID:      5,
+		},
 
-	{
-        MedName: "วินซูลิน-30/70",
-        GenericName: "insulin",
-        Properties: "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
-        Strength: "100 iu/1ml",
-        FormID: 4,
-        UnitID: UintPtr(7), 
-        InstructionID: UintPtr(1), 
-    },
+		{
+			MedName:       "วินซูลิน-30/70",
+			GenericName:   "insulin",
+			Properties:    "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
+			Strength:      "100 iu/1ml",
+			FormID:        4,
+			UnitID:        UintPtr(7),
+			InstructionID: UintPtr(1),
+		},
 
-	{
-        MedName: "TEARS NATURALE II",
-        GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
-        Properties: "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
-        Strength: "(0.3 G+0.1 G)/100 ML",
-        FormID: 6,
-        UnitID: UintPtr(12), 
-    },
-    
-    // ...ใส่ยาอีกตามต้องการ
+		{
+			MedName:     "TEARS NATURALE II",
+			GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
+			Properties:  "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
+			Strength:    "(0.3 G+0.1 G)/100 ML",
+			FormID:      6,
+			UnitID:      UintPtr(12),
+		},
+
+		// ...ใส่ยาอีกตามต้องการ
 	}
 	for _, medicine := range medicines {
-    if err := db.Create(&medicine).Error; err != nil {
-        log.Println("Seed medicineinfo error:", err)
-    }}
+		if err := db.Create(&medicine).Error; err != nil {
+			log.Println("Seed medicineinfo error:", err)
+		}
+	}
 
 	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
 
 	// --- Seed Hospitals ---
-	hospitals := []models.Hospital{
-		{HospitalName: "โรงพยาบาลตัวอย่าง A"},
-		{HospitalName: "โรงพยาบาลตัวอย่าง B"},
-	}
-	for i := range hospitals {
-		if err := db.FirstOrCreate(&hospitals[i],
-			models.Hospital{HospitalName: hospitals[i].HospitalName},
-		).Error; err != nil {
-			log.Println("Seed hospital error:", err)
-		}
-	}
-	
+	// hospitals := []models.Hospital{
+	// 	{HospitalName: "โรงพยาบาลตัวอย่าง A"},
+	// 	{HospitalName: "โรงพยาบาลตัวอย่าง B"},
+	// }
+	// for i := range hospitals {
+	// 	if err := db.FirstOrCreate(&hospitals[i],
+	// 		models.Hospital{HospitalName: hospitals[i].HospitalName},
+	// 	).Error; err != nil {
+	// 		log.Println("Seed hospital error:", err)
+	// 	}
+	// }
+
 	// --- Seed WebAdmins (หมอ / แอดมิน) ---
 	admins := []models.WebAdmin{
 		{
 			Username:  "doctor@test.com",
-			Password:  "1234", 
+			Password:  "1234",
 			FirstName: "ยาดม",
 			LastName:  "หงไทย",
 			Role:      "doctor",
-			
 		}}
 	for i := range admins {
 		if err := db.FirstOrCreate(&admins[i],
@@ -260,16 +257,16 @@ func SeedInitialData(db *gorm.DB) {
 
 	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
 	prescriptions := []models.Prescription{
-	{ IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	{ IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+		{IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", DoctorID: 1, AppSyncStatus: false},
+		{IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", DoctorID: 1, AppSyncStatus: false},
 	}
 
 	for i := range prescriptions {
 		key := models.Prescription{
 			IDCardNumber:   prescriptions[i].IDCardNumber,
 			MedicineInfoID: prescriptions[i].MedicineInfoID,
-			HospitalID:     prescriptions[i].HospitalID,
-			DoctorID:       prescriptions[i].DoctorID,
+			// HospitalID:     prescriptions[i].HospitalID,
+			DoctorID: prescriptions[i].DoctorID,
 		}
 		attrs := models.Prescription{
 			AmountPerTime: prescriptions[i].AmountPerTime,
@@ -284,10 +281,10 @@ func SeedInitialData(db *gorm.DB) {
 	// --- Seed Appointments ---
 	appointments := []models.Appointment{
 		{
+			PatientID:       1,
 			IDCardNumber:    "1101700203452",
-			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
-			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
-			HospitalID:      1,
+			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local), // date-only
+			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),       // time-only
 			DoctorID:        1,
 			Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
 		},
@@ -295,10 +292,10 @@ func SeedInitialData(db *gorm.DB) {
 
 	for i := range appointments {
 		key := models.Appointment{
+			PatientID:       appointments[i].PatientID,
 			IDCardNumber:    appointments[i].IDCardNumber,
 			AppointmentDate: appointments[i].AppointmentDate,
 			AppointmentTime: appointments[i].AppointmentTime,
-			HospitalID:      appointments[i].HospitalID,
 			DoctorID:        appointments[i].DoctorID,
 		}
 		attrs := models.Appointment{
@@ -308,8 +305,6 @@ func SeedInitialData(db *gorm.DB) {
 			log.Println("seed appointments failed:", err)
 		}
 	}
-
-
 
 	// ------ ลบถึงตรงนี้ ----------------------------------------------------------------------------------------------
 

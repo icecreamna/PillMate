@@ -378,7 +378,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                               child: RawMaterialButton(
                                 fillColor: const Color(0xFFFF0000),
                                 onPressed: () {
-                                  agp.removeSelected(selectId);
+                                  agp.removeSelectedList(selectId);
                                 },
                                 shape: const CircleBorder(),
                                 child: const Icon(
@@ -403,7 +403,7 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
               height: 70,
               margin: const EdgeInsets.only(bottom: 60),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   bool hasError = false ;
                   if (!_formKey.currentState!.validate()) hasError = true;
                   if (agp.selectedList.length < 2) {
@@ -414,8 +414,19 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                   }
                   if(hasError) return ;
 
-                  dp.addGroup(_nameGroup.text, agp.selectedList);
-                  Navigator.pop(context);
+                  final success = await agp.addGroups(_nameGroup.text, agp.selectedList);
+                  if (success && !hasError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("✅ สร้างกลุ่มยาเรียบร้อย")),
+                    );
+                    Navigator.pop(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("❌ สร้างกลุ่มยาไม่สำเร็จ")),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF94B4C1),

@@ -9,7 +9,6 @@ import (
 func GetAppointment(db *gorm.DB, appointmentID uint, idCardNumber string) (*models.Appointment, error) {
 	var appt models.Appointment
 	if err := db.
-		Preload("Hospital").
 		Preload("WebAdmin").
 		Where("id = ? AND id_card_number = ?", appointmentID, idCardNumber).
 		First(&appt).Error; err != nil {

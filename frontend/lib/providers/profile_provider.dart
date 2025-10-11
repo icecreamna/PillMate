@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/profile_service.dart';
 import 'package:intl/intl.dart';
 
 class InfoUser {
@@ -30,42 +31,131 @@ class InfoAppoinment {
 
 class ProfileProvider extends ChangeNotifier {
   final AuthService authService;
-  ProfileProvider(this.authService);
+  final ProfileService profileService;
+  ProfileProvider({required this.authService, required this.profileService}) {
+    loadProfile();
+    loadAppointment();
+  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  InfoUser _user = InfoUser(
-    firstName: "Kittabeth",
-    lastName: "Chompoonich",
-    idCard: "1739841323333",
-    tel: "0864031301",
-  );
+  InfoUser? _user;
+  InfoUser? get user => _user;
 
-  final InfoAppoinment _appoinment = InfoAppoinment(
-    dateTime: DateTime.now(),
-    note: "งดอาหาร 8 ชั่วโมง ก่อนเจาะเลือด",
-    hourMinute: DateTime.now(),
-  );
+  InfoAppoinment? _appoinment;
 
-  InfoUser get user => _user;
-  InfoAppoinment get appointment => _appoinment;
+  InfoAppoinment? get appointment => _appoinment;
 
   String get appointmentDay {
+    if (_appoinment == null) return "-";
     final thDate = DateFormat(
       "d MMMM yyyy",
       "th_TH",
-    ).format(_appoinment.dateTime);
-    final buddhistYear = _appoinment.dateTime.year + 543;
-    return thDate.replaceAll('${_appoinment.dateTime.year}', '$buddhistYear');
+    ).format(_appoinment!.dateTime);
+    final buddhistYear = _appoinment!.dateTime.year + 543;
+    return thDate.replaceAll('${_appoinment!.dateTime.year}', '$buddhistYear');
   }
 
-  String get appointmentHourMinute =>
-      DateFormat("HH:mm").format(_appoinment.hourMinute);
+  String get appointmentHourMinute {
+    if (_appoinment == null) return "-";
+    return DateFormat("HH:mm").format(_appoinment!.hourMinute);
+  }
 
-  void updateUser(InfoUser newUser) {
-    _user = newUser;
+  Future<void> loadProfile() async {
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      final data = await profileService.fetchProfile();
+      if (data != null) {
+        _user = InfoUser(
+          firstName: data["first_name"] ?? "",
+          lastName: data["last_name"] ?? "",
+          idCard: data["id_card_number"] ?? "",
+          tel: data["phone_number"] ?? "",
+        );
+        debugPrint("✅ Profile loaded: ${_user!.firstName} ${_user!.lastName}");
+      } else {
+        debugPrint("⚠️ Profile is null (no data returned)");
+      }
+    } catch (e) {
+      throw Exception("provider cannot load profile info ${e.toString()}");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadAppointment() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final data = await profileService.fetchAppointment();
+      if (data != null) {
+        final date = DateTime.parse(data["appointment_date"]);
+        final time = DateFormat("HH:mm").parse(data["appointment_time"]);
+
+        _appoinment = InfoAppoinment(
+          dateTime: date,
+          note: data['note'],
+          hourMinute: time,
+        );
+        debugPrint("✅ Profile loaded");
+      } else {
+        debugPrint("✅ Appointment failed: (no data)");
+      }
+    } catch (e) {
+      debugPrint("Provider cache $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updatedInfoProfile(
+    InfoUser newInfo,
+    BuildContext context,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final success = await profileService.updateInfoProfile(
+        idCard: newInfo.idCard,
+        firstName: newInfo.firstName,
+        lastName: newInfo.lastName,
+        tel: newInfo.tel,
+      );
+      if (success) {
+        _user = newInfo;
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("✅ อัปเดตข้อมูลสำเร็จ"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("❌ อัปเดตข้อมูลไม่สำเร็จ"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("provider catch can't updated $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⚠️ เกิดข้อผิดพลาดระหว่างอัปเดต"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> logout() async {

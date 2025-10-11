@@ -1,79 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
-import 'package:uuid/uuid.dart';
+import 'package:frontend/services/medicine_service.dart';
 import '../models/dose.dart';
 
 class DrugProvider extends ChangeNotifier {
+  final _medicineService = MedicineService();
+
   DrugTab _page = DrugTab.all;
 
-  DrugTab get page => _page;
+  List<Dose> _myMedicines = [];
 
   final Map<String, List<String>> _groups = {};
 
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  DrugTab get page => _page;
   Map<String, List<String>> get groups => _groups;
+  List<Dose> get doseAll => _myMedicines ;
 
-  final List<Dose> _all = [
-    Dose(
-      id: "1",
-      name: "paracetamolss",
-      description: "fattu",
-      import: true,
-      amountPerDose: "1",
-      frequency: "3",
-      instruction: "หลังอาหาร",
-      unit: "เม็ด",
-      picture: "assets/images/pill.png",
-    ),
-    Dose(
-      id: "2",
-      name: "paracetamoleee",
-      description: "fattu",
-      import: false,
-      amountPerDose: "1",
-      frequency: "3",
-      instruction: "หลังอาหาร",
-      unit: "เม็ด",
-      picture: "assets/images/pill.png",
-    ),
-    Dose(
-      id: "3",
-      name: "paracetamoleaa",
-      description: "fattu",
-      import: false,
-      amountPerDose: "1",
-      frequency: "3",
-      instruction: "หลังอาหาร",
-      unit: "เม็ด",
-      picture: "assets/images/pill.png",
-    ),
-  ];
+  Future<void> loadMyMedicines() async {
+    _isLoading = true;
+    notifyListeners();
 
-  List<Dose> get doseAll => _all;
+    try {
+      final medicines = await _medicineService.getMyMedicines();
+      _myMedicines = medicines!;
+      debugPrint("✅ โหลดยา ${medicines.length} รายการสำเร็จ");
+    } catch (e) {
+      debugPrint("❌ โหลดยาไม่สำเร็จ: $e");
+      _myMedicines = [];
+    }
 
-  final _uuid = const Uuid();
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<bool> removeMedicine({required int id}) async {
+    _isLoading = true;
+    notifyListeners();
+    try{
+      final success = await _medicineService.deleteMedicineInfo(id: id);
+      return success; 
+    }catch(e){
+      debugPrint("❌ ลบไม่สำเร็จ: $e");
+      return false;
+    }finally {
+      _isLoading = false ;
+      notifyListeners();
+    }
+  }
 
   void setPage(DrugTab selectPage) {
     _page = selectPage;
     notifyListeners();
   }
 
-  void addDose(Dose newDose) {
-    final dose = newDose.copyWith(id: _uuid.v4());
-    _all.add(dose);
-    debugPrint("มี ${_all.length}");
-    notifyListeners();
-  }
-
-  void removeDose(Dose dose) {
-    _all.removeWhere((d) => d.id == dose.id);
-    debugPrint("มี ${_all.length}");
-    notifyListeners();
-  }
 
   void updatedDose(Dose updateDose) {
-    final index = _all.indexWhere((d) => d.id == updateDose.id);
+    final index = _myMedicines.indexWhere((d) => d.id == updateDose.id);
     if (index != -1) {
-      _all[index] = updateDose;
+      _myMedicines[index] = updateDose;
       notifyListeners();
     }
   }

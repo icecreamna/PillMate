@@ -17,8 +17,12 @@ class AddSingleNotification extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AddSingleNotificationProvider(dose),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AddSingleNotificationProvider(dose),
+        ),
+      ],
       child: _AddSingleNotificationView(),
     );
   }
@@ -67,99 +71,119 @@ class _AddSingleNotificationViewState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              addS.tempDose.name,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              addS.tempDose.description,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              "ครั้งละ " +
-                                  addS.tempDose.amountPerDose +
-                                  addS.tempDose.unit +
-                                  " " +
-                                  "วันละ " +
-                                  addS.tempDose.frequency +
-                                  " " +
-                                  "ครั้ง",
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              addS.tempDose.instruction,
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            if (!addS.tempDose.import) ...[
-                              SizedBox(
-                                width: 95,
-                                height: 35,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => MultiProvider(
-                                          providers: [
-                                            ChangeNotifierProvider.value(
-                                              value: context
-                                                  .read<
-                                                    AddSingleNotificationProvider
-                                                  >(),
-                                            ),
-                                            ChangeNotifierProvider(
-                                              create: (_) => AddEditProvider(
-                                                pageFrom: "edit",
-                                                editDose: addS.tempDose,
-                                              ),
-                                            ),
-                                          ],
-                                          child: const AddEditView(),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF55FF00),
-                                    elevation: 4,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 4,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    "แก้ไขข้อมูลยา",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.visible,
-                                  ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                addS.tempDose.name,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
                                 ),
                               ),
+                              const SizedBox(height: 5),
+                              Text(
+                                addS.tempDose.description,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                "ครั้งละ " +
+                                    addS.tempDose.amountPerDose +
+                                    addS.tempDose.unit +
+                                    " " +
+                                    "วันละ " +
+                                    addS.tempDose.frequency +
+                                    " " +
+                                    "ครั้ง",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                addS.tempDose.instruction,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              if (!addS.tempDose.import) ...[
+                                SizedBox(
+                                  width: 95,
+                                  height: 35,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => MultiProvider(
+                                            providers: [
+                                              ChangeNotifierProvider.value(
+                                                value: context
+                                                    .read<DrugProvider>(),
+                                              ),
+                                              ChangeNotifierProvider.value(
+                                                value: context
+                                                    .read<
+                                                      AddSingleNotificationProvider
+                                                    >(),
+                                              ),
+                                              ChangeNotifierProvider(
+                                                create: (_) => AddEditProvider(
+                                                  pageFrom: "edit",
+                                                  editDose: addS.tempDose,
+                                                ),
+                                              ),
+                                            ],
+                                            child: const AddEditView(),
+                                          ),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        await context
+                                            .read<DrugProvider>()
+                                            .loadMyMedicines();
+
+                                        final updated = context
+                                            .read<DrugProvider>()
+                                            .doseAll
+                                            .firstWhere(
+                                              (m) => m.id == addS.tempDose.id,
+                                              orElse: () => addS.tempDose,
+                                            );
+                                        addS.updatedTempDose(updated);
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF55FF00),
+                                      elevation: 4,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 4,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      "แก้ไขข้อมูลยา",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.visible,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 15),
                             ],
-                            const SizedBox(height: 15),
-                          ],
+                          ),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -357,8 +381,8 @@ class _AddSingleNotificationViewState
                       height: 70,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.read<DrugProvider>().removeDose(
-                            addS.tempDose,
+                          context.read<DrugProvider>().removeMedicine(
+                            id: int.parse(addS.tempDose.id),
                           );
                           Navigator.pop(context);
                         },
@@ -383,10 +407,7 @@ class _AddSingleNotificationViewState
                         width: 181,
                         height: 70,
                         child: ElevatedButton(
-                          onPressed: () {
-                            context.read<DrugProvider>().updatedDose(
-                              addS.tempDose,
-                            );
+                          onPressed: () async {
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -408,10 +429,7 @@ class _AddSingleNotificationViewState
                       width: 181,
                       height: 70,
                       child: ElevatedButton(
-                        onPressed: () {
-                          context.read<DrugProvider>().updatedDose(
-                            addS.tempDose,
-                          );
+                        onPressed: () async {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(

@@ -20,6 +20,13 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProfileProvider>();
+    if (p.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (p.user == null) {
+      return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลผู้ใช้ ❌")));
+    }
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
@@ -70,18 +77,18 @@ class ProfileScreen extends StatelessWidget {
                               barrierDismissible: false,
                               builder: (context) {
                                 final idCardController = TextEditingController(
-                                  text: p.user.idCard,
+                                  text: p.user!.idCard,
                                 );
                                 final firstNameController =
                                     TextEditingController(
-                                      text: p.user.firstName,
+                                      text: p.user!.firstName,
                                     );
                                 final lastNameController =
                                     TextEditingController(
-                                      text: p.user.lastName,
+                                      text: p.user!.lastName,
                                     );
                                 final telController = TextEditingController(
-                                  text: p.user.tel,
+                                  text: p.user!.tel,
                                 );
                                 return SingleChildScrollView(
                                   child: Dialog(
@@ -313,7 +320,7 @@ class ProfileScreen extends StatelessWidget {
                                                 onPressed: () {
                                                   if (_formKey.currentState!
                                                       .validate()) {
-                                                    p.updateUser(
+                                                    p.updatedInfoProfile(
                                                       InfoUser(
                                                         firstName:
                                                             firstNameController
@@ -329,13 +336,16 @@ class ProfileScreen extends StatelessWidget {
                                                         tel: telController.text
                                                             .trim(),
                                                       ),
+                                                      context,
                                                     );
                                                     Navigator.pop(context);
                                                   }
                                                 },
-                                                child: const Text(
-                                                  "บันทึกข้อมูล",
-                                                  style: TextStyle(
+                                                child: Text(
+                                                  p.isLoading
+                                                      ? "กำลังบันทึก..."
+                                                      : "บันทึกข้อมูล",
+                                                  style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 24,
                                                   ),
@@ -367,7 +377,7 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Text(
                           "เลขบัตรประชาชน :"
-                          " ${p.user.idCard}",
+                          " ${p.user!.idCard}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -376,7 +386,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "ชื่อ :"
-                          " ${p.user.firstName}",
+                          " ${p.user!.firstName}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -385,7 +395,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "นามสกุล :"
-                          " ${p.user.lastName}",
+                          " ${p.user!.lastName}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -394,7 +404,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "เบอร์โทรศัพท์ :"
-                          " ${p.user.tel}",
+                          " ${p.user!.tel}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -440,8 +450,10 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "วันที่ :"
-                          " ${p.appointmentDay}",
+                          p.appointmentDay == null
+                              ? "ไม่มีใบนัดถัดไป"
+                              : "วันที่ :"
+                                    " ${p.appointmentDay}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -449,8 +461,10 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          "เวลา :"
-                          " ${p.appointmentHourMinute}",
+                          p.appointmentHourMinute == null
+                              ? "-"
+                              : "เวลา :"
+                                    " ${p.appointmentHourMinute}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -458,8 +472,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          "Note :"
-                          " ${p.appointment.note}",
+                          "Note : ${p.appointment?.note ?? '-'}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -485,9 +498,6 @@ class ProfileScreen extends StatelessWidget {
                               backgroundColor: Colors.green,
                               duration: Duration(seconds: 2),
                             ),
-                          );
-                          await Future.delayed(
-                            const Duration(milliseconds: 800),
                           );
                           Navigator.pushAndRemoveUntil(
                             context,

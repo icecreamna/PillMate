@@ -1,46 +1,71 @@
 class Dose {
   final String id;
   final String name;
+  final String description;
   final String amountPerDose;
   final String frequency;
   final String instruction;
-  final String picture;
-  final String description;
   final String unit;
-  final bool import;
+  final String picture;
+  final bool import; // hospital = true, manual = false
+
+  final int? formId;
+  final int? unitId;
+  final int? instructionId;
 
   Dose({
     required this.id,
     required this.name,
     required this.description,
-    required this.import,
     required this.amountPerDose,
     required this.frequency,
     required this.instruction,
     required this.unit,
     required this.picture,
+    required this.import,
+    this.formId,
+    this.unitId,
+    this.instructionId,
   });
-  Dose copyWith({
-    String? id,
-    String? name,
-    String? description,
-    bool? import,
-    String? amountPerDose,
-    String? frequency,
-    String? instruction,
-    String? picture,
-    String? unit,
-  }) {
+
+
+  /// ✅ แปลงจาก JSON ที่มาจาก backend
+  factory Dose.fromJson(Map<String, dynamic> json) {
+    final formName = json["form_name"] ?? "-";
     return Dose(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      import: import ?? this.import,
-      amountPerDose: amountPerDose ?? this.amountPerDose,
-      frequency: frequency ?? this.frequency,
-      instruction: instruction ?? this.instruction,
-      picture: picture ?? this.picture,
-      unit: unit ?? this.unit,
+      id: json["id"].toString(),
+      name: json["med_name"] ?? "-",
+      description: json["properties"] ?? "-",
+      amountPerDose: json["amount_per_time"] ?? "-",
+      frequency: json["times_per_day"] ?? "-",
+      instruction: json["instruction_name"] ?? "-",
+      unit: json["unit_name"] ?? "-",
+      picture: _mapImage(formName),
+      import: (json["source"] == "hospital"),
+
+      formId: json["form_id"],
+      unitId: json["unit_id"],
+      instructionId: json["instruction_id"],
     );
+  }
+
+  /// ✅ Map ชื่อ form เป็นภาพไอคอน
+  static String _mapImage(String formName) {
+    switch (formName) {
+      case "ยาเม็ด":
+        return "assets/images/pill.png";
+      case "แคปซูล":
+        return "assets/images/capsule.png";
+      case "ยาน้ำ":
+        return "assets/images/syrup.png";
+      case "ยาใช้ทา":
+        return "assets/images/ointment.png";
+      case "ยาฉีด":
+        return "assets/images/vaccine.png";
+      case "ยาใช้หยด":
+        return "assets/images/eye-drop 1.png";
+      default:
+        return "assets/images/pill.png";
+    }
   }
 }
