@@ -18,7 +18,7 @@
 .rxMeta{ color:#111; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .time{ font-weight:700; }
 .dot{ opacity:.5; }
-.doctor{ }
+/* .doctor{ } */
 .rxId{ color:#6b7280; }
 
 .actionsRow{ display:flex; gap:8px; }
@@ -31,7 +31,7 @@
 }
 .actionPrimary:hover{ background:#2563eb; }
 
-.tableWrap{ }
+/* .tableWrap{ } */
 .table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:15px; color:#111; }
 .table th,.table td{ padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left; }
 .table thead th{ background:#6b7280; color:#fff; font-weight:700; }
@@ -39,3 +39,9 @@
 
 .checkbox{ width:16px; height:16px; accent-color:#16a34a; }
 .dose{ white-space:nowrap; }
+
+.actionDanger{
+  height:30px; padding:0 12px; border-radius:8px;
+  border:1px solid #b91c1c; background:#ef4444; color:#fff; cursor:pointer;
+}
+.actionDanger:hover{ background:#b91c1c; }

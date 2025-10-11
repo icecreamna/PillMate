@@ -23,3 +23,15 @@
   display:inline-block; padding:2px 8px; border-radius:999px;
   background:#22c55e; color:#fff; font-weight:700; font-size:12px;
 }
+
+/* จัดวาง badge + ปุ่มลบ ให้ชิดขวาและมีช่องว่าง */
+.rowActions{
+  display:flex; align-items:center; justify-content:flex-end; gap:8px;
+}
+
+/* ปุ่มลบ (โทนแดงให้สอดคล้องกับชุดสไตล์ที่ใช้อยู่) */
+.deleteBtn{
+  height:26px; padding:0 10px; font-size:12px; border-radius:8px;
+  border:1px solid #b91c1c; background:#ef4444; color:#fff; cursor:pointer;
+}
+.deleteBtn:hover{ background:#b91c1c; }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styles from '../../../styles/doctor/appointment/ViewAppointment.module.css'
 
@@ -24,16 +24,26 @@ function formatTimeTH(d) {
 
 export default function ViewAppointment() {
   const nav = useNavigate();
-  const { id: patientId } = useParams(); // มาจาก /doc/appointment/view/:id
+  const { id: patientId } = useParams(); // /doc/appointment/view/:id
 
-  // TODO: เปลี่ยนไปเรียก API จริงด้วย patientId
-  const rows = useMemo(() => {
-    const list = MOCK_APPOINTMENTS.filter(a => String(a.patientId) === String(patientId));
-    // เรียงล่าสุดก่อน
-    return list.sort((a,b) => new Date(b.at) - new Date(a.at));
+  // กรอง mock ตาม patientId และเรียงล่าสุดก่อน -> ใช้เป็นค่าเริ่มต้นของ state
+  const initial = useMemo(() => {
+    return MOCK_APPOINTMENTS
+      .filter(a => String(a.patientId) === String(patientId))
+      .sort((a,b) => new Date(b.at) - new Date(a.at));
   }, [patientId]);
 
+  // ใช้ state เพื่อให้ลบแล้วรีเฟรช UI ได้
+  const [rows, setRows] = useState(initial);
+  useEffect(() => { setRows(initial); }, [initial]);
+
   const patientName = rows[0]?.patientName || `Patient #${patientId}`;
+
+  const onDelete = (id) => {
+    if (!confirm('ยืนยันลบนัดหมายนี้?')) return;
+    // TODO: เรียก DELETE /api/appointments/:id จริงก่อนค่อย setRows ตามผลลัพธ์
+    setRows(prev => prev.filter(r => r.id !== id));
+  };
 
   return (
     <div>
@@ -55,7 +65,7 @@ export default function ViewAppointment() {
               <th style={{width:'22%'}}>วันที่</th>
               <th style={{width:'20%'}}>เวลา</th>
               <th>หมายเหตุ</th>
-              <th style={{width:'14%'}}></th>
+              <th style={{width:'18%'}}></th>
             </tr>
           </thead>
           <tbody>
@@ -75,7 +85,10 @@ export default function ViewAppointment() {
                     <td>{formatTimeTH(r.at)}</td>
                     <td className={styles.note}>{r.note || '-'}</td>
                     <td className={styles.statusCell}>
-                      {isLatest && <span className={styles.latestBadge}>ล่าสุด</span>}
+                      <div className={styles.rowActions}>
+                        {isLatest && <span className={styles.latestBadge}>ล่าสุด</span>}
+                        <button className={styles.deleteBtn} onClick={()=>onDelete(r.id)}>ลบ</button>
+                      </div>
                     </td>
                   </tr>
                 );
