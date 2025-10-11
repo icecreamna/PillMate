@@ -30,9 +30,33 @@ class _AddGroupNotificationView extends StatefulWidget {
 class _AddGroupNotificationScreenState
     extends State<_AddGroupNotificationView> {
   final _formKey = GlobalKey<FormState>();
+  TextEditingController? _nameController;
 
   UnderlineInputBorder _inputBorder(Color c) {
     return UnderlineInputBorder(borderSide: BorderSide(color: c, width: 1));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final addG = context.read<AddGroupNotificationProvider>();
+
+    // ✅ สร้าง controller หลังจาก provider พร้อมใช้งาน
+    if (_nameController == null) {
+      final addG = context.read<AddGroupNotificationProvider>();
+      _nameController = TextEditingController(text: addG.keyName);
+    } else {
+      // ✅ ถ้ามีแล้ว แต่อาจจะยังเป็นค่าครั้งเก่า → sync ใหม่
+      if (_nameController!.text.isEmpty) {
+        _nameController!.text = addG.keyName;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -73,7 +97,13 @@ class _AddGroupNotificationScreenState
                       Form(
                         key: _formKey,
                         child: TextFormField(
-                          enabled: false,
+                          controller: _nameController,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return "กรุณากรอกชื่อกลุ่มยา";
+                            }
+                            return null;
+                          },
                           decoration: InputDecoration(
                             hint: Text(
                               addG.keyName,
@@ -102,9 +132,22 @@ class _AddGroupNotificationScreenState
                     context: context,
                     barrierDismissible: false,
                     builder: (context) {
-                      final myDrugs = dp.doseAll.where((d) => !d.import).toList();
+                      final currentGroupId = addG.groupId;
+                      final myDrugs = dp.doseAll
+                          .where(
+                            (d) =>
+                                !d.import &&
+                                (d.groupId == null ||
+                                    d.groupId == currentGroupId),
+                          )
+                          .toList();
                       final hospitalDrugs = dp.doseAll
-                          .where((d) => d.import)
+                          .where(
+                            (d) =>
+                                d.import &&
+                                (d.groupId == null ||
+                                    d.groupId == currentGroupId),
+                          )
                           .toList();
                       final prevChosen = addG.value;
                       List<bool> selectedMy = List.generate(
@@ -319,7 +362,10 @@ class _AddGroupNotificationScreenState
                 visible: addG.listError.isNotEmpty,
                 child: Text(
                   addG.listError,
-                  style: const TextStyle(color: Color(0xFFFF0000), fontSize: 12),
+                  style: const TextStyle(
+                    color: Color(0xFFFF0000),
+                    fontSize: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -343,7 +389,10 @@ class _AddGroupNotificationScreenState
                             horizontal: 9,
                           ),
                           decoration: const UnderlineTabIndicator(
-                            borderSide: BorderSide(width: 1, color: Colors.grey),
+                            borderSide: BorderSide(
+                              width: 1,
+                              color: Colors.grey,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -495,47 +544,47 @@ class _AddGroupNotificationScreenState
                 height: 35,
                 child: ElevatedButton(
                   onPressed: () async {
-                    if(addG.savedNotification == null) {
-                    bool hasError = false;
-                    if (addG.value.length < 2) {
-                      hasError = true;
-                      addG.setListError();
-                    } else {
-                      addG.clearListError();
-                    }
-                    if (hasError) return;
-                    final info = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MultiProvider(
-                          providers: [
-                            ChangeNotifierProvider(
-                              create: (_) => AddNotificationProvider(
-                                pageFrom: "group",
-                                keyName: addG.keyName,
-                                value: addG.value,
+                    if (addG.savedNotification == null) {
+                      bool hasError = false;
+                      if (addG.value.length < 2) {
+                        hasError = true;
+                        addG.setListError();
+                      } else {
+                        addG.clearListError();
+                      }
+                      if (hasError) return;
+                      final info = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MultiProvider(
+                            providers: [
+                              ChangeNotifierProvider(
+                                create: (_) => AddNotificationProvider(
+                                  pageFrom: "group",
+                                  keyName: addG.keyName,
+                                  value: addG.value,
+                                ),
                               ),
-                            ),
-                          ],
-                          child: const AddNotificationScreen(),
+                            ],
+                            child: const AddNotificationScreen(),
+                          ),
                         ),
-                      ),
-                    );
-          
-                    if (info != null && info is NotificationInfo) {
-                      debugPrint(
-                        "ได้ข้อมูลกลับจาก AddNotificationScreen มา Groupแล้ว",
                       );
-                      debugPrint("ชนิด: ${info.type}");
-                      debugPrint("เวลา: ${info.times}");
-                      debugPrint("วันเริ่มต้น: ${info.startDate}");
-                      debugPrint("วันสิ้นสุด: ${info.endDate}");
-          
-                      addG.saveNotification(info);
+
+                      if (info != null && info is NotificationInfo) {
+                        debugPrint(
+                          "ได้ข้อมูลกลับจาก AddNotificationScreen มา Groupแล้ว",
+                        );
+                        debugPrint("ชนิด: ${info.type}");
+                        debugPrint("เวลา: ${info.times}");
+                        debugPrint("วันเริ่มต้น: ${info.startDate}");
+                        debugPrint("วันสิ้นสุด: ${info.endDate}");
+
+                        addG.saveNotification(info);
+                      }
+                    } else {
+                      addG.clearNotification();
                     }
-                  }else {
-                    addG.clearNotification();
-                  }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: addG.savedNotification == null
@@ -564,9 +613,26 @@ class _AddGroupNotificationScreenState
                     height: 70,
                     margin: const EdgeInsets.only(bottom: 60),
                     child: ElevatedButton(
-                      onPressed: () {
-                        dp.removeGroup(addG.keyName);
-                        Navigator.pop(context);
+                      onPressed: () async {
+                        final success = await addG.deleteGroup(
+                          groupId: (addG.groupId).toString(),
+                        );
+
+                        if (success) {
+                          await context.read<DrugProvider>().loadGroups();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("✅ ลบกลุ่มยาเรียบร้อย"),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("❌ ลบกลุ่มยาไม่สำเร็จ"),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF0000),
@@ -587,7 +653,8 @@ class _AddGroupNotificationScreenState
                     height: 70,
                     margin: const EdgeInsets.only(bottom: 60),
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        if (!_formKey.currentState!.validate()) return;
                         bool hasError = false;
                         if (addG.value.length < 2) {
                           hasError = true;
@@ -596,9 +663,32 @@ class _AddGroupNotificationScreenState
                           addG.clearListError();
                         }
                         if (hasError) return;
-          
-                        dp.updatedDoseGroup(addG.keyName, addG.value);
-                        Navigator.pop(context);
+
+                        final newName = _nameController!.text;
+                        debugPrint(
+                          "📝 groupName ที่จะส่ง: $newName (เดิมคือ ${addG.keyName})",
+                        );
+                        final success = await addG.updateGroup(
+                          groupId: addG.groupId,
+                          groupName: _nameController!.text,
+                          medicineIds: addG.value,
+                        );
+
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("✅ บันทึกกลุ่มสำเร็จ"),
+                            ),
+                          );
+                          await context.read<DrugProvider>().loadGroups();
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("❌ บันทึกกลุ่มไม่สำเร็จ"),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF94B4C1),

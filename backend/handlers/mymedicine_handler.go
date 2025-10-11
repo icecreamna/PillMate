@@ -31,6 +31,7 @@ func GetMyMedicines(db *gorm.DB, patientID uint) ([]struct {
 	FormID          uint   `json:"form_id"`
 	UnitID          uint   `json:"unit_id"`
 	InstructionID   uint   `json:"instruction_id"`
+	GroupId         *uint  `json:"group_id"`
 	FormName        string `json:"form_name"`
 	UnitName        string `json:"unit_name"`
 	InstructionName string `json:"instruction_name"`
@@ -46,6 +47,7 @@ func GetMyMedicines(db *gorm.DB, patientID uint) ([]struct {
 		FormID          uint   `json:"form_id"`
 		UnitID          uint   `json:"unit_id"`
 		InstructionID   uint   `json:"instruction_id"`
+		GroupId         *uint  `json:"group_id"`
 		FormName        string `json:"form_name"`
 		UnitName        string `json:"unit_name"`
 		InstructionName string `json:"instruction_name"`
@@ -62,6 +64,7 @@ func GetMyMedicines(db *gorm.DB, patientID uint) ([]struct {
 			m.form_id,
 			m.unit_id,
 			m.instruction_id,
+			m.group_id,
 			f.form_name,
 			u.unit_name,
 			i.instruction_name,

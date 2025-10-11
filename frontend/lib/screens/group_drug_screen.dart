@@ -32,6 +32,15 @@ class GroupDrugScreen extends StatelessWidget {
               ),
               child: InkWell(
                 onTap: () {
+                  final groupId = dp.groupsId[key]; // 🆔 เก็บ id ของกลุ่ม
+
+                  if (groupId == null) {
+                    debugPrint("❌ ไม่พบ groupId สำหรับกลุ่ม $key");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("ไม่พบข้อมูลกลุ่มนี้")),
+                    );
+                    return; // ❌ หยุดไม่ไปหน้าใหม่
+                  }
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -41,15 +50,16 @@ class GroupDrugScreen extends StatelessWidget {
                             value: context.read<DrugProvider>(),
                           ),
                           ChangeNotifierProvider(
-                            create: (_) =>
-                                AddGroupProvider(),
+                            create: (_) => AddGroupProvider(),
                           ),
                           ChangeNotifierProvider(
-                            create: (_) =>
-                                AddGroupNotificationProvider(key, value),
+                            create: (_) => AddGroupNotificationProvider(
+                              groupId: groupId,
+                              keyName: key,
+                            ),
                           ),
                         ],
-                        child:const AddGroupNotificationScreen(),
+                        child: const AddGroupNotificationScreen(),
                       ),
                     ),
                   );

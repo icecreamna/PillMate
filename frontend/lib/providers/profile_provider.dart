@@ -101,7 +101,7 @@ class ProfileProvider extends ChangeNotifier {
           note: data['note'],
           hourMinute: time,
         );
-        debugPrint("✅ Profile loaded");
+        debugPrint("✅ Appointment loaded");
       } else {
         debugPrint("✅ Appointment failed: (no data)");
       }

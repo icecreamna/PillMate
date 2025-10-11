@@ -12,6 +12,7 @@ class Dose {
   final int? formId;
   final int? unitId;
   final int? instructionId;
+  final int? groupId;
 
   Dose({
     required this.id,
@@ -26,6 +27,7 @@ class Dose {
     this.formId,
     this.unitId,
     this.instructionId,
+    this.groupId
   });
 
 
@@ -46,6 +48,7 @@ class Dose {
       formId: json["form_id"],
       unitId: json["unit_id"],
       instructionId: json["instruction_id"],
+      groupId: json["group_id"]
     );
   }
 

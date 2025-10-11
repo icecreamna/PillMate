@@ -24,6 +24,7 @@ class _DrugScreenState extends State<DrugScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DrugProvider>().loadMyMedicines();
+      context.read<DrugProvider>().loadGroups();
     });
   }
 

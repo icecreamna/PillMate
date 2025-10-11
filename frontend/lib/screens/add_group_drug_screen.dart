@@ -118,9 +118,20 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
                   context: context,
                   barrierDismissible: false,
                   builder: (context) {
-                    final myDrugs = dp.doseAll.where((d) => !d.import).toList();
+                    final myDrugs = dp.doseAll
+                        .where(
+                          (d) =>
+                              !d.import &&
+                              (d.groupId == null),
+                        )
+                        .toList();
+
                     final hospitalDrugs = dp.doseAll
-                        .where((d) => d.import)
+                        .where(
+                          (d) =>
+                              d.import &&
+                              (d.groupId == null),
+                        )
                         .toList();
                     final prevChosen = agp.selectedList;
                     List<bool> selectedMy = List.generate(
@@ -404,27 +415,29 @@ class _AddGroupDrugState extends State<AddGroupDrug> {
               margin: const EdgeInsets.only(bottom: 60),
               child: ElevatedButton(
                 onPressed: () async {
-                  bool hasError = false ;
+                  bool hasError = false;
                   if (!_formKey.currentState!.validate()) hasError = true;
                   if (agp.selectedList.length < 2) {
-                    hasError = true; 
+                    hasError = true;
                     agp.setListError();
-                  }else {
+                  } else {
                     agp.clearListError();
                   }
-                  if(hasError) return ;
+                  if (hasError) return;
 
-                  final success = await agp.addGroups(_nameGroup.text, agp.selectedList);
+                  final success = await agp.addGroups(
+                    _nameGroup.text,
+                    agp.selectedList,
+                  );
                   if (success && !hasError) {
+                    await context.read<DrugProvider>().loadGroups();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("✅ สร้างกลุ่มยาเรียบร้อย")),
+                      const SnackBar(content: Text("✅ สร้างกลุ่มยาเรียบร้อย")),
                     );
                     Navigator.pop(context);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("❌ สร้างกลุ่มยาไม่สำเร็จ")),
+                      const SnackBar(content: Text("❌ สร้างกลุ่มยาไม่สำเร็จ")),
                     );
                   }
                 },

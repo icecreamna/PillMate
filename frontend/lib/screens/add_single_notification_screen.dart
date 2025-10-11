@@ -380,11 +380,25 @@ class _AddSingleNotificationViewState
                       width: 181,
                       height: 70,
                       child: ElevatedButton(
-                        onPressed: () {
-                          context.read<DrugProvider>().removeMedicine(
+                        onPressed: () async {
+                          final success = await context.read<DrugProvider>().removeMedicine(
                             id: int.parse(addS.tempDose.id),
                           );
+                          if (success) {
+                          await context.read<DrugProvider>().loadMyMedicines();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("✅ ลบยาเรียบร้อย"),
+                            ),
+                          );
                           Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("❌ ลบยาไม่สำเร็จ"),
+                            ),
+                          );
+                        }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF0000),
