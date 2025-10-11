@@ -6,7 +6,8 @@ import (
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
 	"time"
-	
+	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 // uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
@@ -243,20 +244,56 @@ func SeedInitialData(db *gorm.DB) {
 	// --- Seed WebAdmins (หมอ / แอดมิน) ---
 	admins := []models.WebAdmin{
 		{
-			Username:  "doctor@test.com",
-			Password:  "1234", 
-			FirstName: "ยาดม",
-			LastName:  "หงไทย",
-			Role:      "doctor",
-			
-		}}
-	for i := range admins {
-		if err := db.FirstOrCreate(&admins[i],
-			models.WebAdmin{Username: admins[i].Username},
-		).Error; err != nil {
-			log.Println("Seed webadmin error:", err)
+			Username:  "admin@pillmate.com",
+			Password:  "admin1234", // default ครั้งแรก
+			FirstName: "System",
+			LastName:  "Admin",
+			Role:      "superadmin",
+		},
+	}
+
+	isBcrypt := func(s string) bool {
+		return strings.HasPrefix(s, "$2a$") || strings.HasPrefix(s, "$2b$") || strings.HasPrefix(s, "$2y$")
+	}
+
+	for _, a := range admins {
+		// เตรียม hash สำหรับ "กรณีสร้างใหม่"
+		hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Println("bcrypt error:", err)
+			continue
+		}
+
+		var out models.WebAdmin
+		// ใช้ UNIQUE(username) ที่มีอยู่แล้วได้เลย (case-sensitive)
+		tx := db.
+			Where("username = ?", a.Username).
+			Attrs(models.WebAdmin{
+				Username:  a.Username,
+				Password:  string(hashed), // ถ้าสร้างใหม่จะเก็บเป็น hash ทันที
+				FirstName: a.FirstName,
+				LastName:  a.LastName,
+				Role:      a.Role,
+			}).
+			FirstOrCreate(&out)
+		if tx.Error != nil {
+			log.Println("Seed webadmin FirstOrCreate error:", tx.Error)
+			continue
+		}
+
+		// ถ้ามีอยู่แล้ว แต่ password ยังเป็น plaintext -> รีแฮชทับ (idempotent)
+		if !isBcrypt(out.Password) {
+			newHashed, err := bcrypt.GenerateFromPassword([]byte(out.Password), bcrypt.DefaultCost)
+			if err != nil {
+				log.Println("bcrypt rehash error:", err)
+				continue
+			}
+			if err := db.Model(&out).Update("password", string(newHashed)).Error; err != nil {
+				log.Println("Seed webadmin rehash update error:", err)
+			}
 		}
 	}
+
 
 	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
 	prescriptions := []models.Prescription{

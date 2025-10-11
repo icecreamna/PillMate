@@ -4,47 +4,74 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
+
 	"github.com/joho/godotenv"
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	
 )
 
 var DB *gorm.DB
 
-func Init() {
-	
-	// โหลดค่า .env
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("ไม่สามารถโหลดไฟล์ .env:", err)
+func getenv(k, def string) string {
+	if v := strings.TrimSpace(os.Getenv(k)); v != "" {
+		return v
 	}
+	return def
+}
 
-	// อ่านค่าจาก environment
+func mustEnv(keys ...string) {
+	for _, k := range keys {
+		if strings.TrimSpace(os.Getenv(k)) == "" {
+			log.Fatalf("missing required env: %s", k)
+		}
+	}
+}
+
+func Init() {
+	// ----- โหลดไฟล์ env หลายไฟล์ตามโหมด -----
+	// ลองโหลด .env (ถ้ามี) + .env.common + .env.<mode>
+	_ = godotenv.Load(".env") // optional
+	mode := getenv("APP_MODE", "all")
+	_ = godotenv.Load(".env.common")
+	_ = godotenv.Load(".env." + mode) // .env.admin / .env.mobile / .env.all (แล้วแต่คุณสร้าง)
+
+	// ----- อ่านค่าจำเป็นและตรวจ -----
+	mustEnv("DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME")
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Bangkok",
-		host, user, password, dbname, port)
-		fmt.Println("DSN:", dsn)
+	sslmode := getenv("DB_SSLMODE", "disable")
 
 	// ตั้ง timezone ของ Go เป็นไทย
-	loc, _ := time.LoadLocation("Asia/Bangkok")
-	time.Local = loc
+	if loc, err := time.LoadLocation("Asia/Bangkok"); err == nil {
+		time.Local = loc
+	}
 
-	// New logger for detailed SQL logging
+	// ----- DSN (ไม่พิมพ์ password ออก log) -----
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Bangkok",
+		host, user, password, dbname, port, sslmode,
+	)
+	safeDSN := fmt.Sprintf(
+		"host=%s user=%s password=**** dbname=%s port=%s sslmode=%s TimeZone=Asia/Bangkok",
+		host, user, dbname, port, sslmode,
+	)
+	fmt.Println("DSN:", safeDSN)
+
+	// ----- เปิด GORM -----
 	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
 		logger.Config{
-			SlowThreshold: time.Second, // Slow SQL threshold
-			LogLevel:      logger.Info, // Log level
-			Colorful:      true,        // Enable color
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Info,
+			Colorful:      true,
 		},
 	)
 
@@ -53,43 +80,48 @@ func Init() {
 		log.Fatal("ไม่สามารถเชื่อมต่อฐานข้อมูล:", err)
 	}
 
-	// สร้างตารางอัตโนมัติ
-	err = db.AutoMigrate(
-		&models.Patient{}, 
-		&models.VerificationCode{},
-		&models.Form{},
-		&models.Unit{},
-		&models.FormUnit{},
-		&models.Instruction{},
-		&models.Hospital{},
-		&models.MedicineInfo{},
-		&models.Prescription{},
-		
-		&models.Appointment{},
-		&models.AppointmentNoti{},
-		&models.NotiLog{},
-		&models.Group{},
-		&models.MyMedicine{},
-		&models.NotiFormat{},
-		&models.NotiInfo{},
-		&models.NotiItem{},
-		&models.Symptom{},
-	)
-	if err != nil {
-		log.Fatal("AutoMigrate ล้มเหลว:", err)
+	// ----- Health check DB -----
+	if err := db.Exec("SELECT 1").Error; err != nil {
+		log.Fatal("DB ping failed:", err)
 	}
 
-	// เพิ่มข้อมูลจากseed
-	SeedInitialData(db)
+	// ----- AutoMigrate (ให้รันเฉพาะฝั่งที่กำหนด) -----
+	// ตั้ง RUN_MIGRATIONS=true ใน .env.admin เท่านั้น
+	if strings.EqualFold(getenv("RUN_MIGRATIONS", "false"), "true") {
+		if err := db.AutoMigrate(
+			&models.Patient{},
+			&models.VerificationCode{},
+			&models.Form{},
+			&models.Unit{},
+			&models.FormUnit{},
+			&models.Instruction{},
+			&models.Hospital{},
+			&models.MedicineInfo{},
+			&models.Prescription{},
+			&models.Appointment{},
+			&models.AppointmentNoti{},
+			&models.NotiLog{},
+			&models.Group{},
+			&models.MyMedicine{},
+			&models.NotiFormat{},
+			&models.NotiInfo{},
+			&models.NotiItem{},
+			&models.Symptom{},
+			// เพิ่มตารางฝั่งเว็บ ถ้ามี เช่น:
+			// &models.WebAdmin{},
+		); err != nil {
+			log.Fatal("AutoMigrate ล้มเหลว:", err)
+		}
+		// seed (ถ้าต้อง) — ขยับมาอยู่หลัง migrate และทำเฉพาะฝั่งที่รัน migrate
+		SeedInitialData(db)
+	}
 
 	DB = db
 	fmt.Println("เชื่อมต่อฐานข้อมูลสำเร็จด้วย GORM")
 
-	// Test timezone
-	var med models.MedicineInfo
-	if err := db.First(&med).Error; err != nil {
-		log.Fatal(err)
+	// ----- แสดงเวลา NOW() จาก DB (ไม่ fatal ถ้าว่าง) -----
+	var now time.Time
+	if err := db.Raw("SELECT NOW()").Scan(&now).Error; err == nil {
+		fmt.Println("DB NOW():", now.In(time.Local))
 	}
-	fmt.Println("CreatedAt Go Local Time:", med.CreatedAt)
-
 }
