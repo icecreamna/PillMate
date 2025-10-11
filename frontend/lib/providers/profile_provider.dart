@@ -106,7 +106,7 @@ class ProfileProvider extends ChangeNotifier {
         debugPrint("✅ Appointment failed: (no data)");
       }
     } catch (e) {
-      debugPrint("Provider cache $e");
+      debugPrint("Provider fetchappoinment cache $e");
     } finally {
       _isLoading = false;
       notifyListeners();

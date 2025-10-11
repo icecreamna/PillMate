@@ -2,13 +2,12 @@ package routes
 
 import (
 	"errors"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
 	"github.com/fouradithep/pillmate/db"
-	"github.com/fouradithep/pillmate/models"
+	"github.com/fouradithep/pillmate/handlers"
 )
 
 func SetupAppointmentRoutes(api fiber.Router) {
@@ -67,28 +66,8 @@ func SetupAppointmentRoutes(api fiber.Router) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
-		now := time.Now().In(time.Local)
-		today := now.Format("2006-01-02")
-
-		var nextAppointment models.Appointment
-
-		// ✅ query นัดที่ยังไม่ถึงวัน/เวลา
-		err := db.DB.
-			Select(`
-		appointment_date,
-		('2000-01-01 ' || TO_CHAR(appointment_time, 'HH24:MI:SS'))::timestamp AS appointment_time,
-		note
-	`).
-			Where(`
-		patient_id = ?
-		AND (
-			appointment_date > ?
-			OR (appointment_date = ? AND appointment_time > ?)
-		)
-	`, patientID, today, today, now.Format("15:04:05")).
-			Order("appointment_date ASC, appointment_time ASC").
-			First(&nextAppointment).Error
-
+		// ✅ เรียก handler
+		nextAppointment, err := handlers.GetNextAppointment(db.DB, patientID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{

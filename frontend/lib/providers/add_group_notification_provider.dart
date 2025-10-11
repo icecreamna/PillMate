@@ -12,6 +12,7 @@ class AddGroupNotificationProvider extends ChangeNotifier {
   final int groupId;
   List<String> _value = [];
   List<Dose> memberList = [];
+  
 
   List<String> get value => _value;
   bool get isLoading => _isloading;
@@ -26,7 +27,6 @@ class AddGroupNotificationProvider extends ChangeNotifier {
   Future<void> loadGroupDetail() async {
     _isloading = true;
     notifyListeners();
-
     try {
       final detail = await _service.getGroupWithDetail(groupId: groupId);
       final members = detail!["members"] as List? ?? [];

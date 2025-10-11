@@ -7,7 +7,7 @@ class AddGroupProvider extends ChangeNotifier {
   String listError = "";
 
   bool _isLoading = false;
-  List<Map<String, dynamic>> _groups = [];
+  final List<Map<String, dynamic>> _groups = [];
   List<String> _selectedList = [];
 
   bool get isLoading => _isLoading;

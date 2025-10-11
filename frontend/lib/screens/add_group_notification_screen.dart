@@ -562,6 +562,7 @@ class _AddGroupNotificationScreenState
                                 create: (_) => AddNotificationProvider(
                                   pageFrom: "group",
                                   keyName: addG.keyName,
+                                  groupId: addG.groupId,
                                   value: addG.value,
                                 ),
                               ),

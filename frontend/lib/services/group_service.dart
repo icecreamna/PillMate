@@ -17,7 +17,7 @@ class GroupService {
 
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
-      print("โหลดกลุ่มสำเร็จ;${body["data"]}");
+      print("โหลดกลุ่มสำเร็จ${body["data"]}");
       return body["data"] ?? [];
     } else {
       print("❌ โหลดกลุ่มไม่สำเร็จ: ${res.statusCode}");

@@ -26,11 +26,16 @@ class DrugProvider extends ChangeNotifier {
   Future<void> loadMyMedicines() async {
     _isLoading = true;
     notifyListeners();
-
     try {
       final medicines = await _medicineService.getMyMedicines();
-      _myMedicines = medicines!;
-      debugPrint("✅ โหลดยา ${medicines.length} รายการสำเร็จ");
+      _myMedicines = [];
+      if (medicines!.isNotEmpty) {
+        _myMedicines.addAll(medicines);
+        debugPrint("✅ โหลดยา ${medicines.length} รายการสำเร็จ");
+        notifyListeners();
+      } else {
+        debugPrint("⚠️ ไม่มีรายการยา");
+      }
     } catch (e) {
       debugPrint("❌ โหลดยาไม่สำเร็จ: $e");
       _myMedicines = [];
@@ -38,6 +43,34 @@ class DrugProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> syncHospitalMedicines(BuildContext context) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final newMeds = await _medicineService.getMedeicineHospital();
+      if (newMeds!.isNotEmpty) {
+        _myMedicines.addAll(newMeds);
+        debugPrint(
+          "✅ เพิ่มยาจากโรงพยาบาล ${newMeds.length} รายการเข้า List แล้ว",
+        );
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ โหลดยาจากโรงพยาบาลเรียบร้อย")),
+        );
+      } else {
+        debugPrint("⚠️ ไม่มีรายการใหม่จากโรงพยาบาล");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("⚠️ ไม่มีรายการใหม่จากโรงพยาบาล")),
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ Error sync hospital medicines: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> removeMedicine({required int id}) async {

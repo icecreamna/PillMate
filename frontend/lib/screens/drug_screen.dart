@@ -45,6 +45,7 @@ class _DrugScreenState extends State<DrugScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await context.read<DrugProvider>().loadMyMedicines();
+          await context.read<DrugProvider>().loadGroups();
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
@@ -74,7 +75,21 @@ class _DrugScreenState extends State<DrugScreen> {
                                         borderRadius: BorderRadius.zero,
                                       ),
                                     ),
-                                    onPressed: () {},
+                                    onPressed: () async {
+                                      debugPrint("🟡 ปุ่มกดแล้ว เริ่ม sync...");
+                                      await context
+                                          .read<DrugProvider>()
+                                          .syncHospitalMedicines(context);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "✅ โหลดยาจากโรงพยาบาลเรียบร้อย",
+                                          ),
+                                        ),
+                                      );
+                                    },
                                     child: const Text(
                                       "เพิ่มยาจากโรงพยาบาล",
                                       style: TextStyle(
@@ -147,7 +162,14 @@ class _DrugScreenState extends State<DrugScreen> {
                                                           BorderRadius.zero,
                                                     ),
                                               ),
-                                              onPressed: () {},
+                                              onPressed: () async {
+                                                await context
+                                                    .read<DrugProvider>()
+                                                    .syncHospitalMedicines(
+                                                      context,
+                                                    );
+    
+                                              },
                                               child: const Text(
                                                 "เพิ่มยาจากโรงพยาบาล",
                                                 style: TextStyle(

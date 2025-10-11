@@ -147,3 +147,11 @@ func MarkNotiItemNotified(db *gorm.DB, patientID, notiItemID uint, notified bool
 	}
 	return &item, nil
 }
+
+func ListNotiFormats(db *gorm.DB) ([]models.NotiFormat, error) {
+	var formats []models.NotiFormat
+	if err := db.Find(&formats).Error; err != nil {
+		return nil, err
+	}
+	return formats, nil
+}

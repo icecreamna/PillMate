@@ -21,3 +21,21 @@ class NotificationInfo {
     required this.endDate,
   });
 }
+
+class NotiFormatModel {
+  final int id;
+  final String formatName;
+
+  NotiFormatModel({
+    required this.id,
+    required this.formatName,
+  });
+
+  factory NotiFormatModel.fromJson(Map<String, dynamic> json) {
+    return NotiFormatModel(
+      id: json["id"],
+      formatName: json["format_name"] ?? "-",
+    );
+  }
+}
+

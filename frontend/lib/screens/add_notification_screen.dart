@@ -12,8 +12,21 @@ import 'package:frontend/widgets/daily_weekly_time_widget.dart';
 import 'package:frontend/widgets/fixed_time_widget.dart';
 import 'package:provider/provider.dart';
 
-class AddNotificationScreen extends StatelessWidget {
+class AddNotificationScreen extends StatefulWidget {
   const AddNotificationScreen({super.key});
+
+  @override
+  State<AddNotificationScreen> createState() => _AddNotificationScreenState();
+}
+
+class _AddNotificationScreenState extends State<AddNotificationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AddNotificationProvider>().loadNotiFormats();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,65 +284,49 @@ class AddNotificationScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: addN.selectedType.isEmpty
-                            ? null
-                            : addN.selectedType,
-                        hint: const Text(
-                          "เลือกรูปแบบการแจ้งเตือน",
-                          style: TextStyle(fontSize: 18, color: Colors.black87),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: "Fixed",
-                            child: Text(
-                              "เวลาเฉพาะ (Fixed Times)",
-                              style: TextStyle(fontSize: 20),
+                      child: addN.isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : DropdownButton<String>(
+                              value: addN.selectedType.isEmpty
+                                  ? null
+                                  : addN.selectedType,
+                              hint: const Text(
+                                "เลือกรูปแบบการแจ้งเตือน",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              items: addN.formats.map((f) {
+                                return DropdownMenuItem<String>(
+                                  value: f.id.toString(),
+                                  child: Text(
+                                    f.formatName,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) => addN.setSelectType(value!),
                             ),
-                          ),
-                          DropdownMenuItem(
-                            value: "Interval",
-                            child: Text(
-                              "ทุกกี่ชั่วโมง (Interval)",
-                              style: TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: "DailyWeekly",
-                            child: Text(
-                              "วันเว้นวัน / ทุกกี่วัน",
-                              style: TextStyle(fontSize: 20),
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: "Cycle",
-                            child: Text(
-                              "ทานต่อเนื่อง/พักยา (Cycle)",
-                              style: TextStyle(fontSize: 20),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) => addN.setSelectType(value!),
-                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (addN.selectedType == "Fixed") ...[
+                  if (addN.getTypeName(addN.selectedType) == "Fixed") ...[
                     const FixedTimeWidget(),
                   ],
-                  if (addN.selectedType == "Interval") ...[
+                  if (addN.getTypeName(addN.selectedType) == "Interval") ...[
                     const IntervalTimeWidget(),
                   ],
-                  if (addN.selectedType == "DailyWeekly") ...[
+                  if (addN.getTypeName(addN.selectedType) == "DailyWeekly") ...[
                     const DailyWeeklyTimeWidget(),
                   ],
 
-                  if (addN.selectedType == "Cycle") ...[
+                  if (addN.getTypeName(addN.selectedType) == "Cycle") ...[
                     const CycleTimeWidget(),
                   ],
                   Center(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         bool valid = true;
 
                         if (addN.startDate.isEmpty || addN.endDate.isEmpty) {
@@ -343,7 +340,7 @@ class AddNotificationScreen extends StatelessWidget {
                             ),
                           );
                         }
-                        switch (addN.selectedType) {
+                        switch (addN.getTypeName(addN.selectedType)) {
                           case "Fixed":
                             final fixed = context.read<FixedTimeProvider>();
                             if (fixed.times.isEmpty) {
@@ -409,25 +406,28 @@ class AddNotificationScreen extends StatelessWidget {
                           return "$hour:$minute";
                         }
 
-                        if (addN.selectedType == 'Fixed') {
+                        if (addN.getTypeName(addN.selectedType) == 'Fixed') {
                           selectedTimes = context
                               .read<FixedTimeProvider>()
                               .times
                               .map((t) => formatThaiTime(t))
                               .toList();
-                        } else if (addN.selectedType == 'DailyWeekly') {
+                        } else if (addN.getTypeName(addN.selectedType) ==
+                            'DailyWeekly') {
                           selectedTimes = context
                               .read<DailyWeeklyProvider>()
                               .times
                               .map((t) => formatThaiTime(t))
                               .toList();
-                        } else if (addN.selectedType == 'Cycle') {
+                        } else if (addN.getTypeName(addN.selectedType) ==
+                            'Cycle') {
                           selectedTimes = context
                               .read<CycleTimeProvider>()
                               .times
                               .map((t) => formatThaiTime(t))
                               .toList();
-                        } else if (addN.selectedType == 'Interval') {
+                        } else if (addN.getTypeName(addN.selectedType) ==
+                            'Interval') {
                           final start = context.read<IntervalProvider>().times;
                           selectedTimes = [formatThaiTime(start)];
                         }
@@ -436,19 +436,25 @@ class AddNotificationScreen extends StatelessWidget {
                           startDate: addN.startDate,
                           endDate: addN.endDate,
                           times: selectedTimes,
-                          intervalHours: (addN.selectedType == 'Interval')
+                          intervalHours:
+                              (addN.getTypeName(addN.selectedType) ==
+                                  'Interval')
                               ? int.tryParse(
                                   context.read<IntervalProvider>().hourText ??
                                       '',
                                 )
                               : null,
-                          intervalTake: (addN.selectedType == "Interval")
+                          intervalTake:
+                              (addN.getTypeName(addN.selectedType) ==
+                                  "Interval")
                               ? int.tryParse(
                                   context.read<IntervalProvider>().takeText ??
                                       '',
                                 )
                               : null,
-                          daysGap: (addN.selectedType == 'DailyWeekly')
+                          daysGap:
+                              (addN.getTypeName(addN.selectedType) ==
+                                  'DailyWeekly')
                               ? int.tryParse(
                                   context
                                           .read<DailyWeeklyProvider>()
@@ -456,7 +462,8 @@ class AddNotificationScreen extends StatelessWidget {
                                       '',
                                 )
                               : null,
-                          takeDays: (addN.selectedType == 'Cycle')
+                          takeDays:
+                              (addN.getTypeName(addN.selectedType) == 'Cycle')
                               ? int.tryParse(
                                   context
                                           .read<CycleTimeProvider>()
@@ -464,14 +471,29 @@ class AddNotificationScreen extends StatelessWidget {
                                       '',
                                 )
                               : null,
-                          breakDays: (addN.selectedType == 'Cycle')
+                          breakDays:
+                              (addN.getTypeName(addN.selectedType) == 'Cycle')
                               ? int.tryParse(
                                   context.read<CycleTimeProvider>().breakText ??
                                       '',
                                 )
                               : null,
                         );
-                        Navigator.pop(context, info);
+                        final success = await addN.addNotification(info);
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("✅ เพิ่มการแจ้งเตือนสำเร็จ"),
+                            ),
+                          );
+                          Navigator.pop(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("❌ เพิ่มการแจ้งเตือนล้มเหลว"),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         elevation: 4,

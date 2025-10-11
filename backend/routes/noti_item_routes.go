@@ -2,7 +2,7 @@ package routes
 
 import (
 	"errors"
-	"fmt"      
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -11,8 +11,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/fouradithep/pillmate/db"
-	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/dto" // ใช้ DTO ตัดข้อมูลส่วนเกิน
+	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/models"
 )
 
@@ -121,14 +121,14 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			InstructionID *uint  `json:"instruction_id,omitempty"`
 		}
 		type GroupCard struct {
-			GroupID      uint        `json:"group_id"`
-			GroupName    string      `json:"group_name,omitempty"`
-			PatientID    uint        `json:"patient_id"`
-			NotifyDate   string      `json:"notify_date"`   // "YYYY-MM-DD"
-			NotifyTime   string      `json:"notify_time"`   // "HH:MM"
-			TakenStatus  bool        `json:"taken_status"`  // true = ทุกชิ้น taken
-			NotifyStatus bool        `json:"notify_status"` // true = ทุกชิ้น notified
-			NotiInfoID   uint        `json:"noti_info_id"`
+			GroupID      uint   `json:"group_id"`
+			GroupName    string `json:"group_name,omitempty"`
+			PatientID    uint   `json:"patient_id"`
+			NotifyDate   string `json:"notify_date"`   // "YYYY-MM-DD"
+			NotifyTime   string `json:"notify_time"`   // "HH:MM"
+			TakenStatus  bool   `json:"taken_status"`  // true = ทุกชิ้น taken
+			NotifyStatus bool   `json:"notify_status"` // true = ทุกชิ้น notified
+			NotiInfoID   uint   `json:"noti_info_id"`
 
 			// สรุปอาการ “ระดับการ์ดกลุ่ม” (ไม่อยู่ใน items)
 			HasSymptom bool  `json:"has_symptom"`
@@ -200,7 +200,6 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		})
 	})
 
-
 	// UPDATE — Mark Taken (เซ็ต/ยกเลิก “ทานแล้ว”)
 	// PATCH /api/noti-items/:id/taken
 	// Body (ตัวอย่าง):
@@ -220,7 +219,9 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		}
 		notiItemID := uint(parsedID)
 
-		type MarkTakenRequest struct{ Taken *bool `json:"taken"` }
+		type MarkTakenRequest struct {
+			Taken *bool `json:"taken"`
+		}
 		var req MarkTakenRequest
 		if err := ctx.BodyParser(&req); err != nil || req.Taken == nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body (taken required)"})
@@ -257,7 +258,9 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		}
 		notiItemID := uint(parsedID)
 
-		type MarkNotifiedRequest struct{ Notified *bool `json:"notified"` }
+		type MarkNotifiedRequest struct {
+			Notified *bool `json:"notified"`
+		}
 		var req MarkNotifiedRequest
 		if err := ctx.BodyParser(&req); err != nil || req.Notified == nil {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body (notified required)"})
@@ -339,6 +342,16 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 		}
 		// ตอบกลับแบบ DTO
 		return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"data": dto.NotiItemsToDTO(created)})
+	})
+
+	api.Get("/noti-formats", func(c *fiber.Ctx) error {
+		formats, err := handlers.ListNotiFormats(db.DB)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(fiber.Map{"data": formats})
 	})
 
 }
