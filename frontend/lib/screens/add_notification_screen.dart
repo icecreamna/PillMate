@@ -481,12 +481,13 @@ class _AddNotificationScreenState extends State<AddNotificationScreen> {
                         );
                         final success = await addN.addNotification(info);
                         if (success && context.mounted) {
+                          
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("✅ เพิ่มการแจ้งเตือนสำเร็จ"),
                             ),
                           );
-                          Navigator.pop(context);
+                          Navigator.pop(context,true);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

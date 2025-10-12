@@ -54,6 +54,33 @@ class NotiService {
     }
   }
 
+  String formatThaiDate(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return "-";
+    try {
+      final date = DateTime.parse(isoDate);
+      const months = [
+        "ม.ค.",
+        "ก.พ.",
+        "มี.ค.",
+        "เม.ย.",
+        "พ.ค.",
+        "มิ.ย.",
+        "ก.ค.",
+        "ส.ค.",
+        "ก.ย.",
+        "ต.ค.",
+        "พ.ย.",
+        "ธ.ค.",
+      ];
+      final day = date.day.toString();
+      final month = months[date.month - 1];
+      final year = (date.year + 543).toString();
+      return "$day $month $year";
+    } catch (_) {
+      return isoDate;
+    }
+  }
+
   Future<bool> addNotification({
     int? myMedicineId, // optional
     int? groupId, // optional
@@ -85,8 +112,8 @@ class NotiService {
         throw Exception("Unknown noti format");
     }
     final url = Uri.parse("$baseUrl/api/noti/$endpoint");
-    final startDate = _toIsoDate(info.startDate);
-    final endDate = _toIsoDate(info.endDate);
+    final startDate = _toIsoDate(info.startDate!);
+    final endDate = _toIsoDate(info.endDate!);
     final Map<String, dynamic> body = {
       if (myMedicineId != null) "my_medicine_id": myMedicineId,
       if (groupId != null) "group_id": groupId,
@@ -99,8 +126,10 @@ class NotiService {
         if (info.times != null) body["times"] = info.times;
         break;
       case 2: // Interval
-        if (info.intervalHours != null) body["interval_hours"] = info.intervalHours;
-        if (info.intervalTake != null) body["times_per_day"] = info.intervalTake;
+        if (info.intervalHours != null)
+          body["interval_hours"] = info.intervalHours;
+        if (info.intervalTake != null)
+          body["times_per_day"] = info.intervalTake;
         if (info.times != null) body["times"] = info.times;
         break;
       case 3: // Every N Days
@@ -126,6 +155,70 @@ class NotiService {
       return true;
     } else {
       throw Exception("❌ เพิ่มการแจ้งเตือนไม่สำเร็จ: ${res.body}");
+    }
+  }
+
+  Future<NotificationInfo?> getNotiInfo({
+    required String type,
+    required String id,
+  }) async {
+    final token = AuthService.jwtToken;
+    if (token == null) throw Exception("Missing JWT token");
+
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/noti-infos/$type/$id"),
+      headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
+    );
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      final data = body["data"];
+      if (data == null) return null;
+      print("Notida ${data}");
+      // 🧩 แปลงข้อมูลเป็น model
+      final info = NotificationInfo.fromJson(data);
+
+      final formatted = NotificationInfo(
+        id: info.id,
+        myMedicineId: info.myMedicineId,
+        groupId: info.groupId,
+        notiFormatId: info.notiFormatId,
+        notiFormatName: info.notiFormatName,
+        type: info.type,
+        startDate: formatThaiDate(info.startDate),
+        endDate: formatThaiDate(info.endDate),
+        times: info.times,
+        intervalHours: info.intervalHours,
+        intervalTake: info.intervalTake,
+        daysGap: info.daysGap,
+        takeDays: info.takeDays,
+        breakDays: info.breakDays,
+      );
+
+      print(
+        "✅ โหลดข้อมูลแจ้งเตือนสำเร็จ: ${formatted.startDate} - ${formatted.endDate}",
+      );
+      return formatted;
+    } else if (res.statusCode == 404) {
+      // ไม่มี noti info
+      return null;
+    } else {
+      throw Exception("โหลด noti info ไม่สำเร็จ: ${res.body}");
+    }
+  }
+
+  Future<bool> removeNotification({required String id}) async {
+    final token = AuthService.jwtToken;
+    if (token == null) throw Exception("Missing JWT token");
+
+    final res = await http.delete(
+      Uri.parse("$baseUrl/api/noti-infos/$id"),
+      headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
+    );
+    if(res.statusCode == 200){
+      print("DeleteNoti success");
+      return true;
+    } else {
+      throw Exception("Delete not success");
     }
   }
 }

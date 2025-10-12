@@ -321,7 +321,7 @@ class _AddSingleNotificationViewState
                 child: ElevatedButton(
                   onPressed: () async {
                     if (addS.savedNotification == null) {
-                      final info = await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => MultiProvider(
@@ -337,19 +337,30 @@ class _AddSingleNotificationViewState
                           ),
                         ),
                       );
-                      if (info != null && info is NotificationInfo) {
-                        debugPrint(
-                          "ได้ข้อมูลกลับจาก AddNotificationScreen มา Singleแล้ว",
-                        );
-                        debugPrint("ชนิด: ${info.type}");
-                        debugPrint("เวลา: ${info.times}");
-                        debugPrint("วันเริ่มต้น: ${info.startDate}");
-                        debugPrint("วันสิ้นสุด: ${info.endDate}");
-
-                        addS.saveNotification(info);
+                      if (result) {
+                        await addS.loadNotification();
+                        setState(() {});
                       }
                     } else {
-                      addS.clearNotification();
+                      final success = await context
+                          .read<AddSingleNotificationProvider>()
+                          .removeNoti();
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("✅ ลบการแจ้งเตือนเรียบร้อย"),
+                          ),
+                        );
+                        await addS
+                            .loadNotification(); // โหลดซ้ำ (noti จะกลายเป็น null)
+                        setState(() {}); // ✅ รีเฟรช UI
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("❌ ลบการแจ้งเตือนไม่สำเร็จ"),
+                          ),
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -381,24 +392,22 @@ class _AddSingleNotificationViewState
                       height: 70,
                       child: ElevatedButton(
                         onPressed: () async {
-                          final success = await context.read<DrugProvider>().removeMedicine(
-                            id: int.parse(addS.tempDose.id),
-                          );
+                          final success = await context
+                              .read<DrugProvider>()
+                              .removeMedicine(id: int.parse(addS.tempDose.id));
                           if (success) {
-                          await context.read<DrugProvider>().loadMyMedicines();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("✅ ลบยาเรียบร้อย"),
-                            ),
-                          );
-                          Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("❌ ลบยาไม่สำเร็จ"),
-                            ),
-                          );
-                        }
+                            await context
+                                .read<DrugProvider>()
+                                .loadMyMedicines();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("✅ ลบยาเรียบร้อย")),
+                            );
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("❌ ลบยาไม่สำเร็จ")),
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFF0000),

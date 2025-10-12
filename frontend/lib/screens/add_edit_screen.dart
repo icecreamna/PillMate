@@ -449,6 +449,7 @@ class AddEditViewState extends State<AddEditView> {
                         _frequencyController.clear();
                         _nameDrugController.clear();
                         _descriptionController.clear();
+                        context.read<DrugProvider>().loadMyMedicines();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("✅ เพิ่มยาเรียบร้อย")),
                         );

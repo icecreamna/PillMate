@@ -553,7 +553,7 @@ class _AddGroupNotificationScreenState
                         addG.clearListError();
                       }
                       if (hasError) return;
-                      final info = await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => MultiProvider(
@@ -572,19 +572,29 @@ class _AddGroupNotificationScreenState
                         ),
                       );
 
-                      if (info != null && info is NotificationInfo) {
-                        debugPrint(
-                          "ได้ข้อมูลกลับจาก AddNotificationScreen มา Groupแล้ว",
-                        );
-                        debugPrint("ชนิด: ${info.type}");
-                        debugPrint("เวลา: ${info.times}");
-                        debugPrint("วันเริ่มต้น: ${info.startDate}");
-                        debugPrint("วันสิ้นสุด: ${info.endDate}");
-
-                        addG.saveNotification(info);
+                      if (result) {
+                        await context
+                            .read<AddGroupNotificationProvider>()
+                            .loadNotification();
+                        setState(() {});
                       }
                     } else {
-                      addG.clearNotification();
+                      final success = await context
+                          .read<AddGroupNotificationProvider>()
+                          .removeNoti();
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("✅ ลบการแจ้งเตือนกลุ่มยาเรียบร้อย"),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("❌ ลบการแจ้งเตือนกลุ่มยาไม่สำเร็จ"),
+                          ),
+                        );
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
