@@ -5,7 +5,6 @@ import (
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
-	"time"
 	"golang.org/x/crypto/bcrypt"
 	"strings"
 )
@@ -231,7 +230,6 @@ func SeedInitialData(db *gorm.DB) {
 	// --- Seed Hospitals ---
 	hospitals := []models.Hospital{
 		{HospitalName: "โรงพยาบาลตัวอย่าง A"},
-		{HospitalName: "โรงพยาบาลตัวอย่าง B"},
 	}
 	for i := range hospitals {
 		if err := db.FirstOrCreate(&hospitals[i],
@@ -296,55 +294,55 @@ func SeedInitialData(db *gorm.DB) {
 
 
 	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
-	prescriptions := []models.Prescription{
-	{ IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	{ IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	}
+	// prescriptions := []models.Prescription{
+	// { IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// { IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// }
 
-	for i := range prescriptions {
-		key := models.Prescription{
-			IDCardNumber:   prescriptions[i].IDCardNumber,
-			MedicineInfoID: prescriptions[i].MedicineInfoID,
-			HospitalID:     prescriptions[i].HospitalID,
-			DoctorID:       prescriptions[i].DoctorID,
-		}
-		attrs := models.Prescription{
-			AmountPerTime: prescriptions[i].AmountPerTime,
-			TimesPerDay:   prescriptions[i].TimesPerDay,
-			AppSyncStatus: false,
-		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
-			log.Fatal("seed prescriptions failed: ", err)
-		}
-	}
+	// for i := range prescriptions {
+	// 	key := models.Prescription{
+	// 		IDCardNumber:   prescriptions[i].IDCardNumber,
+	// 		MedicineInfoID: prescriptions[i].MedicineInfoID,
+	// 		HospitalID:     prescriptions[i].HospitalID,
+	// 		DoctorID:       prescriptions[i].DoctorID,
+	// 	}
+	// 	attrs := models.Prescription{
+	// 		AmountPerTime: prescriptions[i].AmountPerTime,
+	// 		TimesPerDay:   prescriptions[i].TimesPerDay,
+	// 		AppSyncStatus: false,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
+	// 		log.Fatal("seed prescriptions failed: ", err)
+	// 	}
+	// }
 
 	// --- Seed Appointments ---
-	appointments := []models.Appointment{
-		{
-			IDCardNumber:    "1101700203452",
-			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
-			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
-			HospitalID:      1,
-			DoctorID:        1,
-			Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
-		},
-	}
+	// appointments := []models.Appointment{
+	// 	{
+	// 		IDCardNumber:    "1101700203452",
+	// 		AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
+	// 		AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
+	// 		HospitalID:      1,
+	// 		DoctorID:        1,
+	// 		Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+	// 	},
+	// }
 
-	for i := range appointments {
-		key := models.Appointment{
-			IDCardNumber:    appointments[i].IDCardNumber,
-			AppointmentDate: appointments[i].AppointmentDate,
-			AppointmentTime: appointments[i].AppointmentTime,
-			HospitalID:      appointments[i].HospitalID,
-			DoctorID:        appointments[i].DoctorID,
-		}
-		attrs := models.Appointment{
-			Note: appointments[i].Note,
-		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
-			log.Println("seed appointments failed:", err)
-		}
-	}
+	// for i := range appointments {
+	// 	key := models.Appointment{
+	// 		IDCardNumber:    appointments[i].IDCardNumber,
+	// 		AppointmentDate: appointments[i].AppointmentDate,
+	// 		AppointmentTime: appointments[i].AppointmentTime,
+	// 		HospitalID:      appointments[i].HospitalID,
+	// 		DoctorID:        appointments[i].DoctorID,
+	// 	}
+	// 	attrs := models.Appointment{
+	// 		Note: appointments[i].Note,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
+	// 		log.Println("seed appointments failed:", err)
+	// 	}
+	// }
 
 
 

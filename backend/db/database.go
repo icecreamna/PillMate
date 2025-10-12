@@ -98,17 +98,20 @@ func Init() {
 			&models.Hospital{},
 			&models.MedicineInfo{},
 			&models.Prescription{},
+			&models.PrescriptionItem{},
 			&models.Appointment{},
-			&models.AppointmentNoti{},
-			&models.NotiLog{},
+			// &models.AppointmentNoti{},
+			// &models.NotiLog{},
 			&models.Group{},
 			&models.MyMedicine{},
 			&models.NotiFormat{},
 			&models.NotiInfo{},
 			&models.NotiItem{},
 			&models.Symptom{},
-			// เพิ่มตารางฝั่งเว็บ ถ้ามี เช่น:
-			// &models.WebAdmin{},
+
+			// ฝั่งเว็บ ถ้ามี เช่น:
+			&models.WebAdmin{},
+			&models.HospitalPatient{},
 		); err != nil {
 			log.Fatal("AutoMigrate ล้มเหลว:", err)
 		}

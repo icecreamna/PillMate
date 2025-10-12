@@ -6,44 +6,29 @@ import (
 	"github.com/fouradithep/pillmate/models"
 )
 
-type AppointmentDTO struct {
-	ID               uint   `json:"id"`
-	IDCardNumber     string `json:"id_card_number"`
-	AppointmentDate  string `json:"appointment_date"` // "YYYY-MM-DD"
-	AppointmentTime  string `json:"appointment_time"` // "HH:MM"
-
-	HospitalID       uint   `json:"hospital_id"`
-	HospitalName     string `json:"hospital_name,omitempty"`
-
-	DoctorID         uint   `json:"doctor_id"`
-	DoctorFirstName  string `json:"doctor_first_name,omitempty"`
-	DoctorLastName   string `json:"doctor_last_name,omitempty"`
-
-	Note             string `json:"note,omitempty"`
+// ส่งออกสำหรับ Mobile (สตริงทั้งหมดสำหรับ date/time)
+type MobileAppointmentResponse struct {
+	ID              uint      `json:"id"`
+	IDCardNumber    string    `json:"id_card_number"`
+	AppointmentDate string    `json:"appointment_date"` // "YYYY-MM-DD"
+	AppointmentTime string    `json:"appointment_time"` // "HH:MM"
+	HospitalID      uint      `json:"hospital_id"`
+	DoctorID        uint      `json:"doctor_id"`
+	Note            *string   `json:"note,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-func AppointmentToDTO(a models.Appointment) AppointmentDTO {
-	return AppointmentDTO{
-		ID:               a.ID,
-		IDCardNumber:     a.IDCardNumber,
-		AppointmentDate:  a.AppointmentDate.Format("2006-01-02"),
-		AppointmentTime:  a.AppointmentTime.In(time.UTC).Format("15:04"),
-
-		HospitalID:       a.HospitalID,
-		HospitalName:     a.Hospital.HospitalName,
-
-		DoctorID:         a.DoctorID,
-		DoctorFirstName:  a.WebAdmin.FirstName,
-		DoctorLastName:   a.WebAdmin.LastName,
-
-		Note:             a.Note,
+func ToMobileAppointmentResponse(m models.Appointment) MobileAppointmentResponse {
+	return MobileAppointmentResponse{
+		ID:              m.ID,
+		IDCardNumber:    m.IDCardNumber,
+		AppointmentDate: m.AppointmentDate.In(time.Local).Format("2006-01-02"),
+		AppointmentTime: m.AppointmentTime.In(time.Local).Format("15:04"),
+		HospitalID:      m.HospitalID,
+		DoctorID:        m.DoctorID,
+		Note:            m.Note,
+		CreatedAt:       m.CreatedAt,
+		UpdatedAt:       m.UpdatedAt,
 	}
-}
-
-func AppointmentsToDTO(list []models.Appointment) []AppointmentDTO {
-	out := make([]AppointmentDTO, 0, len(list))
-	for _, ap := range list {
-		out = append(out, AppointmentToDTO(ap))
-	}
-	return out
 }

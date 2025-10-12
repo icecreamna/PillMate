@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from '../../../styles/doctor/patient/AddPatient.module.css'
 
-const GENDERS = ['ชาย', 'หญิง', 'ไม่ระบุ']
+const GENDERS = ['ชาย', 'หญิง']
 
 // คำนวณอายุเป็น "ปีเต็ม" จากวันเกิดถึงวันนี้
 function calcAge(dobStr) {

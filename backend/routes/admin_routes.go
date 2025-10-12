@@ -56,6 +56,7 @@ func SetupAdminAuthRoutes(app *fiber.App) {
 
 		// ตอบกลับให้ front รู้ role สำหรับ redirect; ไม่จำเป็นต้องส่ง token ใน body แล้ว
 		return c.JSON(fiber.Map{
+			"message": "login success",
 			"user": user,
 			"role": user.Role, // เช่น "superadmin" | "doctor" | "staff"
 		})

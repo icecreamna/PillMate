@@ -50,14 +50,13 @@ func main() {
 		api := app.Group("/api", handlers.AuthRequired)
 
 		routes.SetupMyMedicineRoutes(api)
-		routes.SetupMedicineInfoRoutes(api)
 		routes.SetupGroupMedicineRoutes(api)
 		routes.SetupNotiInfosRoutes(api)
 		routes.SetupNotiItemsRoutes(api)
 		routes.SetupNotifyRoutes(api)
 		routes.SetupProfileRoutes(api)
 		routes.SetupSymptomRoutes(api)
-		routes.SetupAppointmentRoutes(api)
+		routes.SetupMobileAppointmentRoutes(api)
 	}
 
 	// ---------- Admin/Web (เพิ่มโดยไม่กระทบ Mobile) ----------
@@ -72,7 +71,17 @@ func main() {
 			handlers.RequireRole("superadmin", "admin-app"),
 		)
 		routes.SetupDoctorRoutes(admin)
+		routes.SetupMedicineInfoRoutes(admin)
 
+
+		// กลุ่มสำหรับ doctor (ต้องมี token + role doctor)
+		doctor := app.Group("/doctor/",
+			handlers.AuthAny,
+			handlers.RequireRole("doctor", "admin-app"),
+		)
+		routes.SetupHospitalPatientRoutes(doctor)
+		routes.SetupPrescriptionRoutes(doctor)
+		routes.SetupDoctorAppointmentRoutes(doctor)
 		// ถ้ายังไม่มีหน้า panel ฝั่ง doctor ให้ไม่ต้องประกาศกลุ่มนี้ เพื่อลด unused var
 		// doc := app.Group("/api/doctor", handlers.AuthAny, handlers.RequireRole("doctor", "admin-app"))
 		// routes.SetupDoctorPanelRoutes(doc)
