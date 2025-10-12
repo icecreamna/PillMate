@@ -33,17 +33,10 @@ export default function ViewAppointment() {
       .sort((a,b) => new Date(b.at) - new Date(a.at));
   }, [patientId]);
 
-  // ใช้ state เพื่อให้ลบแล้วรีเฟรช UI ได้
   const [rows, setRows] = useState(initial);
   useEffect(() => { setRows(initial); }, [initial]);
 
   const patientName = rows[0]?.patientName || `Patient #${patientId}`;
-
-  const onDelete = (id) => {
-    if (!confirm('ยืนยันลบนัดหมายนี้?')) return;
-    // TODO: เรียก DELETE /api/appointments/:id จริงก่อนค่อย setRows ตามผลลัพธ์
-    setRows(prev => prev.filter(r => r.id !== id));
-  };
 
   return (
     <div>
@@ -87,7 +80,7 @@ export default function ViewAppointment() {
                     <td className={styles.statusCell}>
                       <div className={styles.rowActions}>
                         {isLatest && <span className={styles.latestBadge}>ล่าสุด</span>}
-                        <button className={styles.deleteBtn} onClick={()=>onDelete(r.id)}>ลบ</button>
+                        {/* ปุ่มลบถูกเอาออกแล้ว */}
                       </div>
                     </td>
                   </tr>
