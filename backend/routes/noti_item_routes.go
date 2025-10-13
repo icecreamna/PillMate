@@ -24,24 +24,17 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	//   /api/noti-items?patient_id=7&date_from=2025-10-01&date_to=2025-10-07
 	//   /api/noti-items?my_medicine_id=12&taken_status=true
 	//   /api/noti-items?group_id=3&noti_info_id=44&notify_status=false
+
 	api.Get("/noti-items", func(ctx *fiber.Ctx) error {
-		// auth: ดึง patient_id จาก Locals เสมอ
+		// ✅ Auth: ดึง patient_id จาก Locals
 		patientID, ok := ctx.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
+		// ✅ อ่าน query filter
 		var filter handlers.ListNotiItemsFilter
 
-		// หมายเหตุ: handlers.ListNotiItems จะบังคับใช้ patientID จาก Locals เสมอ
-		// การส่ง ?patient_id=... มาจะไม่ override สิทธิ์ผู้ใช้
-		if patientIDStr := ctx.Query("patient_id"); patientIDStr != "" {
-			if parsed, err := strconv.ParseUint(patientIDStr, 10, 64); err == nil {
-				// เก็บลงฟิลด์ได้ แต่ไม่ถูกใช้แทน patientID จาก Locals
-				tmp := uint(parsed)
-				filter.PatientID = &tmp
-			}
-		}
 		if myMedIDStr := ctx.Query("my_medicine_id"); myMedIDStr != "" {
 			if parsed, err := strconv.ParseUint(myMedIDStr, 10, 64); err == nil {
 				myMedicineID := uint(parsed)
@@ -61,10 +54,10 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			}
 		}
 		if fromStr := strings.TrimSpace(ctx.Query("date_from")); fromStr != "" {
-			filter.DateFrom = &fromStr // รูปแบบ "YYYY-MM-DD"
+			filter.DateFrom = &fromStr
 		}
 		if toStr := strings.TrimSpace(ctx.Query("date_to")); toStr != "" {
-			filter.DateTo = &toStr // รูปแบบ "YYYY-MM-DD"
+			filter.DateTo = &toStr
 		}
 		if takenStatusStr := ctx.Query("taken_status"); takenStatusStr != "" {
 			taken := strings.EqualFold(takenStatusStr, "true") || takenStatusStr == "1"
@@ -75,17 +68,18 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			filter.NotifyStatus = &notified
 		}
 
-		// บังคับใช้ patientID จาก Locals ที่ระดับ handlers
+		// ✅ ดึงข้อมูลจาก handler (มีชื่อ form/unit/instruction แล้ว)
 		notiItems, err := handlers.ListNotiItems(db.DB, patientID, filter)
 		if err != nil {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 
-		// ====== ดึง symptom ของ items เหล่านี้ครั้งเดียว แล้วทำ map: noti_item_id -> symptom_id
+		// ✅ ดึง symptom map (เหมือนเดิม)
 		ids := make([]uint, 0, len(notiItems))
 		for _, it := range notiItems {
 			ids = append(ids, it.ID)
 		}
+
 		symMap := map[uint]uint{}
 		if len(ids) > 0 {
 			var rows []struct {
@@ -103,100 +97,100 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 			}
 		}
 
-		// ส่งเฉพาะฟิลด์ที่ต้องการด้วย DTO (ตัด relations/ฟิลด์ว่าง) + ผนวกสถานะ symptom (ระดับ item)
-		dtoList := dto.NotiItemsToDTOWithSymptoms(notiItems, symMap)
+		// ✅ เพิ่ม field has_symptom / symptom_id
+		for i := range notiItems {
+			if symID, ok := symMap[notiItems[i].ID]; ok {
+				notiItems[i].HasSymptom = true
+				_ = symID
+			}
+		}
 
-		// ===== สร้าง 2 ก้อน: data (เดี่ยว) + group_cards (กลุ่ม) =====
-		// ก้อน data: เอาเฉพาะที่ "ไม่มีกลุ่ม"
-		flats := make([]dto.NotiItemDTO, 0, len(dtoList))
-
-		// ก้อน group_cards: รวมด้วย (group_id, notify_date, notify_time)
+		// ======== แยกเดี่ยวและกลุ่ม ========
 		type GroupLine struct {
-			NotiItemID    uint   `json:"noti_item_id"`
-			MyMedicineID  uint   `json:"my_medicine_id"`
-			MedName       string `json:"med_name"`
-			AmountPerTime string `json:"amount_per_time"`
-			FormID        uint   `json:"form_id"`
-			UnitID        *uint  `json:"unit_id,omitempty"`
-			InstructionID *uint  `json:"instruction_id,omitempty"`
+			NotiItemID      uint    `json:"noti_item_id"`
+			MyMedicineID    uint    `json:"my_medicine_id"`
+			MedName         string  `json:"med_name"`
+			AmountPerTime   string  `json:"amount_per_time"`
+			FormID          uint    `json:"form_id"`
+			FormName        string  `json:"form_name"`
+			UnitID          *uint   `json:"unit_id,omitempty"`
+			UnitName        *string `json:"unit_name,omitempty"`
+			InstructionID   *uint   `json:"instruction_id,omitempty"`
+			InstructionName *string `json:"instruction_name,omitempty"`
 		}
 		type GroupCard struct {
 			GroupID      uint   `json:"group_id"`
 			GroupName    string `json:"group_name,omitempty"`
 			PatientID    uint   `json:"patient_id"`
-			NotifyDate   string `json:"notify_date"`   // "YYYY-MM-DD"
-			NotifyTime   string `json:"notify_time"`   // "HH:MM"
-			TakenStatus  bool   `json:"taken_status"`  // true = ทุกชิ้น taken
-			NotifyStatus bool   `json:"notify_status"` // true = ทุกชิ้น notified
+			NotifyDate   string `json:"notify_date"`
+			NotifyTime   string `json:"notify_time"`
+			TakenStatus  bool   `json:"taken_status"`
+			NotifyStatus bool   `json:"notify_status"`
 			NotiInfoID   uint   `json:"noti_info_id"`
 
-			// สรุปอาการ “ระดับการ์ดกลุ่ม” (ไม่อยู่ใน items)
-			HasSymptom bool  `json:"has_symptom"`
-			SymptomID  *uint `json:"symptom_id,omitempty"`
-
-			Items []GroupLine `json:"items"`
+			HasSymptom bool        `json:"has_symptom"`
+			Items      []GroupLine `json:"items"`
 		}
+
+		flats := make([]handlers.NotiItemWithNames, 0)
 		groupMap := map[string]*GroupCard{}
 
-		for i, raw := range notiItems {
-			d := dtoList[i] // DTO ที่ map แล้ว (มี has_symptom / symptom_id สำหรับสรุปที่ระดับการ์ด)
-
-			if raw.GroupID == nil {
-				// ไม่มี group -> ใส่ก้อน data
+		for _, d := range notiItems {
+			if d.GroupID == nil {
+				// เดี่ยว
 				flats = append(flats, d)
 				continue
 			}
 
-			key := fmt.Sprintf("%d|%s|%s", *raw.GroupID, d.NotifyDate, d.NotifyTime)
+			key := fmt.Sprintf("%d|%s|%s", *d.GroupID, d.NotifyDate, d.NotifyTime)
 			card, ok := groupMap[key]
 			if !ok {
 				card = &GroupCard{
-					GroupID:      *raw.GroupID,
-					GroupName:    raw.GroupName,
-					PatientID:    raw.PatientID,
+					GroupID:      *d.GroupID,
+					GroupName:    d.GroupName,
+					PatientID:    d.PatientID,
 					NotifyDate:   d.NotifyDate,
 					NotifyTime:   d.NotifyTime,
-					TakenStatus:  true, // เริ่มจาก true แล้ว AND ลงไป
-					NotifyStatus: true, // เริ่มจาก true แล้ว AND ลงไป
+					TakenStatus:  true,
+					NotifyStatus: true,
 					NotiInfoID:   d.NotiInfoID,
 					HasSymptom:   false,
-					SymptomID:    nil,
 					Items:        []GroupLine{},
 				}
 				groupMap[key] = card
 			}
 
 			card.Items = append(card.Items, GroupLine{
-				NotiItemID:    d.ID,
-				MyMedicineID:  d.MyMedicineID,
-				MedName:       d.MedName,
-				AmountPerTime: d.AmountPerTime,
-				FormID:        d.FormID,
-				UnitID:        d.UnitID,
-				InstructionID: d.InstructionID,
+				NotiItemID:      d.ID,
+				MyMedicineID:    d.MyMedicineID,
+				MedName:         d.MedName,
+				AmountPerTime:   d.AmountPerTime,
+				FormID:          d.FormID,
+				FormName:        d.FormName,
+				UnitID:          d.UnitID,
+				UnitName:        d.UnitName,
+				InstructionID:   d.InstructionID,
+				InstructionName: d.InstructionName,
 			})
 
-			// สถานะรวมการ์ด: true ก็ต่อเมื่อ "ทุกชิ้น" เป็น true
+			// สถานะรวมของ group
 			card.TakenStatus = card.TakenStatus && d.TakenStatus
 			card.NotifyStatus = card.NotifyStatus && d.NotifyStatus
-
-			// สรุปอาการไว้ที่ระดับการ์ด: ถ้ามี item ไหนมีอาการ ก็ถือว่าการ์ดมีอาการ
 			if d.HasSymptom && !card.HasSymptom {
 				card.HasSymptom = true
-				card.SymptomID = d.SymptomID
 			}
 		}
 
-		// map -> slice
+		// ✅ แปลง map -> slice
 		groupCards := make([]GroupCard, 0, len(groupMap))
 		for _, c := range groupMap {
 			groupCards = append(groupCards, *c)
 		}
 
-		// ส่งสองก้อนกลับไป
+		// ✅ ส่ง response
 		return ctx.JSON(fiber.Map{
-			"data":        flats,      // เฉพาะรายการที่ไม่มีกลุ่ม
-			"group_cards": groupCards, // รวมกลุ่มตาม group_id + date + time (พร้อมสรุปอาการระดับการ์ด)
+			"data":        flats,
+			"group_cards": groupCards,
 		})
 	})
 

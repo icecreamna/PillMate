@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/today_service.dart';
 import 'package:intl/intl.dart';
 
-class Dose {
+class DoseSingle {
   final String name;
   // final String picture;
+  final String amountPerTime;
   final String unit;
-  Dose({required this.name, required this.unit});
+  DoseSingle({
+    required this.name,
+    required this.amountPerTime,
+    required this.unit,
+  });
 }
 
 class DoseGroup {
+  final int? id;
+  final int? groupId;
   final String nameGroup;
   final String key;
-  final List<Dose> doses;
+  final List<DoseSingle> doses;
   final DateTime at;
   final String instruction;
   bool saveNote;
   bool isTaken;
 
   DoseGroup({
+    this.id,
+    this.groupId,
     required this.nameGroup,
     required this.key,
     required this.doses,
@@ -29,9 +39,14 @@ class DoseGroup {
 }
 
 class TodayProvider extends ChangeNotifier {
+  final TodayService _todayService = TodayService();
+
+  bool _isLoading = false;
+
   DateTime _selected = DateTime.now();
 
   DateTime get selected => _selected;
+  bool get isLoading => _isLoading;
 
   String get dateLabel {
     final thDate = DateFormat("d MMMM yyyy", "th_TH").format(_selected);
@@ -42,46 +57,7 @@ class TodayProvider extends ChangeNotifier {
   // String getTimeHourMinute(String key) => key.split("|").first;
   // String getInstruction(String key) => key.split("|").last;
 
-  final List<DoseGroup> all = <DoseGroup>[
-    DoseGroup(
-      key: "08:00-หลังอาหาร",
-      nameGroup: "กลุ่ม 1",
-      at: DateTime(2025, 9, 14, 8, 0),
-      instruction: "หลังอาหาร",
-      doses: [Dose(name: "ยา1", unit: "1 เม็ด")],
-    ),
-    DoseGroup(
-      key: "09:00-ก่อนอาหาร",
-      nameGroup: "กลุ่ม 2",
-      at: DateTime(2025, 9, 14, 9, 0),
-      instruction: "ก่อนอาหาร",
-      doses: [Dose(name: "ยา2", unit: "1 เม็ด")],
-    ),
-    DoseGroup(
-      key: "13:00-หลังอาหาร",
-      nameGroup: "กลุ่ม 3",
-      at: DateTime(2025, 9, 14, 13, 0),
-      instruction: "หลังอาหาร",
-      doses: [
-        Dose(name: "ยา3", unit: "1 เม็ด"),
-        Dose(name: "แคปซูล1", unit: "1 เม็ด"),
-        Dose(name: "แคปซูล2", unit: "1 เม็ด"),
-        Dose(name: "ยาน้ำ1", unit: "1 ช้อน"),
-        Dose(name: "ยาน้ำ2", unit: "1 ช้อน"),
-      ],
-    ),
-    DoseGroup(
-      nameGroup: "กลุ่ม 4",
-      key: "13:00-ก่อนอาหาร",
-      doses: [
-        Dose(name: "ยา4", unit: "3 เม็ด"),
-        Dose(name: "ยา5", unit: "5 ช้อน"),
-        Dose(name: "ยาบ้า", unit: "100 ขวด"),
-      ],
-      at: DateTime(2025, 9, 14, 13, 0),
-      instruction: "ก่อนอาหาร",
-    ),
-  ];
+  List<DoseGroup> all = <DoseGroup>[];
   // List<Dose> get doseSelect {
   //   return all
   //       .where(
@@ -92,6 +68,21 @@ class TodayProvider extends ChangeNotifier {
   //       )
   //       .toList();
   // }//function
+  Future<void> loadTodayData() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final data = await _todayService.fetchTodayNoti(_selected);
+      all = data;
+      notifyListeners();
+    } catch (e) {
+      print("❌ โหลดข้อมูลวันนี้ไม่สำเร็จ: $e");
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   List<DoseGroup> doseSelect(DateTime? selectTime) {
     if (selectTime == null) return [];

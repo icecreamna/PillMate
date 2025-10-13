@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:intl/intl.dart';
@@ -14,6 +15,14 @@ class TodayScreen extends StatefulWidget {
 class _TodayScreenState extends State<TodayScreen> {
   final _formKey = GlobalKey<FormState>();
   final _saveSymptom = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => Provider.of<TodayProvider>(context, listen: false).loadTodayData(),
+    );
+  }
 
   @override
   void dispose() {
@@ -43,6 +52,52 @@ class _TodayScreenState extends State<TodayScreen> {
   Widget build(BuildContext context) {
     final p = context.watch<TodayProvider>();
     final items = p.doseSelect(p.selected);
+
+    if (p.isLoading) {
+      Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
@@ -52,10 +107,7 @@ class _TodayScreenState extends State<TodayScreen> {
           children: [
             const Text(
               "ตารางกินยา",
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 2),
             Row(
@@ -65,7 +117,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   onTap: () => p.pickDate(context),
                   child: Text(
                     p.dateLabel,
-                    style: const TextStyle(fontSize: 20,),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ],
@@ -202,9 +254,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                             style: ElevatedButton.styleFrom(
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                      10,
-                                                    ),
+                                                    BorderRadius.circular(10),
                                               ),
                                               backgroundColor: const Color(
                                                 0xFFFFA100,
@@ -265,8 +315,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                     shape:
                                                         const RoundedRectangleBorder(
                                                           borderRadius:
-                                                              BorderRadius
-                                                                  .zero,
+                                                              BorderRadius.zero,
                                                         ),
                                                     child: Form(
                                                       key: _formKey,
@@ -441,7 +490,13 @@ class _TodayScreenState extends State<TodayScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           if (d.doses.length > 1) ...[
-                                            Text(d.nameGroup,style: const TextStyle(color: Colors.black,fontSize: 16),),
+                                            Text(
+                                              d.nameGroup,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                            ),
                                             ...d.doses.map(
                                               (dose) => Padding(
                                                 padding:
@@ -451,7 +506,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                       left: 15,
                                                     ),
                                                 child: Text(
-                                                  "• ${dose.name} ${dose.unit}",
+                                                  "• ${dose.name} ${dose.amountPerTime} ${dose.unit}",
                                                   style: const TextStyle(
                                                     color: Colors.black,
                                                     fontSize: 16,
@@ -461,17 +516,16 @@ class _TodayScreenState extends State<TodayScreen> {
                                                 ),
                                               ),
                                             ),
-                                          ]
-                                          else if (d.doses.length == 1) ...[
-                                              Text(
-                                                "${d.doses.first.name} ${d.doses.first.unit}",
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.normal,
-                                                ),
+                                          ] else if (d.doses.length == 1) ...[
+                                            Text(
+                                              "${d.doses.first.name} ${d.doses.first.amountPerTime} ${d.doses.first.unit}",
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.normal,
                                               ),
-                                          ]
+                                            ),
+                                          ],
                                         ],
                                       ),
                                       const SizedBox(height: 10),

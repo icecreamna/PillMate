@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/providers/profile_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -21,7 +22,48 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.watch<ProfileProvider>();
     if (p.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     if (p.user == null) {

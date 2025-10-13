@@ -152,6 +152,15 @@ class NotiService {
     );
     if (res.statusCode >= 200 && res.statusCode < 300) {
       print("✅ เพิ่มการแจ้งเตือนสำเร็จ (${res.statusCode})");
+      final genSuccess = await generateItemsForPatientRange(
+        fromDate: startDate,
+        toDate: endDate,
+      );
+      if (genSuccess) {
+        print("✅ สร้าง noti_items สำเร็จหลังเพิ่ม noti_info");
+      } else {
+        print("⚠️ สร้าง noti_items ล้มเหลวหลังเพิ่ม noti_info");
+      }
       return true;
     } else {
       throw Exception("❌ เพิ่มการแจ้งเตือนไม่สำเร็จ: ${res.body}");
@@ -214,11 +223,33 @@ class NotiService {
       Uri.parse("$baseUrl/api/noti-infos/$id"),
       headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
     );
-    if(res.statusCode == 200){
+    if (res.statusCode == 200) {
       print("DeleteNoti success");
       return true;
     } else {
       throw Exception("Delete not success");
+    }
+  }
+
+  Future<bool> generateItemsForPatientRange({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final token = AuthService.jwtToken;
+    if (token == null) throw Exception("Missing JWT token");
+
+    final res = await http.post(
+      Uri.parse("$baseUrl/api/noti-items/generate-range"),
+      headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
+      body: jsonEncode({"from_date": fromDate, "to_date": toDate}),
+    );
+
+    if (res.statusCode == 201) {
+      print("✅ Generate noti_items สำเร็จ ($fromDate → $toDate)");
+      return true;
+    } else {
+      print("❌ Generate noti_items ล้มเหลว: ${res.body}");
+      return false;
     }
   }
 }

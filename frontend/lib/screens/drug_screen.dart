@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/enums/drug_tab.dart';
 import 'package:frontend/providers/add_edit_provider.dart';
 import 'package:frontend/providers/add_group_provider.dart';
@@ -31,6 +32,51 @@ class _DrugScreenState extends State<DrugScreen> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<DrugProvider>();
+
+    if (p.isLoading) {
+      return Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
@@ -168,7 +214,6 @@ class _DrugScreenState extends State<DrugScreen> {
                                                     .syncHospitalMedicines(
                                                       context,
                                                     );
-    
                                               },
                                               child: const Text(
                                                 "เพิ่มยาจากโรงพยาบาล",

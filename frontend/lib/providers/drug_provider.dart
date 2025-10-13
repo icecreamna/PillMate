@@ -40,7 +40,7 @@ class DrugProvider extends ChangeNotifier {
       debugPrint("❌ โหลดยาไม่สำเร็จ: $e");
       _myMedicines = [];
     }
-
+    await Future.delayed(const Duration(milliseconds: 500));
     _isLoading = false;
     notifyListeners();
   }
@@ -107,6 +107,7 @@ class DrugProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("Provider can't load Groups");
     } finally {
+      await Future.delayed(const Duration(milliseconds: 500));
       _isLoading = false;
       notifyListeners();
     }
