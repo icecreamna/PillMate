@@ -1,76 +1,66 @@
-// src/pages/doctor/EditDoctor.jsx
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "../../../styles/admin/doctor/EditDoctor.module.css";
-
-const mock = [
-  {
-    id: 1,
-    first_name: "Doctor",
-    last_name: "A",
-    email: "doctor_a@pillmate.com",
-  },
-  {
-    id: 2,
-    first_name: "Doctor",
-    last_name: "B",
-    email: "doctor_b@pillmate.com",
-  },
-  {
-    id: 3,
-    first_name: "Doctor",
-    last_name: "C",
-    email: "doctor_c@pillmate.com",
-  },
-];
+import { getDoctor, updateDoctor } from "../../../services/doctors";
 
 export default function EditDoctor() {
   const { id } = useParams();
   const nav = useNavigate();
 
-  const current = useMemo(
-    () => mock.find((m) => String(m.id) === String(id)),
-    [id]
-  );
-  const [firstName, setFirstName] = useState(current?.first_name || "");
-  const [lastName, setLastName] = useState(current?.last_name || "");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
+  // ฟิลด์ฟอร์ม
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName]   = useState("");
+  const [email, setEmail]         = useState(""); // แสดง read-only (จาก username)
+
+  // ดึงข้อมูลหมอตาม id
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setErr(""); setMsg(""); setLoading(true);
+      try {
+        const res = await getDoctor(id);     // GET /admin/doctors/:id  -> { data: {...} }
+        const d   = res?.data || {};
+        if (!cancelled) {
+          setFirstName(d.first_name || "");
+          setLastName(d.last_name || "");
+          setEmail(d.username || d.email || ""); // DTO ของ BE ใช้ username เป็นอีเมล
+        }
+      } catch (e) {
+        if (!cancelled) setErr(e.message || "ไม่พบข้อมูลแพทย์");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
+
   const save = async (e) => {
     e.preventDefault();
-    setErr("");
-    setMsg("");
-    setLoading(true);
+    setErr(""); setMsg(""); setSaving(true);
     try {
-      // TODO: PUT /api/doctors/:id  (ส่ง {first_name,last_name})
-      await new Promise((r) => setTimeout(r, 600));
+      // PUT /admin/doctors/:id  -> body: { username?, first_name?, last_name?, password? }
+      const payload = {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        // ไม่ให้แก้อีเมลจากหน้านี้: ถ้าจะให้แก้ ค่อยเพิ่ม input/ส่ง username ด้วย
+      };
+      await updateDoctor(id, payload);
       setMsg("บันทึกสำเร็จ");
-      // nav(-1) // ถ้าต้องการกลับทันที
+      // ถ้าต้องการกลับทันที: nav(-1)
     } catch (e) {
       setErr(e.message || "บันทึกไม่สำเร็จ");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const resetPassword = async () => {
-    setErr("");
-    setMsg("");
-    setLoading(true);
-    try {
-      // TODO: POST /api/doctors/:id/reset-password
-      await new Promise((r) => setTimeout(r, 500));
-      setMsg("ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว");
-    } catch (e) {
-      setErr(e.message || "ทำรายการไม่สำเร็จ");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!current) return <div className={styles.page}>ไม่พบข้อมูลแพทย์</div>;
+  if (loading) return <div className={styles.page}>กำลังโหลด...</div>;
+  if (err && !firstName && !lastName) return <div className={styles.page}>{err}</div>;
 
   return (
     <div className={styles.page}>
@@ -83,7 +73,8 @@ export default function EditDoctor() {
       <hr className={styles.hr} />
 
       <div className={styles.card}>
-        <div className={styles.email}>{current.email}</div>
+        {/* แสดงอีเมล/ยูสเซอร์เนม read-only */}
+        <div className={styles.email}>{email}</div>
 
         {err && <div className={styles.error}>{err}</div>}
         {msg && <div className={styles.success}>{msg}</div>}
@@ -97,6 +88,7 @@ export default function EditDoctor() {
               onChange={(e) => setFirstName(e.target.value)}
             />
           </label>
+
           <label className={styles.label}>
             <span>Last Name</span>
             <input
@@ -105,15 +97,18 @@ export default function EditDoctor() {
               onChange={(e) => setLastName(e.target.value)}
             />
           </label>
-          // ปุ่มไปหน้า reset password
+
+          {/* ปุ่มไปหน้า reset password */}
           <button
+            type="button"
             className={styles.reset}
             onClick={() => nav(`/admin/${id}/reset-password`)}
           >
             reset password →
           </button>
-          <button className={styles.submit} type="submit" disabled={loading}>
-            {loading ? "Saving…" : "Save Changes"}
+
+          <button className={styles.submit} type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save Changes"}
           </button>
         </form>
       </div>

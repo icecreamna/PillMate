@@ -1,13 +1,21 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from '../../../styles/doctor/patient/AddPatient.module.css'
+import { createPatient } from '../../../services/patients'
 
 const GENDERS = ['ชาย', 'หญิง']
 
-// คำนวณอายุเป็น "ปีเต็ม" จากวันเกิดถึงวันนี้
-function calcAge(dobStr) {
-  if (!dobStr) return ''
-  const dob = new Date(dobStr)
+const onlyDigits = (s) => (s || '').replace(/[^\d]/g, '')
+
+// กัน timezone ด้วยการเติม T00:00:00 แล้วส่งเป็น RFC3339 (+07:00)
+function toBangkokISO(d) {
+  if (!d) return ''
+  return `${d}T00:00:00+07:00`
+}
+
+function calcAge(dobStrYMD) {
+  if (!dobStrYMD) return ''
+  const dob = new Date(`${dobStrYMD}T00:00:00`)
   if (isNaN(dob)) return ''
   const today = new Date()
   let age = today.getFullYear() - dob.getFullYear()
@@ -21,10 +29,11 @@ export default function AddPatient() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [ok, setOk] = useState('')
+
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
-    birthDay: '',
+    birthDay: '',   // "YYYY-MM-DD"
     age: '',
     gender: '',
     idcard: '',
@@ -38,6 +47,20 @@ export default function AddPatient() {
     if (!form.lastName.trim())  return 'กรุณากรอก Last Name'
     if (!form.birthDay)         return 'กรุณาเลือกวันเกิด'
     if (!form.gender)           return 'กรุณาเลือกเพศ'
+
+    // บังคับเลขบัตร 13 หลัก
+    const id13 = onlyDigits(form.idcard)
+    if (!id13) return 'กรุณากรอกเลขบัตรประชาชน'
+    if (id13.length !== 13) return 'เลขบัตรประชาชนต้องมี 13 หลัก'
+
+    // บังคับเบอร์โทร 10 หลัก
+    const tel = onlyDigits(form.phone)
+    if (!tel) return 'กรุณากรอกเบอร์โทรศัพท์'
+    if (tel.length !== 10) return 'เบอร์โทรต้องมี 10 หลัก'
+
+    // กันเพศผิดค่า
+    if (!GENDERS.includes(form.gender)) return 'ค่าเพศไม่ถูกต้อง'
+
     return ''
   }
 
@@ -47,9 +70,16 @@ export default function AddPatient() {
     if (v) { setError(v); setOk(''); return }
     setError(''); setOk(''); setLoading(true)
     try {
-      // TODO: POST /api/patients (ใช้ form ที่มี age คำนวณแล้ว)
-      // await fetch('/api/patients', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(form) })
-      await new Promise(r => setTimeout(r, 600)) // mock
+      const payload = {
+        id_card_number: onlyDigits(form.idcard),      // 13 หลัก
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        phone_number: onlyDigits(form.phone),         // 10 หลัก
+        birth_day: toBangkokISO(form.birthDay),       // RFC3339 +07:00
+        gender: form.gender,                           // "ชาย" | "หญิง"
+      }
+       console.log('POST payload:', payload)
+      await createPatient(payload) // POST /doctor/hospital-patients
       setOk('เพิ่มผู้ป่วยเรียบร้อย')
       nav('/doc/patients', { replace:true })
     } catch (err) {
@@ -57,7 +87,7 @@ export default function AddPatient() {
     } finally { setLoading(false) }
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const todayStr = new Date().toISOString().slice(0, 10)
 
   return (
     <div className={styles.page}>
@@ -79,6 +109,7 @@ export default function AddPatient() {
                 className={styles.input}
                 value={form.firstName}
                 onChange={e => onChange('firstName', e.target.value)}
+                autoComplete="given-name"
               />
             </label>
 
@@ -105,17 +136,14 @@ export default function AddPatient() {
                 className={styles.input}
                 value={form.lastName}
                 onChange={e => onChange('lastName', e.target.value)}
+                autoComplete="family-name"
               />
             </label>
 
             <label className={styles.label}>
               <span>Age</span>
               <div className={styles.inputGroup}>
-                <input
-                  className={styles.input}
-                  readOnly
-                  value={form.age}
-                />
+                <input className={styles.input} readOnly value={form.age} />
                 <span className={styles.suffix}>ปี</span>
               </div>
             </label>
@@ -127,7 +155,9 @@ export default function AddPatient() {
               <input
                 className={styles.input}
                 value={form.idcard}
-                onChange={e => onChange('idcard', e.target.value)}
+                onChange={e => onChange('idcard', onlyDigits(e.target.value))}
+                inputMode="numeric"
+                placeholder="กรอก 13 หลัก (ไม่ต้องใส่ขีด)"
               />
             </label>
 
@@ -150,7 +180,9 @@ export default function AddPatient() {
               <input
                 className={styles.input}
                 value={form.phone}
-                onChange={e => onChange('phone', e.target.value)}
+                onChange={e => onChange('phone', onlyDigits(e.target.value))}
+                inputMode="tel"
+                placeholder="เช่น 0812345678"
               />
             </label>
           </div>

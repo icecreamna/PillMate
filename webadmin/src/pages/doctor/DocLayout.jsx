@@ -1,14 +1,10 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import styles from '../../styles/doctor/DocLayout.module.css'
+import LogoutButton from '../../components/LogoutButton'
 
 export default function DocLayout(){
   const nav = useNavigate()
   const email = localStorage.getItem('email') || 'hospital_a@pillmate.com'
-  const logout = ()=>{
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('role')
-    nav('/login', { replace:true })
-  }
 
   return (
     <div className={styles.app}>
@@ -25,7 +21,13 @@ export default function DocLayout(){
       <main className={styles.main}>
         <header className={styles.topbar}>
           <input className={styles.email} value={email} disabled />
-          <button className={styles.logout} onClick={logout}>ออกจากระบบ</button>
+          <LogoutButton
+            className={styles.logout}
+            confirm
+            onAfter={() => nav('/login', { replace: true })}
+          >
+            ออกจากระบบ
+          </LogoutButton>
         </header>
 
         <div className={styles.content}>

@@ -183,3 +183,55 @@ func SetupDoctorRoutes(api fiber.Router) {
 		})
 	})
 }
+
+// ต้องเรียกจากกลุ่มที่มี middleware แล้ว เช่น
+// doctor := app.Group("/doctor/",
+//     handlers.AuthAny,
+//     handlers.RequireRole("doctor", "admin-app"),
+// )
+// routes.SetupDoctorPublicRoutes(doctor)
+//
+// เส้นทางที่ได้:
+//   GET /doctor/me
+//   GET /doctor/doctors/:id
+
+func SetupDoctorPublicRoutes(api fiber.Router) {
+
+	// GET /doctor/me  — ดึงข้อมูลหมอจาก token (admin_id)
+	api.Get("/me", func(c *fiber.Ctx) error {
+		v, ok := c.Locals("admin_id").(uint)
+		if !ok || v == 0 {
+			return c.Status(fiber.StatusUnauthorized).
+				JSON(fiber.Map{"error": "unauthorized"})
+		}
+
+		doc, err := handlers.GetDoctorByID(db.DB, v)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		// ตอบเป็น DTO (ไม่คืน password)
+		return c.JSON(fiber.Map{"data": dto.ToWebAdminDTO(doc)})
+	})
+
+	// GET /doctor/doctors/:id — อ่านข้อมูลหมอตาม id
+	api.Get("/doctors/:id", func(c *fiber.Ctx) error {
+		idU64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+		if err != nil || idU64 == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		}
+
+		doc, err := handlers.GetDoctorByID(db.DB, uint(idU64))
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		// ตอบเป็น DTO (ไม่คืน password)
+		return c.JSON(fiber.Map{"data": dto.ToWebAdminDTO(doc)})
+	})
+}
+

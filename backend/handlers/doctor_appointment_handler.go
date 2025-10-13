@@ -14,32 +14,47 @@ import (
 
 const defaultHospitalID uint = 1 // โรงพยาบาลเดียว (seed ไว้ id=1)
 
-// parse "YYYY-MM-DD" -> time.Time (date-only)
-func parseDateYMD(s string) (time.Time, error) {
+// ===== Fixed timezone (Bangkok) สำหรับการตีความ "เวลา" (ไม่ใช่ "วัน") =====
+var handlerBangkokLoc = func() *time.Location {
+	l, _ := time.LoadLocation("Asia/Bangkok")
+	return l
+}()
+
+// ============== DATE PARSER (ไม่อิงโซนไทย) =======================
+// parse "YYYY-MM-DD" -> ตรึงเป็นเที่ยงคืน UTC ของวันนั้น (เพื่อให้ DB/GET ตรงวันเดิม)
+func parseDateYMD_AsDateUTC(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return time.Time{}, errors.New("appointment_date is required")
 	}
-	t, err := time.Parse("2006-01-02", s)
+	d, err := time.Parse("2006-01-02", s) // parse แบบไม่ใส่ Location = time.UTC
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid date format: want YYYY-MM-DD, got %q", s)
 	}
-	return t, nil
+	// เก็บเป็น 00:00:00 UTC ของวันนั้น
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC), nil
 }
 
-// parse "HH:MM" (or "HH:MM:SS") -> time.Time (time-only)
-func parseTimeHM(s string) (time.Time, error) {
+// ============== TIME PARSER (อิงโซนไทย) =========================
+// parse "HH:MM" (or "HH:MM:SS") -> anchor 2000-01-01 HH:MM @Bangkok → UTC เพื่อเซฟ
+func parseTimeHMToUTC(s string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return time.Time{}, errors.New("appointment_time is required")
 	}
-	if t, err := time.Parse("15:04", s); err == nil {
-		return t, nil
+	var t time.Time
+	var err error
+	// รองรับ HH:MM และ HH:MM:SS
+	t, err = time.ParseInLocation("15:04", s, handlerBangkokLoc)
+	if err != nil {
+		t, err = time.ParseInLocation("15:04:05", s, handlerBangkokLoc)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("invalid time format: want HH:MM, got %q", s)
+		}
 	}
-	if t, err := time.Parse("15:04:05", s); err == nil {
-		return t, nil
-	}
-	return time.Time{}, fmt.Errorf("invalid time format: want HH:MM, got %q", s)
+	// ใช้ปีสมัยใหม่ (2000) เพื่อกัน offset ประวัติศาสตร์ +06:42/BC
+	anchor := time.Date(2000, 1, 1, t.Hour(), t.Minute(), t.Second(), 0, handlerBangkokLoc)
+	return anchor.UTC(), nil
 }
 
 // ============ CREATE (หมอสร้างนัด) ============
@@ -53,12 +68,13 @@ func DoctorCreateAppointment(db *gorm.DB, in *dto.DoctorCreateAppointmentDTO, do
 		return nil, errors.New("id_card_number must be 13 digits")
 	}
 
-	// parse date ("YYYY-MM-DD") and time ("HH:MM")
-	dateOnly, err := parseDateYMD(in.AppointmentDate)
+	// parse date ("YYYY-MM-DD") เป็น "UTC midnight ของวันนั้น" (ไม่อิงโซนไทย)
+	dateUTC, err := parseDateYMD_AsDateUTC(in.AppointmentDate)
 	if err != nil {
 		return nil, err
 	}
-	tOnly, err := parseTimeHM(in.AppointmentTime)
+	// parse time ("HH:MM") เป็น anchor 2000-01-01 @Bangkok แล้วแปลงเป็น UTC
+	timeUTC, err := parseTimeHMToUTC(in.AppointmentTime)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +114,11 @@ func DoctorCreateAppointment(db *gorm.DB, in *dto.DoctorCreateAppointmentDTO, do
 		}
 	}
 
-	// กันชน slot หมอ (doctor_id + date + time)
+	// กันชน slot หมอ (doctor_id + date + time) — ใช้ค่าที่จะเซฟจริง (UTC)
 	{
 		var cnt int64
 		if err := db.Model(&models.Appointment{}).
-			Where("doctor_id = ? AND appointment_date = ? AND appointment_time = ?", docID, dateOnly, tOnly).
+			Where("doctor_id = ? AND appointment_date = ? AND appointment_time = ?", docID, dateUTC, timeUTC).
 			Count(&cnt).Error; err != nil {
 			return nil, err
 		}
@@ -113,8 +129,8 @@ func DoctorCreateAppointment(db *gorm.DB, in *dto.DoctorCreateAppointmentDTO, do
 
 	rec := models.Appointment{
 		IDCardNumber:    idc,
-		AppointmentDate: dateOnly,
-		AppointmentTime: tOnly,
+		AppointmentDate: dateUTC, // UTC midnight ของวันนั้น (เพื่อให้ DB โชว์วันตรงกับอินพุต)
+		AppointmentTime: timeUTC, // UTC (anchor 2000-01-01)
 		HospitalID:      hospID,
 		DoctorID:        docID,
 		Note:            in.Note,
@@ -136,6 +152,7 @@ func DoctorListAppointments(db *gorm.DB, doctorID uint, q string, dateFrom, date
 		like := "%" + s + "%"
 		tx = tx.Where("id_card_number ILIKE ?", like)
 	}
+	// หมายเหตุ: แนะนำให้ตัวเรียก (routes) ส่งค่า df/dt เป็น "UTC midnight" ของวันนั้นแล้ว
 	if dateFrom != nil && !dateFrom.IsZero() {
 		tx = tx.Where("appointment_date >= ?", *dateFrom)
 	}
@@ -177,7 +194,7 @@ func DoctorUpdateAppointment(db *gorm.DB, doctorID, id uint, in *dto.DoctorUpdat
 	}
 
 	updates := map[string]any{
-		"updated_at": time.Now(),
+		"updated_at": time.Now().UTC(), // ใช้ UTC ให้คงที่
 	}
 
 	// id_card_number
@@ -189,28 +206,28 @@ func DoctorUpdateAppointment(db *gorm.DB, doctorID, id uint, in *dto.DoctorUpdat
 		updates["id_card_number"] = idc
 	}
 
-	// เตรียมค่าที่จะใช้กันชน slot หลังอัปเดต
+	// เตรียมค่าที่จะใช้กันชน slot หลังอัปเดต (เริ่มจากค่าปัจจุบัน)
 	newDate := rec.AppointmentDate
 	newTime := rec.AppointmentTime
 
-	// appointment_date: string "YYYY-MM-DD"
+	// appointment_date: string "YYYY-MM-DD" → ตีความเป็น "UTC midnight ของวันนั้น"
 	if in.AppointmentDate != nil {
-		d, err := parseDateYMD(*in.AppointmentDate)
+		dUTC, err := parseDateYMD_AsDateUTC(*in.AppointmentDate)
 		if err != nil {
 			return nil, err
 		}
-		updates["appointment_date"] = d
-		newDate = d
+		updates["appointment_date"] = dUTC
+		newDate = dUTC
 	}
 
-	// appointment_time: string "HH:MM"
+	// appointment_time: string "HH:MM" → UTC (anchor 2000-01-01)
 	if in.AppointmentTime != nil {
-		tOnly, err := parseTimeHM(*in.AppointmentTime)
+		tUTC, err := parseTimeHMToUTC(*in.AppointmentTime)
 		if err != nil {
 			return nil, err
 		}
-		updates["appointment_time"] = tOnly
-		newTime = tOnly
+		updates["appointment_time"] = tUTC
+		newTime = tUTC
 	}
 
 	// hospital (optional override)

@@ -123,3 +123,43 @@ func SetupMedicineInfoRoutes(api fiber.Router) {
 		return c.JSON(fiber.Map{"message": "deleted"})
 	})
 }
+
+// =======================
+// Read-only for doctor
+// ใช้งานภายใต้กลุ่มที่มี middleware แล้ว เช่น
+// doctor := app.Group("/doctor/",
+//     handlers.AuthAny,
+//     handlers.RequireRole("doctor", "admin-app"),
+// )
+// routes.SetupDoctorMedicineReadRoutes(doctor)
+//
+// เส้นทางจริงจะเป็น:
+//   GET /doctor/medicine-infos
+//   GET /doctor/medicine-info/:id
+// =======================
+func SetupDoctorMedicineReadRoutes(api fiber.Router) {
+	// LIST
+	api.Get("/medicine-infos", func(c *fiber.Ctx) error {
+		list, err := handlers.GetMedicineInfos(db.DB)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(fiber.Map{"data": dto.ToMedicineInfoDTOs(list)})
+	})
+
+	// GET ONE
+	api.Get("/medicine-info/:id", func(c *fiber.Ctx) error {
+		id, err := strconv.ParseUint(c.Params("id"), 10, 64)
+		if err != nil || id == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+		}
+		m, err := handlers.GetMedicineInfo(db.DB, uint(id))
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "not found"})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(fiber.Map{"data": dto.ToMedicineInfoDTO(m)})
+	})
+}

@@ -16,9 +16,12 @@ import (
 func SetupMobileAppointmentRoutes(api fiber.Router) {
 	// GET /api/appointments/latest
 	api.Get("/appointments/latest", func(c *fiber.Ctx) error {
-		patientID, _ := c.Locals("patient_id").(uint) // ต้องมีจาก handlers.AuthRequired
+		// ปิด cache responses (ข้อมูลส่วนบุคคล)
+		c.Set("Cache-Control", "no-store")
+
+		patientID, _ := c.Locals("patient_id").(uint) // ต้องมีจาก middleware auth ฝั่ง mobile
 		if patientID == 0 {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
 		}
 
 		latest, err := handlers.MobileGetLatestAppointment(db.DB, patientID)
@@ -33,9 +36,12 @@ func SetupMobileAppointmentRoutes(api fiber.Router) {
 
 	// GET /api/appointments/:id
 	api.Get("/appointments/:id", func(c *fiber.Ctx) error {
+		// ปิด cache responses (ข้อมูลส่วนบุคคล)
+		c.Set("Cache-Control", "no-store")
+
 		patientID, _ := c.Locals("patient_id").(uint)
 		if patientID == 0 {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
 		}
 
 		idU64, err := strconv.ParseUint(c.Params("id"), 10, 64)

@@ -9,6 +9,7 @@ import (
 	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/routes"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -17,6 +18,14 @@ func main() {
 	fmt.Println("Server started...")
 
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+	// ใส่ origin ของหน้าเว็บที่เรียกจริง (ตัวอย่าง Vite dev)
+	AllowOrigins:     "http://localhost:5173",
+	AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+	AllowHeaders:     "Content-Type, Authorization",
+	ExposeHeaders:    "Content-Type",
+	AllowCredentials: true, // สำคัญ! ต้องเปิดเมื่อใช้คุกกี้
+	}))
 
 	// ใช้โหมดควบคุมการเปิดเส้นทาง: "mobile" | "admin" | "all"
 	mode := os.Getenv("APP_MODE")
@@ -82,6 +91,8 @@ func main() {
 		routes.SetupHospitalPatientRoutes(doctor)
 		routes.SetupPrescriptionRoutes(doctor)
 		routes.SetupDoctorAppointmentRoutes(doctor)
+		routes.SetupDoctorMedicineReadRoutes(doctor)
+		routes.SetupDoctorPublicRoutes(doctor)
 		// ถ้ายังไม่มีหน้า panel ฝั่ง doctor ให้ไม่ต้องประกาศกลุ่มนี้ เพื่อลด unused var
 		// doc := app.Group("/api/doctor", handlers.AuthAny, handlers.RequireRole("doctor", "admin-app"))
 		// routes.SetupDoctorPanelRoutes(doc)

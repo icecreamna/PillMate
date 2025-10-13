@@ -31,16 +31,22 @@ import (
 //
 // หมายเหตุ: ส่ง Header Content-Type: application/json เมื่อมี Body
 
+// --- helper: แปลง "YYYY-MM-DD" -> 00:00:00 @ UTC (ไม่อิงโซนไทย) ---
+func parseQueryDateYMD_AsDateUTC(s string) (time.Time, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return time.Time{}, errors.New("empty")
+	}
+	d, err := time.Parse("2006-01-02", s) // ไม่มี Location => UTC
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC), nil
+}
+
 func SetupDoctorAppointmentRoutes(api fiber.Router) {
 
 	// CREATE
-	// ตัวอย่าง body:
-	// {
-	//   "id_card_number": "1101700203452",
-	//   "appointment_date": "2025-10-20",
-	//   "appointment_time": "14:30",
-	//   "note": "งดอาหารก่อนตรวจ 8 ชั่วโมง"
-	// }
 	api.Post("/appointments", func(c *fiber.Ctx) error {
 		if ct := c.Get("Content-Type"); !strings.Contains(ct, "application/json") {
 			return c.Status(fiber.StatusUnsupportedMediaType).JSON(fiber.Map{"error": "Content-Type must be application/json"})
@@ -63,18 +69,20 @@ func SetupDoctorAppointmentRoutes(api fiber.Router) {
 		docID, _ := c.Locals("admin_id").(uint)
 		q := c.Query("q", "")
 
-		// parse date_from/date_to (YYYY-MM-DD)
+		// parse date_from/date_to (YYYY-MM-DD -> UTC midnight)
 		var dfPtr, dtPtr *time.Time
 		if s := strings.TrimSpace(c.Query("date_from", "")); s != "" {
-			if t, err := time.Parse("2006-01-02", s); err == nil {
-				tt := t // local date
-				dfPtr = &tt
+			if tUTC, err := parseQueryDateYMD_AsDateUTC(s); err == nil {
+				dfPtr = &tUTC
+			} else {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid date_from (want YYYY-MM-DD)"})
 			}
 		}
 		if s := strings.TrimSpace(c.Query("date_to", "")); s != "" {
-			if t, err := time.Parse("2006-01-02", s); err == nil {
-				tt := t
-				dtPtr = &tt
+			if tUTC, err := parseQueryDateYMD_AsDateUTC(s); err == nil {
+				dtPtr = &tUTC
+			} else {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid date_to (want YYYY-MM-DD)"})
 			}
 		}
 
@@ -103,12 +111,6 @@ func SetupDoctorAppointmentRoutes(api fiber.Router) {
 	})
 
 	// UPDATE
-	// ตัวอย่าง body:
-	// {
-	//   "appointment_date": "2025-10-25",
-	//   "appointment_time": "10:00",
-	//   "note": "เลื่อนเวลา"
-	// }
 	api.Put("/appointments/:id", func(c *fiber.Ctx) error {
 		if ct := c.Get("Content-Type"); !strings.Contains(ct, "application/json") {
 			return c.Status(fiber.StatusUnsupportedMediaType).JSON(fiber.Map{"error": "Content-Type must be application/json"})

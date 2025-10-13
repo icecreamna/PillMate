@@ -11,7 +11,7 @@ import (
 )
 
 // ดึง token จาก cookie/header (รองรับทั้ง jwt และ admin_jwt)
-func pickToken(c *fiber.Ctx) string {
+func PickToken(c *fiber.Ctx) string {
 	// if t := c.Cookies("jwt"); t != "" { // เผื่อบางที่ใช้ชื่อเดิม
 	// 	return t
 	// }
@@ -25,7 +25,7 @@ func pickToken(c *fiber.Ctx) string {
 	return ""
 }
 
-func parseJWT(tokenString string) (jwt.MapClaims, error) {
+func ParseJWT(tokenString string) (jwt.MapClaims, error) {
 	secret := os.Getenv("jwtSecretKey")
 	if secret == "" {
 		return nil, errors.New("JWT secret key not set")
@@ -50,11 +50,11 @@ func parseJWT(tokenString string) (jwt.MapClaims, error) {
 
 // ใช้กับฝั่งเว็บ (admin/doctor) — ไม่กระทบ AuthRequired เดิมของ mobile
 func AuthAny(c *fiber.Ctx) error {
-	t := pickToken(c)
+	t := PickToken(c)
 	if t == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing token"})
 	}
-	claims, err := parseJWT(t)
+	claims, err := ParseJWT(t)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}

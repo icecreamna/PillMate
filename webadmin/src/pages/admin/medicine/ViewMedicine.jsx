@@ -1,26 +1,110 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styles from '../../../styles/admin/medicine/ViewMedicine.module.css'
-
-// mock data (ภายหลังดึงจาก API ตาม id)
-const MOCK = [
-  { id: 1, medName: 'Medicine A', genericName: 'Generic A', properties: 'บรรเทาอาการปวด ลดไข้', strength: '500 mg', form: 'ยาเม็ด', unit: 'mg', instruction: 'หลังอาหาร', status: 'Active' },
-  { id: 2, medName: 'Medicine B', genericName: 'Generic B', properties: '', strength: '400 mg', form: 'แคปซูล', unit: 'mg', instruction: 'ก่อนอาหาร', status: 'Active' },
-  { id: 3, medName: 'Medicine C', genericName: 'Generic C', properties: '', strength: '4 mg/5 ml', form: 'ยาน้ำ', unit: 'ml', instruction: 'วันละ 3 ครั้ง', status: 'Inactive' },
-]
-
-const FORM_OPTIONS = ['ยาเม็ด','แคปซูล','ยาน้ำ','ขี้ผึ้ง','สเปรย์']
-const UNIT_OPTIONS = ['mg','g','ml','IU','mcg']
-const INSTRUCTION_OPTIONS = ['หลังอาหาร','ก่อนอาหาร','พร้อมอาหาร','วันละ 1 ครั้ง','วันละ 2 ครั้ง','วันละ 3 ครั้ง']
-const STATUS_OPTIONS = ['Active','Inactive']
+import { getMedicine } from '../../../services/medicines'
+import { listForms, listUnitsByForm, listInstructions } from '../../../services/initialData'
 
 export default function ViewMedicine() {
   const { id } = useParams()
   const nav = useNavigate()
-  // ของจริง: ใช้ useEffect ไป fetch `/api/medicines/:id`
-  const data = useMemo(() => MOCK.find(x => String(x.id) === String(id)), [id])
 
-  if (!data) return <div className={styles.page}>ไม่พบข้อมูลยา</div>
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  // ข้อมูลยา (จาก DTO)
+  const [med, setMed] = useState(null)
+
+  // อ้างอิงชื่อ
+  const [forms, setForms] = useState([])            // [{id, form_name}]
+  const [units, setUnits] = useState([])            // [{id, unit_name}] (ตาม form_id)
+  const [instructions, setInstructions] = useState([]) // [{id, instruction_name}]
+
+  // โหลดหลัก: medicine + forms + instructions
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true); setError('')
+      try {
+        const [resMed, fs, ins] = await Promise.all([
+          getMedicine(id),   // -> { data: {...} }
+          listForms(),       // -> array
+          listInstructions() // -> array
+        ])
+        if (cancelled) return
+        const m = resMed?.data
+        if (!m) throw new Error('ไม่พบข้อมูลยา')
+        setMed(m)
+        setForms(Array.isArray(fs) ? fs : [])
+        setInstructions(Array.isArray(ins) ? ins : [])
+      } catch (e) {
+        if (!cancelled) setError(e.message || 'โหลดข้อมูลไม่สำเร็จ')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [id])
+
+  // เมื่อมี form_id → โหลด units ของฟอร์มนั้น
+  useEffect(() => {
+    let cancelled = false
+    const fid = Number(med?.form_id)
+    if (!fid) { setUnits([]); return }
+    ;(async () => {
+      try {
+        const res = await listUnitsByForm(fid) // -> { form_id, units: [...] }
+        if (!cancelled) setUnits(Array.isArray(res?.units) ? res.units : [])
+      } catch {
+        if (!cancelled) setUnits([])
+      }
+    })()
+    return () => { cancelled = true }
+  }, [med?.form_id])
+
+  // ---------- helpers ----------
+  // หาชื่อจาก id หรือจากฟิลด์ตรง ๆ
+  const formName = useMemo(() => {
+    if (!med) return ''
+    if (med.form_name) return med.form_name
+    const f = forms.find(x => String(x.id) === String(med.form_id))
+    return f?.form_name || f?.name || ''
+  }, [med, forms])
+
+  const unitName = useMemo(() => {
+    if (!med) return ''
+    if (med.unit_name) return med.unit_name
+    const u = units.find(x => String(x.id) === String(med.unit_id))
+    return u?.unit_name || u?.name || ''
+  }, [med, units])
+
+  const instructionName = useMemo(() => {
+    if (!med) return ''
+    if (med.instruction_name) return med.instruction_name
+    const ins = instructions.find(x => String(x.id) === String(med.instruction_id))
+    return ins?.instruction_name || ins?.name || ''
+  }, [med, instructions])
+
+  // ทำรายการ option โดยรับ label ปัจจุบัน + รายการ label ทั้งหมด
+  const ensureOptions = (currentLabel, allLabels) => {
+    const labels = (allLabels || []).filter(Boolean)
+    if (currentLabel) {
+      const rest = labels.filter(l => l !== currentLabel)
+      return [{ value: currentLabel, label: currentLabel }, ...rest.map(l => ({ value: l, label: l }))]
+    }
+    // ไม่มีค่า -> ใส่ placeholder value="" ก่อน
+    return [{ value: "", label: "-" }, ...labels.map(l => ({ value: l, label: l }))]
+  }
+
+  if (loading) return <div className={styles.page}>กำลังโหลด...</div>
+  if (error)   return <div className={styles.page}>{error}</div>
+  if (!med)    return <div className={styles.page}>ไม่พบข้อมูลยา</div>
+
+  // options สำหรับ select (disabled)
+  const formOpts         = ensureOptions(formName,        forms.map(f => f.form_name || f.name))
+  const unitOpts         = ensureOptions(unitName,        units.map(u => u.unit_name || u.name))
+  const instructionOpts  = ensureOptions(instructionName, instructions.map(i => i.instruction_name || i.name))
+  const statusLabel      = (med.med_status?.toLowerCase() === 'inactive') ? 'Inactive' : 'Active'
+  const statusOpts       = ensureOptions(statusLabel, ['Active', 'Inactive'])
 
   return (
     <div className={styles.page}>
@@ -35,51 +119,51 @@ export default function ViewMedicine() {
           <div className={styles.col}>
             <label className={styles.label}>
               <span>Medicine Name</span>
-              <input className={styles.input} value={data.medName} readOnly />
+              <input className={styles.input} value={med.med_name || ''} readOnly />
             </label>
 
             <label className={styles.label}>
               <span>Generic Name</span>
-              <input className={styles.input} value={data.genericName} readOnly />
+              <input className={styles.input} value={med.generic_name || ''} readOnly />
             </label>
 
             <label className={styles.label}>
               <span>Properties</span>
-              <textarea className={styles.textarea} rows={4} value={data.properties} readOnly />
+              <textarea className={styles.textarea} rows={4} value={med.properties || ''} readOnly />
             </label>
 
             <label className={styles.label}>
               <span>Strength</span>
-              <input className={styles.input} value={data.strength} readOnly />
+              <input className={styles.input} value={med.strength || ''} readOnly />
             </label>
           </div>
 
           <div className={styles.col}>
             <label className={styles.label}>
               <span>Form</span>
-              <select className={styles.select} value={data.form} disabled>
-                {[data.form, ...FORM_OPTIONS.filter(o=>o!==data.form)].map(o => <option key={o}>{o}</option>)}
+              <select className={styles.select} value={formName || ""} disabled>
+                {formOpts.map(o => <option key={`${o.value}-${o.label}`} value={o.value}>{o.label}</option>)}
               </select>
             </label>
 
             <label className={styles.label}>
               <span>Unit</span>
-              <select className={styles.select} value={data.unit} disabled>
-                {[data.unit, ...UNIT_OPTIONS.filter(o=>o!==data.unit)].map(o => <option key={o}>{o}</option>)}
+              <select className={styles.select} value={unitName || ""} disabled>
+                {unitOpts.map(o => <option key={`${o.value}-${o.label}`} value={o.value}>{o.label}</option>)}
               </select>
             </label>
 
             <label className={styles.label}>
               <span>Instruction</span>
-              <select className={styles.select} value={data.instruction} disabled>
-                {[data.instruction, ...INSTRUCTION_OPTIONS.filter(o=>o!==data.instruction)].map(o => <option key={o}>{o}</option>)}
+              <select className={styles.select} value={instructionName || ""} disabled>
+                {instructionOpts.map(o => <option key={`${o.value}-${o.label}`} value={o.value}>{o.label}</option>)}
               </select>
             </label>
 
             <label className={styles.label}>
               <span>Status</span>
-              <select className={styles.select} value={data.status} disabled>
-                {[data.status, ...STATUS_OPTIONS.filter(o=>o!==data.status)].map(o => <option key={o}>{o}</option>)}
+              <select className={styles.select} value={statusLabel || ""} disabled>
+                {statusOpts.map(o => <option key={`${o.value}-${o.label}`} value={o.value}>{o.label}</option>)}
               </select>
             </label>
           </div>

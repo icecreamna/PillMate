@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styles from "../../../styles/admin/doctor/ResetDoctorPassword.module.css";
+import { getDoctor, resetDoctorPassword } from "../../../services/doctors";
 
 export default function ResetDoctorPassword() {
   const { id } = useParams();
   const nav = useNavigate();
-  // ในของจริงโหลดอีเมลจาก API ด้วย id; ตอนนี้ mock ไว้
-  const email = `doctor_${id}@pillmate.com`;
+
+  // แสดงอีเมล/username จริงจาก API (fallback เป็น mock ถ้าโหลดไม่ได้)
+  const [email, setEmail] = useState(`doctor_${id}@pillmate.com`);
 
   const [pw1, setPw1] = useState("");
   const [pw2, setPw2] = useState("");
@@ -14,6 +16,20 @@ export default function ResetDoctorPassword() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getDoctor(id);   // GET /admin/doctors/:id -> { data:{...} }
+        const d = res?.data || {};
+        if (!cancelled) setEmail(d.username || d.email || `doctor_${id}@pillmate.com`);
+      } catch {
+        // เงียบไว้ ใช้ fallback email เดิม
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
 
   const validate = () => {
     if (!pw1) return "กรุณากรอกรหัสผ่านใหม่";
@@ -24,19 +40,13 @@ export default function ResetDoctorPassword() {
   const onSubmit = async (e) => {
     e.preventDefault();
     const v = validate();
-    if (v) {
-      setErr(v);
-      return;
-    }
-    setErr("");
-    setMsg("");
-    setLoading(true);
+    if (v) { setErr(v); return; }
+    setErr(""); setMsg(""); setLoading(true);
     try {
-      // TODO: เรียก API จริง:
-      // await fetch(`/api/doctors/${id}/password`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw1 }) })
-      await new Promise((r) => setTimeout(r, 600)); // mock
+      // PATCH /admin/doctors/:id/password  -> body: { new_password }
+      await resetDoctorPassword(id, pw1);
       setMsg("เปลี่ยนรหัสผ่านสำเร็จ");
-      // nav(-1) // ถ้าต้องการย้อนกลับอัตโนมัติ
+      // ถ้าต้องการกลับทันทีหลังสำเร็จ: nav(-1)
     } catch (e) {
       setErr(e.message || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
     } finally {

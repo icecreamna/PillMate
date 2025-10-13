@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../../../styles/admin/doctor/AddDoctor.module.css";
+import { createDoctor } from "../../../services/doctors";
 
 export default function AddDoctor() {
   const nav = useNavigate();
@@ -20,7 +21,7 @@ export default function AddDoctor() {
     if (!form.first_name.trim()) return "กรุณากรอก First Name";
     if (!form.last_name.trim()) return "กรุณากรอก Last Name";
     if (!form.username.trim()) return "กรุณากรอก Username (อีเมล)";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.username))
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.username.trim()))
       return "รูปแบบอีเมลไม่ถูกต้อง";
     if (form.password == null || form.password === "")
       return "กรุณากรอก Password";
@@ -38,12 +39,15 @@ export default function AddDoctor() {
     setError("");
     setLoading(true);
     try {
-      // TODO: เรียก API จริงที่นี่
-      // const res = await fetch('/api/doctors', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...payload }) })
-      // if (!res.ok) throw new Error((await res.json()).error || 'บันทึกไม่สำเร็จ')
-
-      await new Promise((r) => setTimeout(r, 600)); // mock
-      nav("/doctor", { replace: true });
+      // เรียก API จริง: POST /admin/doctors
+      await createDoctor({
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        username: form.username.trim(),
+        password: form.password, // ส่งจริงไปให้ BE hash เอง
+      });
+      // บันทึกสำเร็จ → กลับไปหน้า list ของ admin
+      nav("/admin", { replace: true });
     } catch (err) {
       setError(err.message || "บันทึกไม่สำเร็จ");
     } finally {

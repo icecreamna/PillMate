@@ -52,7 +52,7 @@ func LoginAdmin(db *gorm.DB, username, password string) (string, *models.WebAdmi
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"aud":      "admin-app",
-		"role":     admin.Role, // เช่น "superadmin" / "doctor" / "staff"
+		"role":     admin.Role, // เช่น "superadmin" / "doctor" 
 		"admin_id": admin.ID,
 		"iat":      now.Unix(),
 		"exp":      now.Add(72 * time.Hour).Unix(), // ปรับอายุโทเค็นได้ตามต้องการ

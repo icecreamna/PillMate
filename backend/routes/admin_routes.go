@@ -7,6 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
+	"strconv"
+	"github.com/fouradithep/pillmate/models"
 )
 
 func SetupAdminAuthRoutes(app *fiber.App) {
@@ -77,5 +79,42 @@ func SetupAdminAuthRoutes(app *fiber.App) {
 		return c.JSON(fiber.Map{
 		"message": "logout success",
 	})
+	})
+
+	// GET /admin/me -> ตรวจคุกกี้/เฮดเดอร์ ด้วย pickToken + parseJWT แล้วคืน {user, role}
+	adm.Get("/me", func(c *fiber.Ctx) error {
+		tok := handlers.PickToken(c) // ถ้า helpers เป็น lowercase ให้แก้ชื่อเรียกให้ตรง (pickToken)
+		if strings.TrimSpace(tok) == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+		}
+
+		claims, err := handlers.ParseJWT(tok) // เช่น parseJWT (แก้ชื่อเรียกให้ตรงกับที่ export)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+		}
+
+		// admin_id จาก claims อาจเป็น float64 หรือ string ในบางเคส
+		var adminID uint
+		if v, ok := claims["admin_id"].(float64); ok {
+			adminID = uint(v)
+		} else if s, ok := claims["admin_id"].(string); ok && s != "" {
+			if id64, _ := strconv.ParseUint(s, 10, 64); id64 > 0 {
+				adminID = uint(id64)
+			}
+		}
+		if adminID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+		}
+
+		var user models.WebAdmin
+		if err := db.DB.First(&user, adminID).Error; err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+		}
+		user.Password = "" // กันหลุด hash
+
+		return c.JSON(fiber.Map{
+			"user": user,
+			"role": user.Role,
+		})
 	})
 }
