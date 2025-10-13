@@ -15,8 +15,11 @@ class DoseSingle {
 }
 
 class DoseGroup {
-  final int? id;
+  final int? notiSingleId;
+  final int? medicineId;
   final int? groupId;
+  final List<int>? notiGroupIds;
+  int? symptomId;
   final String nameGroup;
   final String key;
   final List<DoseSingle> doses;
@@ -24,10 +27,13 @@ class DoseGroup {
   final String instruction;
   bool saveNote;
   bool isTaken;
+  String? symptomNote;
 
   DoseGroup({
-    this.id,
+    this.notiSingleId,
+    this.medicineId,
     this.groupId,
+    this.notiGroupIds,
     required this.nameGroup,
     required this.key,
     required this.doses,
@@ -35,6 +41,8 @@ class DoseGroup {
     required this.instruction,
     this.saveNote = false,
     this.isTaken = false,
+    this.symptomNote = "",
+    this.symptomId,
   });
 }
 
@@ -74,13 +82,260 @@ class TodayProvider extends ChangeNotifier {
     try {
       final data = await _todayService.fetchTodayNoti(_selected);
       all = data;
+
+      await loadAllSymptomsAndMap();
       notifyListeners();
     } catch (e) {
       print("❌ โหลดข้อมูลวันนี้ไม่สำเร็จ: $e");
     } finally {
-      await Future.delayed(const Duration(milliseconds: 1000));
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> updateTakenStatus(
+    DoseGroup doseGroup,
+    bool taken,
+    BuildContext context,
+  ) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      if (doseGroup.notiSingleId != null) {
+        // ✅ แบบเดี่ยว
+        final success = await _todayService.markTaken(
+          notiItemId: doseGroup.notiSingleId!,
+          taken: taken,
+        );
+        if (success) {
+          doseGroup.isTaken = taken;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "อัปเดตสถานะการกิน เสร็จสิ้น",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "อัปเดตสถานะการกิน ไม่เสร็จสิ้น",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (doseGroup.notiGroupIds != null) {
+        bool allSuccess = true;
+        for (final id in doseGroup.notiGroupIds!) {
+          print("ส่ง notiGroupId ${id}");
+          final success = await _todayService.markTaken(
+            notiItemId: id,
+            taken: taken,
+          );
+          if (!success) allSuccess = false;
+        }
+        if (allSuccess) {
+          doseGroup.isTaken = taken;
+          notifyListeners();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "อัปเดตสถานะการกิน เสร็จสิ้น",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "อัปเดตสถานะการกิน ไม่เสร็จสิ้น",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> createSymptom({
+    DoseGroup? dose,
+    required String symptomNote,
+    required BuildContext context,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final notiId =
+          dose?.notiSingleId ??
+          (dose?.notiGroupIds != null && dose!.notiGroupIds!.isNotEmpty
+              ? dose.notiGroupIds!.first
+              : null);
+
+      if (notiId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ ไม่พบรหัสแจ้งเตือน (notiItemId)")),
+        );
+        return;
+      }
+
+      final created = await _todayService.createSymptom(
+        symptomNote: symptomNote,
+        notiItemId: notiId,
+        groupId: dose?.groupId,
+        myMedicineId: dose?.medicineId,
+      );
+      if (created != null) {
+        dose?.saveNote = true;
+        dose?.symptomNote = symptomNote;
+        dose!.symptomId = created["id"];
+        print("idคือออออ${dose.symptomId}");
+        notifyListeners();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "บันทึกอาการสำเร็จ",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "อัปเดตสถานะการกิน ไม่เสร็จสิ้น",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error exception $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> editSymptom({
+    DoseGroup? dose,
+    required String symptomNote,
+    required BuildContext context,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      if (dose!.symptomId == null) {
+        throw Exception("❌ ไม่มี Symptom ID สำหรับอัปเดต");
+      }
+
+      final ok = await _todayService.updateSymptom(
+        symptomId: dose.symptomId!,
+        symptomNote: symptomNote,
+      );
+
+      if (ok) {
+        dose.symptomNote = symptomNote;
+        notifyListeners();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "อัปเดตอาการสำเร็จ",
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception("อัปเดตไม่สำเร็จ");
+      }
+    } catch (e) {
+      print("❌ แก้ไขอาการล้มเหลว: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "เกิดข้อผิดพลาด: $e",
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadAllSymptomsAndMap() async {
+    try {
+      final list = await _todayService.fetchAllSymptoms();
+
+      // เลือก "อาการล่าสุด" ต่อ noti_item_id
+      // (ถ้า API ส่ง created_at มาเป็น RFC3339 ก็ parse ได้ตรง ๆ)
+      final Map<int, Map<String, dynamic>> latestByNoti = {};
+      for (final s in list) {
+        final int notiId = s["noti_item_id"];
+        final String createdAt = s["created_at"] ?? "";
+        final prev = latestByNoti[notiId];
+        if (prev == null) {
+          latestByNoti[notiId] = s;
+        } else {
+          final prevTime =
+              DateTime.tryParse(prev["created_at"] ?? "") ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final curTime =
+              DateTime.tryParse(createdAt) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          if (curTime.isAfter(prevTime)) latestByNoti[notiId] = s;
+        }
+      }
+
+      // แมพเข้า DoseGroup (single ใช้ notiSingleId, group ใช้ notiGroupIds.first)
+      for (final d in all) {
+        final notiId =
+            d.notiSingleId ??
+            (d.notiGroupIds != null && d.notiGroupIds!.isNotEmpty
+                ? d.notiGroupIds!.first
+                : null);
+        if (notiId == null) continue;
+
+        final match = latestByNoti[notiId];
+        if (match != null) {
+          d.saveNote = true;
+          d.symptomNote = match["symptom_note"] ?? "";
+        }
+      }
+    } catch (e) {
+      print("❌ โหลด/แมพ symptoms ไม่สำเร็จ: $e");
     }
   }
 
@@ -113,11 +368,6 @@ class TodayProvider extends ChangeNotifier {
       _selected = DateTime(picked.year, picked.month, picked.day);
       notifyListeners();
     }
-  }
-
-  void setIsTaken(bool taken, DoseGroup doseGroup) {
-    doseGroup.isTaken = taken;
-    notifyListeners();
   }
 
   void removeDose(DoseGroup doseGroup) {

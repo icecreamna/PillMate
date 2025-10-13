@@ -239,6 +239,7 @@ func SetupNotiItemsRoutes(api fiber.Router) {
 	// {
 	//   "notified": true
 	// }
+	//เปลี่ยน เป็น true หลัง แจ่งจาก duenow
 	api.Patch("/noti-items/:id/notified", func(ctx *fiber.Ctx) error {
 		// auth
 		patientID, ok := ctx.Locals("patient_id").(uint)

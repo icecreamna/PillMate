@@ -19,9 +19,14 @@ class ProfileSetupProvider extends ChangeNotifier {
 
   Future<void> checkSetUp(BuildContext context) async {
     bool hasAnyError = false;
-    
+
     for (int i = 0; i < 4; i++) {
-      final text = [firstnameController,lastnameController,idcardController,phoneController][i].text.trim();
+      final text = [
+        firstnameController,
+        lastnameController,
+        idcardController,
+        phoneController,
+      ][i].text.trim();
       if (text.isEmpty) {
         hasError[i] = "กรุณากรอกค่า";
         hasAnyError = true;
@@ -49,11 +54,30 @@ class ProfileSetupProvider extends ChangeNotifier {
       phoneNumber: phoneController.text.trim(),
     );
 
-    if(!success) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("บันทึกข้อมูลไม่สำเร็จ")),
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "สมัครเสร็จสิ้น",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
       );
-      return;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "สมัครไม่ผ่าน",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
 
     Navigator.pushReplacement(

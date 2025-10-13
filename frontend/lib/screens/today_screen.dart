@@ -188,8 +188,12 @@ class _TodayScreenState extends State<TodayScreen> {
                                               height: 62,
                                               width: 120,
                                               child: ElevatedButton(
-                                                onPressed: () {
-                                                  p.setIsTaken(true, d);
+                                                onPressed: () async {
+                                                  await p.updateTakenStatus(
+                                                    d,
+                                                    true,
+                                                    context,
+                                                  );
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
@@ -217,8 +221,12 @@ class _TodayScreenState extends State<TodayScreen> {
                                               height: 62,
                                               width: 130,
                                               child: ElevatedButton(
-                                                onPressed: () {
-                                                  p.setIsTaken(false, d);
+                                                onPressed: () async {
+                                                  await p.updateTakenStatus(
+                                                    d,
+                                                    false,
+                                                    context,
+                                                  );
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
@@ -243,32 +251,32 @@ class _TodayScreenState extends State<TodayScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 30),
-                                        SizedBox(
-                                          width: 109,
-                                          height: 37,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              p.removeDose(d);
-                                              Navigator.pop(context);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              backgroundColor: const Color(
-                                                0xFFFFA100,
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              "ลบออก",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                        // SizedBox(
+                                        //   width: 109,
+                                        //   height: 37,
+                                        //   child: ElevatedButton(
+                                        //     onPressed: () {
+                                        //       p.removeDose(d);
+                                        //       Navigator.pop(context);
+                                        //     },
+                                        //     style: ElevatedButton.styleFrom(
+                                        //       shape: RoundedRectangleBorder(
+                                        //         borderRadius:
+                                        //             BorderRadius.circular(10),
+                                        //       ),
+                                        //       backgroundColor: const Color(
+                                        //         0xFFFFA100,
+                                        //       ),
+                                        //     ),
+                                        //     child: const Text(
+                                        //       "ลบออก",
+                                        //       style: TextStyle(
+                                        //         color: Colors.white,
+                                        //         fontSize: 16,
+                                        //       ),
+                                        //     ),
+                                        //   ),
+                                        // ),
                                       ],
                                     ),
                                   ),
@@ -308,6 +316,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                           const SizedBox(width: 50),
                                           IconButton(
                                             onPressed: () {
+                                              _saveSymptom.text =
+                                                  d.symptomNote ?? "";
                                               showDialog(
                                                 context: context,
                                                 builder: (context) {
@@ -383,6 +393,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                     Navigator.pop(
                                                                       context,
                                                                     );
+
                                                                     _saveSymptom
                                                                         .clear();
                                                                   },
@@ -417,16 +428,36 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                   width: 10,
                                                                 ),
                                                                 ElevatedButton(
-                                                                  onPressed: () {
+                                                                  onPressed: () async {
                                                                     if (_formKey
                                                                         .currentState!
                                                                         .validate()) {
+                                                                      if (d.saveNote ==
+                                                                          false) {
+                                                                        //  ยังไม่มี — สร้างใหม่
+                                                                        await p.createSymptom(
+                                                                          dose:
+                                                                              d,
+                                                                          symptomNote: _saveSymptom
+                                                                              .text
+                                                                              .trim(),
+                                                                          context:
+                                                                              context,
+                                                                        );
+                                                                      } else {
+                                                                        // มีแล้ว — อัปเดต
+                                                                        await p.editSymptom(
+                                                                          dose:
+                                                                              d,
+                                                                          symptomNote: _saveSymptom
+                                                                              .text
+                                                                              .trim(),
+                                                                          context:
+                                                                              context,
+                                                                        );
+                                                                      }
                                                                       Navigator.pop(
                                                                         context,
-                                                                      );
-                                                                      p.setNote(
-                                                                        true,
-                                                                        d,
                                                                       );
                                                                       _saveSymptom
                                                                           .clear();

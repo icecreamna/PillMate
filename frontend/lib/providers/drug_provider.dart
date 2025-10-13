@@ -107,7 +107,6 @@ class DrugProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("Provider can't load Groups");
     } finally {
-      await Future.delayed(const Duration(milliseconds: 500));
       _isLoading = false;
       notifyListeners();
     }

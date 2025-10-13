@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/fouradithep/pillmate/models"
@@ -27,9 +28,10 @@ func CreateSymptom(db *gorm.DB, patientID uint, inputSymptom *models.Symptom) (*
 	}
 
 	// เติม/ตรวจ MyMedicineID ให้ตรงกับ NotiItem
-	if inputSymptom.MyMedicineID == 0 {
-		inputSymptom.MyMedicineID = linkedNotiItem.MyMedicineID
-	} else if inputSymptom.MyMedicineID != linkedNotiItem.MyMedicineID {
+	if inputSymptom.MyMedicineID == nil {
+		tmp := linkedNotiItem.MyMedicineID
+		inputSymptom.MyMedicineID = &tmp
+	} else if *inputSymptom.MyMedicineID != linkedNotiItem.MyMedicineID {
 		return nil, gorm.ErrInvalidData
 	}
 
@@ -52,6 +54,7 @@ func CreateSymptom(db *gorm.DB, patientID uint, inputSymptom *models.Symptom) (*
 	if err := db.Create(inputSymptom).Error; err != nil {
 		return nil, err
 	}
+
 	return inputSymptom, nil
 }
 
@@ -65,10 +68,25 @@ func GetSymptom(db *gorm.DB, patientID, symptomID uint) (*models.Symptom, error)
 	if err := db.
 		Where("id = ? AND patient_id = ?", symptomID, patientID).
 		First(&symptom).Error; err != nil {
+		fmt.Printf("❌ Not found: %v\n", err)
+
 		return nil, err
 	}
 	return &symptom, nil
 }
+
+func GetSymptomByNoti(db *gorm.DB, patientID, notiItemID uint) (*models.Symptom, error) {
+	var symptom models.Symptom
+	if err := db.
+		Where("patient_id = ? AND noti_item_id = ?", patientID, notiItemID).
+		Order("created_at DESC").
+		First(&symptom).Error; err != nil {
+		fmt.Printf("❌ Not found (noti_item_id=%d): %v\n", notiItemID, err)
+		return nil, err
+	}
+	return &symptom, nil
+}
+
 
 // ฟิลเตอร์สำหรับ ListSymptoms
 type ListSymptomsFilter struct {
