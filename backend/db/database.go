@@ -33,12 +33,8 @@ func mustEnv(keys ...string) {
 }
 
 func Init() {
-	// ----- โหลดไฟล์ env หลายไฟล์ตามโหมด -----
-	// ลองโหลด .env (ถ้ามี) + .env.common + .env.<mode>
-	_ = godotenv.Load(".env") // optional
-	mode := getenv("APP_MODE", "all")
-	_ = godotenv.Load(".env.common")
-	_ = godotenv.Load(".env." + mode) // .env.admin / .env.mobile / .env.all (แล้วแต่คุณสร้าง)
+	// ----- โหลด environment จาก .env -----
+	_ = godotenv.Load(".env") // optional: ไม่ error ถ้าไม่มีไฟล์
 
 	// ----- อ่านค่าจำเป็นและตรวจ -----
 	mustEnv("DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME")
@@ -49,7 +45,7 @@ func Init() {
 	dbname := os.Getenv("DB_NAME")
 	sslmode := getenv("DB_SSLMODE", "disable")
 
-	// ตั้ง timezone ของ Go เป็นไทย
+	// ตั้ง timezone ของ Go เป็นไทย (มีผลกับ time.Local)
 	if loc, err := time.LoadLocation("Asia/Bangkok"); err == nil {
 		time.Local = loc
 	}
@@ -85,9 +81,6 @@ func Init() {
 		log.Fatal("DB ping failed:", err)
 	}
 
-	// ----- AutoMigrate (ให้รันเฉพาะฝั่งที่กำหนด) -----
-	// ตั้ง RUN_MIGRATIONS=true ใน .env.admin เท่านั้น
-	if strings.EqualFold(getenv("RUN_MIGRATIONS", "false"), "true") {
 		if err := db.AutoMigrate(
 			&models.Patient{},
 			&models.VerificationCode{},
@@ -109,15 +102,14 @@ func Init() {
 			&models.NotiItem{},
 			&models.Symptom{},
 
-			// ฝั่งเว็บ ถ้ามี เช่น:
+			// ฝั่งเว็บ:
 			&models.WebAdmin{},
 			&models.HospitalPatient{},
 		); err != nil {
 			log.Fatal("AutoMigrate ล้มเหลว:", err)
 		}
-		// seed (ถ้าต้อง) — ขยับมาอยู่หลัง migrate และทำเฉพาะฝั่งที่รัน migrate
+		// seed (ถ้าต้อง)
 		SeedInitialData(db)
-	}
 
 	DB = db
 	fmt.Println("เชื่อมต่อฐานข้อมูลสำเร็จด้วย GORM")
