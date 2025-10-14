@@ -1,0 +1,36 @@
+.page { padding: 0 16px 24px; }
+.header { display:flex; align-items:center; justify-content:space-between; }
+.title { margin:24px 0 8px; font-size:28px; font-weight:800; }
+.back {
+  height:32px; padding:0 12px; border-radius:8px;
+  border:1px solid #93c5fd; background:#dbeafe; color:#1e3a8a; cursor:pointer;
+}
+.hr { border:none; height:1px; background:#e5e7eb; margin:8px 0 20px; }
+
+.card {
+  width: min(520px, 92vw);
+  margin: 0 auto;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:16px;
+}
+
+.error {
+  background:#fee2e2; border:1px solid #fecaca; color:#991b1b;
+  padding:10px 12px; border-radius:8px; margin-bottom:12px;
+}
+
+.form { display:grid; gap:12px; }
+.label { display:grid; gap:6px; font-size:14px; }
+.input {
+  height:36px; border:1px solid #d1d5db; border-radius:6px;
+  padding:0 10px; outline:none;
+}
+.input:focus { border-color:#93c5fd; box-shadow:0 0 0 2px #dbeafe; }
+
+.submit {
+  height:36px; border:none; border-radius:8px;
+  background:#22c55e; color:#fff; font-weight:700; cursor:pointer;
+}
+.submit:disabled { opacity:.6; cursor:not-allowed; }

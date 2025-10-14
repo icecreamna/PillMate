@@ -1,0 +1,91 @@
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #111;
+}
+
+.addBtn{
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #22c55e;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.addBtn:hover{ background:#16a34a; }
+
+.tableWrap {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 15px;
+  color: #111;
+}
+.table th, .table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+.table thead th {
+  background: #6b7280;
+  color: #fff;
+  font-weight: 700;
+}
+.table tbody tr:nth-child(even){ background:#f9fafb; }
+
+/* # Action: แคบลงและขยับเข้าหา Form (ซ้ายเข้า) */
+.table th:last-child,
+.table td:last-child {
+  width: 140px;         /* แคบลงจากเดิม */
+  text-align: left;     /* ให้เริ่มชิดซ้าย */
+  box-sizing: border-box;
+  padding-left: 6px;    /* ลด padding ซ้ายให้ชิดคอลัมน์ Form */
+  padding-right: 8px;   /* ลด padding ขวา */
+}
+
+/* กล่องปุ่มในคอลัมน์ Action — จัดเริ่มจากซ้าย */
+.actions{
+  display: flex;
+  justify-content: flex-start;   /* ← ชิดซ้าย */
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+/* ปุ่มเล็ก ใช้งานได้ ไม่ล้นเซลล์ */
+.view, .edit, .delete{
+  min-width: 48px;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* สีปุ่ม */
+.view  { background:#22c55e; border-color:#16a34a; }
+.view:hover  { background:#16a34a; }
+.edit  { background:#3b82f6; border-color:#2563eb; }
+.edit:hover  { background:#2563eb; }
+.delete { background:#ef4444; border-color:#b91c1c; }
+.delete:hover { background:#b91c1c; }

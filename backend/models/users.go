@@ -33,16 +33,14 @@ type WebAdmin struct {
 }
 
 type HospitalPatient struct {
-	ID 		 		uint `gorm:"primaryKey" json:"id"`
-	IDCardNumber 	string `gorm:"type:char(13);unique" json:"id_card_number"`
-	FirstName 		string `gorm:"type:varchar(255)" json:"first_name"`
-    LastName  		string `gorm:"type:varchar(255)" json:"last_name"`
-	PhoneNumber 	string `gorm:"type:varchar(10);unique" json:"phone_number"`
-	BirthDay        time.Time `gorm:"type:date" json:"birth_day"`
-	Age             int `gorm:"not null" json:"age"` //อายุ
-	Gender			string `gorm:"not null" json:"gender"` //ชาย, หญิง
-	CreatedAt 		time.Time      `json:"created_at"`
-	UpdatedAt 		time.Time      `json:"updated_at"`
-	DeletedAt 		gorm.DeletedAt `gorm:"index" json:"-"`
-
+	ID            uint           `gorm:"primaryKey" json:"id"`
+	IDCardNumber  string         `gorm:"type:varchar(13);not null;uniqueIndex:uniq_active_idcard,where:deleted_at IS NULL" json:"id_card_number"`
+	FirstName     string         `gorm:"type:varchar(100);not null" json:"first_name"`
+	LastName      string         `gorm:"type:varchar(100);not null" json:"last_name"`
+	PhoneNumber   string         `gorm:"type:varchar(10);not null;uniqueIndex:uniq_active_phone,where:deleted_at IS NULL" json:"phone_number"`
+	BirthDay      time.Time      `gorm:"type:date;not null" json:"birth_day"`
+	Gender        string         `gorm:"type:varchar(10);not null" json:"gender"` // ค่า: ชาย, หญิง (กำหนด CHECK ด้านล่าง)
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }

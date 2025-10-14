@@ -5,8 +5,8 @@ import (
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
-	"time"
-	
+	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 // uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
@@ -225,12 +225,9 @@ func SeedInitialData(db *gorm.DB) {
         log.Println("Seed medicineinfo error:", err)
     }}
 
-	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
-
 	// --- Seed Hospitals ---
 	hospitals := []models.Hospital{
 		{HospitalName: "โรงพยาบาลตัวอย่าง A"},
-		{HospitalName: "โรงพยาบาลตัวอย่าง B"},
 	}
 	for i := range hospitals {
 		if err := db.FirstOrCreate(&hospitals[i],
@@ -243,71 +240,109 @@ func SeedInitialData(db *gorm.DB) {
 	// --- Seed WebAdmins (หมอ / แอดมิน) ---
 	admins := []models.WebAdmin{
 		{
-			Username:  "doctor@test.com",
-			Password:  "1234", 
-			FirstName: "ยาดม",
-			LastName:  "หงไทย",
-			Role:      "doctor",
-			
-		}}
-	for i := range admins {
-		if err := db.FirstOrCreate(&admins[i],
-			models.WebAdmin{Username: admins[i].Username},
-		).Error; err != nil {
-			log.Println("Seed webadmin error:", err)
-		}
-	}
-
-	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
-	prescriptions := []models.Prescription{
-	{ IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	{ IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	}
-
-	for i := range prescriptions {
-		key := models.Prescription{
-			IDCardNumber:   prescriptions[i].IDCardNumber,
-			MedicineInfoID: prescriptions[i].MedicineInfoID,
-			HospitalID:     prescriptions[i].HospitalID,
-			DoctorID:       prescriptions[i].DoctorID,
-		}
-		attrs := models.Prescription{
-			AmountPerTime: prescriptions[i].AmountPerTime,
-			TimesPerDay:   prescriptions[i].TimesPerDay,
-			AppSyncStatus: false,
-		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
-			log.Fatal("seed prescriptions failed: ", err)
-		}
-	}
-
-	// --- Seed Appointments ---
-	appointments := []models.Appointment{
-		{
-			IDCardNumber:    "1101700203452",
-			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
-			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
-			HospitalID:      1,
-			DoctorID:        1,
-			Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+			Username:  "admin@pillmate.com",
+			Password:  "admin1234", // default ครั้งแรก
+			FirstName: "System",
+			LastName:  "Admin",
+			Role:      "superadmin",
 		},
 	}
 
-	for i := range appointments {
-		key := models.Appointment{
-			IDCardNumber:    appointments[i].IDCardNumber,
-			AppointmentDate: appointments[i].AppointmentDate,
-			AppointmentTime: appointments[i].AppointmentTime,
-			HospitalID:      appointments[i].HospitalID,
-			DoctorID:        appointments[i].DoctorID,
+	isBcrypt := func(s string) bool {
+		return strings.HasPrefix(s, "$2a$") || strings.HasPrefix(s, "$2b$") || strings.HasPrefix(s, "$2y$")
+	}
+
+	for _, a := range admins {
+		// เตรียม hash สำหรับ "กรณีสร้างใหม่"
+		hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Println("bcrypt error:", err)
+			continue
 		}
-		attrs := models.Appointment{
-			Note: appointments[i].Note,
+
+		var out models.WebAdmin
+		// ใช้ UNIQUE(username) ที่มีอยู่แล้วได้เลย (case-sensitive)
+		tx := db.
+			Where("username = ?", a.Username).
+			Attrs(models.WebAdmin{
+				Username:  a.Username,
+				Password:  string(hashed), // ถ้าสร้างใหม่จะเก็บเป็น hash ทันที
+				FirstName: a.FirstName,
+				LastName:  a.LastName,
+				Role:      a.Role,
+			}).
+			FirstOrCreate(&out)
+		if tx.Error != nil {
+			log.Println("Seed webadmin FirstOrCreate error:", tx.Error)
+			continue
 		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
-			log.Println("seed appointments failed:", err)
+
+		// ถ้ามีอยู่แล้ว แต่ password ยังเป็น plaintext -> รีแฮชทับ (idempotent)
+		if !isBcrypt(out.Password) {
+			newHashed, err := bcrypt.GenerateFromPassword([]byte(out.Password), bcrypt.DefaultCost)
+			if err != nil {
+				log.Println("bcrypt rehash error:", err)
+				continue
+			}
+			if err := db.Model(&out).Update("password", string(newHashed)).Error; err != nil {
+				log.Println("Seed webadmin rehash update error:", err)
+			}
 		}
 	}
+
+	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
+
+	
+	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
+	// prescriptions := []models.Prescription{
+	// { IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// { IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// }
+
+	// for i := range prescriptions {
+	// 	key := models.Prescription{
+	// 		IDCardNumber:   prescriptions[i].IDCardNumber,
+	// 		MedicineInfoID: prescriptions[i].MedicineInfoID,
+	// 		HospitalID:     prescriptions[i].HospitalID,
+	// 		DoctorID:       prescriptions[i].DoctorID,
+	// 	}
+	// 	attrs := models.Prescription{
+	// 		AmountPerTime: prescriptions[i].AmountPerTime,
+	// 		TimesPerDay:   prescriptions[i].TimesPerDay,
+	// 		AppSyncStatus: false,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
+	// 		log.Fatal("seed prescriptions failed: ", err)
+	// 	}
+	// }
+
+	// --- Seed Appointments ---
+	// appointments := []models.Appointment{
+	// 	{
+	// 		IDCardNumber:    "1101700203452",
+	// 		AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
+	// 		AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
+	// 		HospitalID:      1,
+	// 		DoctorID:        1,
+	// 		Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+	// 	},
+	// }
+
+	// for i := range appointments {
+	// 	key := models.Appointment{
+	// 		IDCardNumber:    appointments[i].IDCardNumber,
+	// 		AppointmentDate: appointments[i].AppointmentDate,
+	// 		AppointmentTime: appointments[i].AppointmentTime,
+	// 		HospitalID:      appointments[i].HospitalID,
+	// 		DoctorID:        appointments[i].DoctorID,
+	// 	}
+	// 	attrs := models.Appointment{
+	// 		Note: appointments[i].Note,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
+	// 		log.Println("seed appointments failed:", err)
+	// 	}
+	// }
 
 
 
