@@ -55,10 +55,12 @@ class _RegisterScreenState extends State<_RegisterView> {
     final provider = context.read<RegisterProvider>();
 
     try {
-      await provider.register(
+      final res =await provider.register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      final patienId = res["patient_id"];
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -68,6 +70,7 @@ class _RegisterScreenState extends State<_RegisterView> {
             arguments: {
               "otpType": PageType.register,
               "email": _emailController.text,
+              "patient_id":patienId
             },
           ),
         ),

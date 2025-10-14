@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:intl/intl.dart';
@@ -16,28 +17,97 @@ class _TodayScreenState extends State<TodayScreen> {
   final _saveSymptom = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => Provider.of<TodayProvider>(context, listen: false).loadTodayData(),
+    );
+  }
+
+  @override
   void dispose() {
     _saveSymptom.dispose();
     super.dispose();
   }
 
+  //   List<Widget> buildDoseWidgets(DoseGroup d) {
+  //   if (d.doses.length > 1) {
+  //     return d.doses
+  //         .map((dose) => Padding(
+  //               padding: const EdgeInsets.only(top: 5, bottom: 5, left: 15),
+  //               child: Text("• ${dose.name} ${dose.unit}"),
+  //             ))
+  //         .toList();
+  //   } else {
+  //     return [
+  //       Padding(
+  //         padding: const EdgeInsets.only(top: 5, bottom: 5, left: 15),
+  //         child: Text("${d.doses.first.name} ${d.doses.first.unit}"),
+  //       ),
+  //     ];
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<TodayProvider>();
+    final items = p.doseSelect(p.selected);
+
+    if (p.isLoading) {
+      Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               "ตารางกินยา",
-              style: TextStyle(
-                fontSize: 25,
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 2),
             Row(
@@ -47,7 +117,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   onTap: () => p.pickDate(context),
                   child: Text(
                     p.dateLabel,
-                    style: const TextStyle(fontSize: 20, color: Colors.white),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ],
@@ -59,7 +129,7 @@ class _TodayScreenState extends State<TodayScreen> {
       body: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-        child: p.doseSelect(p.selected).isEmpty
+        child: items.isEmpty
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
@@ -83,12 +153,11 @@ class _TodayScreenState extends State<TodayScreen> {
               )
             : ListView.builder(
                 itemBuilder: (_, i) {
-                  final d = p.doseSelect(p.selected)[i];
+                  final d = items[i];
                   final timeText = DateFormat('HH:mm').format(d.at.toLocal());
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 5),
                     child: SizedBox(
-                      height: 100,
                       child: Card(
                         color: Colors.white,
                         child: InkWell(
@@ -119,14 +188,18 @@ class _TodayScreenState extends State<TodayScreen> {
                                               height: 62,
                                               width: 120,
                                               child: ElevatedButton(
-                                                onPressed: () {
-                                                  p.handleIsTaken("taken", d);
+                                                onPressed: () async {
+                                                  await p.updateTakenStatus(
+                                                    d,
+                                                    true,
+                                                    context,
+                                                  );
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadiusGeometry.circular(
+                                                        BorderRadius.circular(
                                                           10,
                                                         ),
                                                   ),
@@ -148,17 +221,18 @@ class _TodayScreenState extends State<TodayScreen> {
                                               height: 62,
                                               width: 130,
                                               child: ElevatedButton(
-                                                onPressed: () {
-                                                  p.handleIsTaken(
-                                                    "not_taken",
+                                                onPressed: () async {
+                                                  await p.updateTakenStatus(
                                                     d,
+                                                    false,
+                                                    context,
                                                   );
                                                   Navigator.pop(context);
                                                 },
                                                 style: ElevatedButton.styleFrom(
                                                   shape: RoundedRectangleBorder(
                                                     borderRadius:
-                                                        BorderRadiusGeometry.circular(
+                                                        BorderRadius.circular(
                                                           10,
                                                         ),
                                                   ),
@@ -177,34 +251,32 @@ class _TodayScreenState extends State<TodayScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 30),
-                                        SizedBox(
-                                          width: 109,
-                                          height: 37,
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              p.handleIsTaken("remove", d);
-                                              Navigator.pop(context);
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadiusGeometry.circular(
-                                                      10,
-                                                    ),
-                                              ),
-                                              backgroundColor: const Color(
-                                                0xFFFFA100,
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              "ลบออก",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
+                                        // SizedBox(
+                                        //   width: 109,
+                                        //   height: 37,
+                                        //   child: ElevatedButton(
+                                        //     onPressed: () {
+                                        //       p.removeDose(d);
+                                        //       Navigator.pop(context);
+                                        //     },
+                                        //     style: ElevatedButton.styleFrom(
+                                        //       shape: RoundedRectangleBorder(
+                                        //         borderRadius:
+                                        //             BorderRadius.circular(10),
+                                        //       ),
+                                        //       backgroundColor: const Color(
+                                        //         0xFFFFA100,
+                                        //       ),
+                                        //     ),
+                                        //     child: const Text(
+                                        //       "ลบออก",
+                                        //       style: TextStyle(
+                                        //         color: Colors.white,
+                                        //         fontSize: 16,
+                                        //       ),
+                                        //     ),
+                                        //   ),
+                                        // ),
                                       ],
                                     ),
                                   ),
@@ -244,6 +316,8 @@ class _TodayScreenState extends State<TodayScreen> {
                                           const SizedBox(width: 50),
                                           IconButton(
                                             onPressed: () {
+                                              _saveSymptom.text =
+                                                  d.symptomNote ?? "";
                                               showDialog(
                                                 context: context,
                                                 builder: (context) {
@@ -251,8 +325,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                     shape:
                                                         const RoundedRectangleBorder(
                                                           borderRadius:
-                                                              BorderRadiusGeometry
-                                                                  .zero,
+                                                              BorderRadius.zero,
                                                         ),
                                                     child: Form(
                                                       key: _formKey,
@@ -320,13 +393,14 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                     Navigator.pop(
                                                                       context,
                                                                     );
+
                                                                     _saveSymptom
                                                                         .clear();
                                                                   },
                                                                   style: ElevatedButton.styleFrom(
                                                                     shape: RoundedRectangleBorder(
                                                                       borderRadius:
-                                                                          BorderRadiusGeometry.circular(
+                                                                          BorderRadius.circular(
                                                                             5,
                                                                           ),
                                                                     ),
@@ -354,10 +428,34 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                   width: 10,
                                                                 ),
                                                                 ElevatedButton(
-                                                                  onPressed: () {
+                                                                  onPressed: () async {
                                                                     if (_formKey
                                                                         .currentState!
                                                                         .validate()) {
+                                                                      if (d.saveNote ==
+                                                                          false) {
+                                                                        //  ยังไม่มี — สร้างใหม่
+                                                                        await p.createSymptom(
+                                                                          dose:
+                                                                              d,
+                                                                          symptomNote: _saveSymptom
+                                                                              .text
+                                                                              .trim(),
+                                                                          context:
+                                                                              context,
+                                                                        );
+                                                                      } else {
+                                                                        // มีแล้ว — อัปเดต
+                                                                        await p.editSymptom(
+                                                                          dose:
+                                                                              d,
+                                                                          symptomNote: _saveSymptom
+                                                                              .text
+                                                                              .trim(),
+                                                                          context:
+                                                                              context,
+                                                                        );
+                                                                      }
                                                                       Navigator.pop(
                                                                         context,
                                                                       );
@@ -368,7 +466,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                                                   style: ElevatedButton.styleFrom(
                                                                     shape: RoundedRectangleBorder(
                                                                       borderRadius:
-                                                                          BorderRadiusGeometry.circular(
+                                                                          BorderRadius.circular(
                                                                             5,
                                                                           ),
                                                                     ),
@@ -405,43 +503,85 @@ class _TodayScreenState extends State<TodayScreen> {
                                             icon: Icon(
                                               Icons.note_add_outlined,
                                               size: 32,
-                                              color: d.isTake
+                                              color: d.saveNote
                                                   ? const Color(0xFFFFC800)
                                                   : const Color(0xFFA5A5A5),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const Text(
-                                        "paracetamol",
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
-                                        ),
+                                      //  Column(
+                                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                                      //   children: d.doses.map((dose) {
+                                      //     return Text("${dose.name} ${dose.unit}");
+                                      //   },).toList()
+                                      //  )
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (d.doses.length > 1) ...[
+                                            Text(
+                                              d.nameGroup,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            ...d.doses.map(
+                                              (dose) => Padding(
+                                                padding:
+                                                    const EdgeInsetsGeometry.only(
+                                                      top: 5,
+                                                      bottom: 5,
+                                                      left: 15,
+                                                    ),
+                                                child: Text(
+                                                  "• ${dose.name} ${dose.amountPerTime} ${dose.unit}",
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 16,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ] else if (d.doses.length == 1) ...[
+                                            Text(
+                                              "${d.doses.first.name} ${d.doses.first.amountPerTime} ${d.doses.first.unit}",
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.normal,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
+                                      const SizedBox(height: 10),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    // Text(
-                                    //   d.isTaken ? "กินแล้ว" : "ยังไม่กิน",
-                                    //   style: TextStyle(
-                                    //     color: d.isTaken
-                                    //         ? color.AppColors.greenColor
-                                    //         : color.AppColors.redColor,
-                                    //     fontSize: 16,
-                                    //     fontWeight: FontWeight.bold,
-                                    //   ),
-                                    // ),
-                                    const SizedBox(height: 15),
-                                    Image.asset(
-                                      "assets/images/pill.png",
-                                      width: 33,
-                                      height: 33,
+                                    Text(
+                                      d.isTaken ? "กินแล้ว" : "ยังไม่กิน",
+                                      style: TextStyle(
+                                        color: d.isTaken
+                                            ? color.AppColors.greenColor
+                                            : color.AppColors.redColor,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
+                                    const SizedBox(height: 15),
+                                    //     Image.asset(
+                                    //       "assets/images/pill.png",
+                                    //       width: 33,
+                                    //       height: 33,
+                                    //     ),
                                   ],
                                 ),
                               ],
@@ -452,7 +592,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     ),
                   );
                 },
-                itemCount: p.doseSelect(p.selected).length,
+                itemCount: items.length,
               ),
       ),
     );

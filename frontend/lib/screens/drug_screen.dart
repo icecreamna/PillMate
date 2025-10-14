@@ -1,245 +1,330 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:frontend/enums/drug_tab.dart';
+import 'package:frontend/providers/add_edit_provider.dart';
+import 'package:frontend/providers/add_group_provider.dart';
 import 'package:frontend/providers/drug_provider.dart';
+import 'package:frontend/screens/add_edit_screen.dart';
+import 'package:frontend/screens/add_group_drug_screen.dart';
+import 'package:frontend/screens/all_drug_screen.dart';
+import 'package:frontend/screens/group_drug_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
+import 'package:frontend/widgets/tab_button.dart';
 import 'package:provider/provider.dart';
 
-class DrugScreen extends StatelessWidget {
+class DrugScreen extends StatefulWidget {
   const DrugScreen({super.key});
+
+  @override
+  State<DrugScreen> createState() => _DrugScreenState();
+}
+
+class _DrugScreenState extends State<DrugScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DrugProvider>().loadMyMedicines();
+      context.read<DrugProvider>().loadGroups();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<DrugProvider>();
 
+    if (p.isLoading) {
+      return Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: const Text(
           "ยาของฉัน",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-        child: Stack(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: p.doseAll.isEmpty
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: 144,
-                            height: 45,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFFDF6A),
-                                padding: EdgeInsets.zero,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero,
-                                ),
-                              ),
-                              onPressed: () {},
-                              child: const Text(
-                                "เพิ่มยาจากโรงพยาบาล",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Opacity(
-                          opacity: 0.5,
-                          child: Image.asset(
-                            "assets/images/drugs.png",
-                            width: 210,
-                            height: 210,
-                          ),
-                        ),
-                        const SizedBox(height: 50),
-                        const Text(
-                          "ไม่มีรายการยา",
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "เพิ่มรายการยา กรุณากดปุ่ม +",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        const Spacer(),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.topRight,
-                          child: SizedBox(
-                            width: 144,
-                            height: 45,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFFDF6A),
-                                padding: EdgeInsets.zero,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero,
-                                ),
-                              ),
-                              onPressed: () {},
-                              child: const Text(
-                                "เพิ่มยาจากโรงพยาบาล",
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        Expanded(
-                          child: ListView.builder(
-                            itemBuilder: (_, index) {
-                              final d = p.doseAll[index];
-                              return Padding(
-                                padding: const EdgeInsetsGeometry.only(
-                                  bottom: 10,
-                                ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<DrugProvider>().loadMyMedicines();
+          await context.read<DrugProvider>().loadGroups();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          child: Stack(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: p.doseAll.isEmpty
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Align(
+                                alignment: Alignment.topRight,
                                 child: SizedBox(
-                                  width: 384,
-                                  height: 135,
-                                  child: Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      side: const BorderSide(
-                                        color: Colors.grey,
-                                        width: 0.5,
+                                  width: 144,
+                                  height: 45,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFFFDF6A),
+                                      padding: EdgeInsets.zero,
+                                      shadowColor: Colors.black,
+                                      elevation: 4,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.zero,
                                       ),
                                     ),
-                                    color: d.import
-                                        ? const Color(0xFFFFF5D0)
-                                        : Colors.white,
-                                    child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        10,
-                                        13,
-                                        16,
-                                        0,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  d.name,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 20,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 5),
-                                                Text(
-                                                  d.drugIndication,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  "ครั้งละ " +
-                                                      d.numberOfTake +
-                                                      "เม็ด" +
-                                                      " " +
-                                                      "วันละ " +
-                                                      d.takePerDay +
-                                                      " " +
-                                                      "ครั้ง",
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  d.instruction,
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                    onPressed: () async {
+                                      debugPrint("🟡 ปุ่มกดแล้ว เริ่ม sync...");
+                                      await context
+                                          .read<DrugProvider>()
+                                          .syncHospitalMedicines(context);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "✅ โหลดยาจากโรงพยาบาลเรียบร้อย",
                                           ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Image.asset(
-                                                d.picture,
-                                                width: 40,
-                                                height: 40,
-                                              ),
-                                              const SizedBox(height: 40),
-                                              Text(
-                                                d.import
-                                                    ? "(โรงพยาบาล)"
-                                                    : "(ของฉัน)",
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      "เพิ่มยาจากโรงพยาบาล",
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ),
-                              );
-                            },
-                            itemCount: p.doseAll.length,
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: SizedBox(
-                width: 70,
-                height: 70,
-                child: RawMaterialButton(
-                  onPressed: () {},
-                  shape: const CircleBorder(),
-                  fillColor: color.AppColors.backgroundColor1st,
-                  highlightColor: Colors.blueAccent.withOpacity(0.1),
-                  splashColor: Colors.blueAccent.withOpacity(0.1),
-                  child: const Icon(Icons.add, color: Colors.white, size: 36),
-                ),
+                          const Spacer(),
+                          Opacity(
+                            opacity: 0.5,
+                            child: Image.asset(
+                              "assets/images/drugs.png",
+                              width: 210,
+                              height: 210,
+                            ),
+                          ),
+                          const SizedBox(height: 50),
+                          const Text(
+                            "ไม่มีรายการยา",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            "เพิ่มรายการยา กรุณากดปุ่ม +",
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          const Spacer(),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 9),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                TabButton(
+                                  onTap: (t) =>
+                                      context.read<DrugProvider>().setPage(t),
+                                  selectPage: p.page,
+                                ),
+                                Expanded(
+                                  child: p.page == DrugTab.all
+                                      ? Align(
+                                          alignment: Alignment.topRight,
+                                          child: SizedBox(
+                                            width: 144,
+                                            height: 45,
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFFFDF6A,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                                elevation: 4,
+                                                shadowColor: Colors.black,
+                                                shape:
+                                                    const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.zero,
+                                                    ),
+                                              ),
+                                              onPressed: () async {
+                                                await context
+                                                    .read<DrugProvider>()
+                                                    .syncHospitalMedicines(
+                                                      context,
+                                                    );
+                                              },
+                                              child: const Text(
+                                                "เพิ่มยาจากโรงพยาบาล",
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 16,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Align(
+                                          alignment: Alignment.topRight,
+                                          child: SizedBox(
+                                            width: 32,
+                                            height: 45,
+                                            child: RawMaterialButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => MultiProvider(
+                                                      providers: [
+                                                        ChangeNotifierProvider.value(
+                                                          value: context
+                                                              .read<
+                                                                DrugProvider
+                                                              >(),
+                                                        ),
+                                                        ChangeNotifierProvider(
+                                                          create: (_) =>
+                                                              AddGroupProvider(),
+                                                        ),
+                                                      ],
+                                                      child:
+                                                          const AddGroupDrug(),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              shape: const CircleBorder(),
+                                              fillColor: const Color(
+                                                0xFFFF92DB,
+                                              ),
+                                              child: const Icon(
+                                                Icons.add,
+                                                color: Colors.black,
+                                                size: 28,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Expanded(
+                            child: p.page == DrugTab.all
+                                ? const AllDrugScreen()
+                                : const GroupDrugScreen(),
+                          ),
+                        ],
+                      ),
               ),
-            ),
-          ],
+              if (p.page == DrugTab.all) ...[
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: RawMaterialButton(
+                      onPressed: () async {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MultiProvider(
+                              providers: [
+                                ChangeNotifierProvider.value(
+                                  value: context.read<DrugProvider>(),
+                                ),
+                                ChangeNotifierProvider(
+                                  create: (_) =>
+                                      AddEditProvider(pageFrom: "add"),
+                                ),
+                              ],
+                              child: const AddEditView(),
+                            ),
+                          ),
+                          // MaterialPageRoute(builder: (context) => const AddEditScreen(),settings: const RouteSettings(arguments: {
+                          //   "pageType":"add"
+                          // }))
+                        );
+                      },
+                      shape: const CircleBorder(),
+                      fillColor: Colors.transparent,
+                      highlightColor: Colors.blueAccent.withOpacity(0.1),
+                      splashColor: Colors.blueAccent.withOpacity(0.1),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

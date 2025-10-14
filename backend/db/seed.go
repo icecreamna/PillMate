@@ -12,7 +12,6 @@ import (
 // uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
 func UintPtr(v uint) *uint { return &v }
 
-
 func SeedInitialData(db *gorm.DB) {
 	// seed ข้อมูล Form
 	forms := []models.Form{
@@ -128,7 +127,6 @@ func SeedInitialData(db *gorm.DB) {
 		{InstructionName: "หลังอาหาร"},
 		{InstructionName: "พร้อมอาหาร"},
 		{InstructionName: "ก่อนนอน"},
-		
 	}
 	for _, instruction := range instructions {
 		if err := db.FirstOrCreate(&instruction, models.Instruction{InstructionName: instruction.InstructionName}).Error; err != nil {
@@ -142,7 +140,6 @@ func SeedInitialData(db *gorm.DB) {
 		{FormatName: "ทุกกี่ชั่วโมง (Interval)"},
 		{FormatName: "วันเว้นวัน / ทุกกี่วัน (EveryNDays)"},
 		{FormatName: "ทานต่อเนื่อง/พักยา (Cycle)"},
-		
 	}
 	for _, notiformat := range notiformats {
 		if err := db.FirstOrCreate(&notiformat, models.NotiFormat{FormatName: notiformat.FormatName}).Error; err != nil {
@@ -152,78 +149,79 @@ func SeedInitialData(db *gorm.DB) {
 
 	// seed ข้อมูล MedicineInfo
 	medicines := []models.MedicineInfo{
-    {
-        MedName: "Paracetamol",
-        GenericName: "Acetaminophen",
-        Properties: "บรรเทาอาการปวดลดไข้",
-        Strength: "500mg",
-        FormID: 1,
-        UnitID: UintPtr(1), 
-        InstructionID: UintPtr(2), 
-		// MedStatus: "active",
-    },
+		{
+			MedName:       "Paracetamol",
+			GenericName:   "Acetaminophen",
+			Properties:    "บรรเทาอาการปวดลดไข้",
+			Strength:      "500mg",
+			FormID:        1,
+			UnitID:        UintPtr(1),
+			InstructionID: UintPtr(2),
+			// MedStatus: "active",
+		},
 
-	{
-        MedName: "PROBUFEN 400",
-        GenericName: "Ibuprofen",
-        Properties: "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
-        Strength: "400 mg",
-        FormID: 2,
-        UnitID: UintPtr(2), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "PROBUFEN 400",
+			GenericName:   "Ibuprofen",
+			Properties:    "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
+			Strength:      "400 mg",
+			FormID:        2,
+			UnitID:        UintPtr(2),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "ไบโซลวอน สำหรับเด็ก",
-        GenericName: "bromhexine",
-        Properties: "ละลายเสมหะและบรรเทาอาการไอ",
-        Strength: "4 mg/5 ml",
-        FormID: 3,
-        UnitID: UintPtr(3), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "ไบโซลวอน สำหรับเด็ก",
+			GenericName:   "bromhexine",
+			Properties:    "ละลายเสมหะและบรรเทาอาการไอ",
+			Strength:      "4 mg/5 ml",
+			FormID:        3,
+			UnitID:        UintPtr(3),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "COUNTERPAIN COOL",
-        GenericName: "menthol",
-        Properties: "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
-        Strength: "4%",
-        FormID: 5, 
-    },
+		{
+			MedName:     "COUNTERPAIN COOL",
+			GenericName: "menthol",
+			Properties:  "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
+			Strength:    "4%",
+			FormID:      5,
+		},
 
-	{
-        MedName: "ยาทาแก้ผดผื่นคัน คาลาไมน์",
-        GenericName: "calamine+zinc oxide",
-        Properties: "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
-        Strength: "(10 G+5 G)/100 ML",
-        FormID: 5, 
-    },
+		{
+			MedName:     "ยาทาแก้ผดผื่นคัน คาลาไมน์",
+			GenericName: "calamine+zinc oxide",
+			Properties:  "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
+			Strength:    "(10 G+5 G)/100 ML",
+			FormID:      5,
+		},
 
-	{
-        MedName: "วินซูลิน-30/70",
-        GenericName: "insulin",
-        Properties: "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
-        Strength: "100 iu/1ml",
-        FormID: 4,
-        UnitID: UintPtr(7), 
-        InstructionID: UintPtr(1), 
-    },
+		{
+			MedName:       "วินซูลิน-30/70",
+			GenericName:   "insulin",
+			Properties:    "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
+			Strength:      "100 iu/1ml",
+			FormID:        4,
+			UnitID:        UintPtr(7),
+			InstructionID: UintPtr(1),
+		},
 
-	{
-        MedName: "TEARS NATURALE II",
-        GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
-        Properties: "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
-        Strength: "(0.3 G+0.1 G)/100 ML",
-        FormID: 6,
-        UnitID: UintPtr(12), 
-    },
-    
-    // ...ใส่ยาอีกตามต้องการ
+		{
+			MedName:     "TEARS NATURALE II",
+			GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
+			Properties:  "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
+			Strength:    "(0.3 G+0.1 G)/100 ML",
+			FormID:      6,
+			UnitID:      UintPtr(12),
+		},
+
+		// ...ใส่ยาอีกตามต้องการ
 	}
 	for _, medicine := range medicines {
-    if err := db.Create(&medicine).Error; err != nil {
-        log.Println("Seed medicineinfo error:", err)
-    }}
+		if err := db.Create(&medicine).Error; err != nil {
+			log.Println("Seed medicineinfo error:", err)
+		}
+	}
 
 	// --- Seed Hospitals ---
 	hospitals := []models.Hospital{

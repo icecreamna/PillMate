@@ -22,7 +22,7 @@ func UpdatePatientBasic(db *gorm.DB, patientID uint, payload *models.Patient) (*
 	updateFields := map[string]any{}
 
 	// หมายเหตุ: ป้องกันการเขียนค่าเป็นค่าว่างโดยไม่ตั้งใจ
-	if payload.IDCardNumber != "" {
+	if payload.IDCardNumber != nil {
 		updateFields["id_card_number"] = payload.IDCardNumber
 	}
 	if payload.FirstName != "" {
@@ -31,7 +31,7 @@ func UpdatePatientBasic(db *gorm.DB, patientID uint, payload *models.Patient) (*
 	if payload.LastName != "" {
 		updateFields["last_name"] = payload.LastName
 	}
-	if payload.PhoneNumber != "" {
+	if payload.PhoneNumber != nil {
 		updateFields["phone_number"] = payload.PhoneNumber
 	}
 

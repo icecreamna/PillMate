@@ -79,7 +79,7 @@ func Init() {
 	// ----- Health check DB -----
 	if err := db.Exec("SELECT 1").Error; err != nil {
 		log.Fatal("DB ping failed:", err)
-	}
+	// สร้างตารางอัตโนมัติ
 
 		if err := db.AutoMigrate(
 			&models.Patient{},
@@ -119,4 +119,5 @@ func Init() {
 	if err := db.Raw("SELECT NOW()").Scan(&now).Error; err == nil {
 		fmt.Println("DB NOW():", now.In(time.Local))
 	}
+}
 }

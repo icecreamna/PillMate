@@ -1,14 +1,15 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/fouradithep/pillmate/db"
 	"github.com/fouradithep/pillmate/handlers"
 	"github.com/fouradithep/pillmate/models"
-	"github.com/fouradithep/pillmate/db"
-	"time"
-	"strconv"
-	"fmt"
-	"strings"
+	"github.com/gofiber/fiber/v2"
 )
 
 func SetupPatientRoutes(app *fiber.App) {
@@ -32,7 +33,7 @@ func SetupPatientRoutes(app *fiber.App) {
 
 		c.Location(fmt.Sprintf("/patient/%d", patient.ID))
 		return c.JSON(fiber.Map{
-			"message": "Register Successful",
+			"message":    "Register Successful",
 			"patient_id": patient.ID,
 		})
 
@@ -70,16 +71,17 @@ func SetupOTPRoutes(app *fiber.App) {
 	app.Post("/patient/:id/otp/request", func(c *fiber.Ctx) error {
 		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || patientID == 0 {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error":"invalid id"})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 		}
 		vc, err := handlers.IssueOTP(db.DB, uint(patientID), 3*time.Minute)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error":"failed to issue otp"})
+			fmt.Println("❌ IssueOTP error:", err)
+			return c.Status(500).JSON(fiber.Map{"error": "failed to issue otp"})
 		}
 		return c.JSON(fiber.Map{
-			"message": "OTP created and emailed",
+			"message":         "OTP created and emailed",
 			"verification_id": vc.ID,
-			"otp_expires_at": vc.ExpiresAt,
+			"otp_expires_at":  vc.ExpiresAt,
 		})
 	})
 
@@ -87,19 +89,19 @@ func SetupOTPRoutes(app *fiber.App) {
 	app.Post("/patient/:id/otp/resend", func(c *fiber.Ctx) error {
 		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || patientID == 0 {
-			return c.Status(400).JSON(fiber.Map{"error":"invalid id"})
+			return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
 		}
 		if err := handlers.RevokeActiveOTP(db.DB, uint(patientID)); err != nil {
-			return c.Status(500).JSON(fiber.Map{"error":"revoke otp error"})
+			return c.Status(500).JSON(fiber.Map{"error": "revoke otp error"})
 		}
 		vc, err := handlers.IssueOTP(db.DB, uint(patientID), 3*time.Minute)
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error":"failed to issue otp"})
+			return c.Status(500).JSON(fiber.Map{"error": "failed to issue otp"})
 		}
 		return c.JSON(fiber.Map{
-			"message": "New OTP created and emailed",
+			"message":         "New OTP created and emailed",
 			"verification_id": vc.ID,
-			"otp_expires_at": vc.ExpiresAt,
+			"otp_expires_at":  vc.ExpiresAt,
 		})
 	})
 
@@ -107,11 +109,13 @@ func SetupOTPRoutes(app *fiber.App) {
 	app.Post("/patient/:id/otp/verify", func(c *fiber.Ctx) error {
 		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || patientID == 0 {
-			return c.Status(400).JSON(fiber.Map{"error":"invalid id"})
+			return c.Status(400).JSON(fiber.Map{"error": "invalid id"})
 		}
-		var req struct{ OTP string `json:"otp_code"` } // ตรงกับคอลัมน์ otp_code
+		var req struct {
+			OTP string `json:"otp_code"`
+		} // ตรงกับคอลัมน์ otp_code
 		if err := c.BodyParser(&req); err != nil || len(req.OTP) != 6 {
-			return c.Status(400).JSON(fiber.Map{"error":"invalid request"})
+			return c.Status(400).JSON(fiber.Map{"error": "invalid request"})
 		}
 		if err := handlers.VerifyOTP(db.DB, uint(patientID), req.OTP); err != nil {
 			switch err.Error() {
@@ -120,13 +124,12 @@ func SetupOTPRoutes(app *fiber.App) {
 			case "otp expired", "invalid otp":
 				return c.Status(401).JSON(fiber.Map{"error": err.Error()})
 			default:
-				return c.Status(500).JSON(fiber.Map{"error":"verify error"})
+				return c.Status(500).JSON(fiber.Map{"error": "verify error"})
 			}
 		}
-		return c.JSON(fiber.Map{"message":"OTP verified successfully"})
+		return c.JSON(fiber.Map{"message": "OTP verified successfully"})
 	})
 
-	
 }
 
 func SetupForgotPasswordRoutes(app *fiber.App) {
@@ -142,7 +145,7 @@ func SetupForgotPasswordRoutes(app *fiber.App) {
 		// หา patient จากอีเมล  ดึงแค่ id ก็พอ
 		var p models.Patient
 		if err := db.DB.Select("id").Where("email = ?", req.Email).First(&p).Error; err != nil {
-			
+
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "email not found"})
 		}
 
@@ -156,7 +159,7 @@ func SetupForgotPasswordRoutes(app *fiber.App) {
 func SetupPasswordRoutes(app *fiber.App) {
 	// POST /patient/:id/reset-password
 	// Body: { "new_password": "yourNewSecret" }
-	app.Post("/patient/:id/reset-password", func(c *fiber.Ctx) error {
+	app.Put("/patient/:id/reset-password", func(c *fiber.Ctx) error {
 		patientID, err := strconv.ParseUint(c.Params("id"), 10, 64)
 		if err != nil || patientID == 0 {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid patient id"})
@@ -176,5 +179,3 @@ func SetupPasswordRoutes(app *fiber.App) {
 		return c.JSON(fiber.Map{"message": "password reset successful"})
 	})
 }
-
-

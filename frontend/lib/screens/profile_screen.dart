@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:frontend/providers/profile_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/utils/colors.dart' as color;
@@ -20,17 +21,62 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProfileProvider>();
+    if (p.isLoading) {
+      Scaffold(
+        backgroundColor: color.AppColors.backgroundColor1st,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 280,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/images/clock.svg",
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
+                      height: 190,
+                      width: 200,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -70,
+                      child: Image.asset(
+                        "assets/images/drugs.png",
+                        height: 153,
+                        width: 153,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 120),
+              const Text(
+                "PillMate",
+                style: TextStyle(color: Colors.white, fontSize: 48),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (p.user == null) {
+      return const Scaffold(body: Center(child: Text("ไม่พบข้อมูลผู้ใช้ ❌")));
+    }
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor2nd,
       appBar: AppBar(
         backgroundColor: color.AppColors.backgroundColor1st,
+        foregroundColor: Colors.white,
         title: const Text(
           "ข้อมูลผู้ใช้",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
       body: Container(
@@ -73,18 +119,18 @@ class ProfileScreen extends StatelessWidget {
                               barrierDismissible: false,
                               builder: (context) {
                                 final idCardController = TextEditingController(
-                                  text: p.user.idCard,
+                                  text: p.user!.idCard,
                                 );
                                 final firstNameController =
                                     TextEditingController(
-                                      text: p.user.firstName,
+                                      text: p.user!.firstName,
                                     );
                                 final lastNameController =
                                     TextEditingController(
-                                      text: p.user.lastName,
+                                      text: p.user!.lastName,
                                     );
                                 final telController = TextEditingController(
-                                  text: p.user.tel,
+                                  text: p.user!.tel,
                                 );
                                 return SingleChildScrollView(
                                   child: Dialog(
@@ -307,6 +353,8 @@ class ProfileScreen extends StatelessWidget {
                                                     237,
                                                     50,
                                                   ),
+                                                  shadowColor: Colors.black,
+                                                  elevation: 4,
                                                   backgroundColor: const Color(
                                                     0xFF03B200,
                                                   ),
@@ -314,7 +362,7 @@ class ProfileScreen extends StatelessWidget {
                                                 onPressed: () {
                                                   if (_formKey.currentState!
                                                       .validate()) {
-                                                    p.updateUser(
+                                                    p.updatedInfoProfile(
                                                       InfoUser(
                                                         firstName:
                                                             firstNameController
@@ -330,13 +378,16 @@ class ProfileScreen extends StatelessWidget {
                                                         tel: telController.text
                                                             .trim(),
                                                       ),
+                                                      context,
                                                     );
                                                     Navigator.pop(context);
                                                   }
                                                 },
-                                                child: const Text(
-                                                  "บันทึกข้อมูล",
-                                                  style: TextStyle(
+                                                child: Text(
+                                                  p.isLoading
+                                                      ? "กำลังบันทึก..."
+                                                      : "บันทึกข้อมูล",
+                                                  style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 24,
                                                   ),
@@ -368,7 +419,7 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Text(
                           "เลขบัตรประชาชน :"
-                          " ${p.user.idCard}",
+                          " ${p.user!.idCard}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -377,7 +428,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "ชื่อ :"
-                          " ${p.user.firstName}",
+                          " ${p.user!.firstName}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -386,7 +437,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "นามสกุล :"
-                          " ${p.user.lastName}",
+                          " ${p.user!.lastName}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -395,7 +446,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           "เบอร์โทรศัพท์ :"
-                          " ${p.user.tel}",
+                          " ${p.user!.tel}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -441,8 +492,10 @@ class ProfileScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "วันที่ :"
-                          " ${p.appointmentDay}",
+                          p.appointmentDay == null
+                              ? "ไม่มีใบนัดถัดไป"
+                              : "วันที่ :"
+                                    " ${p.appointmentDay}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -450,8 +503,10 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          "เวลา :"
-                          " ${p.appointmentHourMinute}",
+                          p.appointmentHourMinute == null
+                              ? "-"
+                              : "เวลา :"
+                                    " ${p.appointmentHourMinute}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -459,8 +514,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          "Note :"
-                          " ${p.appointment.note}",
+                          "Note : ${p.appointment?.note ?? '-'}",
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -475,19 +529,39 @@ class ProfileScreen extends StatelessWidget {
             const Spacer(),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
-                },
+                onPressed: p.isLoading
+                    ? null
+                    : () async {
+                        final success = await p.logout();
+                        if (success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("ออกจากระบบสำเร็จ ✅"),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("ออกจากระบบไม่สำเร็จ ❌"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[300],
                   minimumSize: const Size(389, 50),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusGeometry.circular(5),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
                 child: const Text(

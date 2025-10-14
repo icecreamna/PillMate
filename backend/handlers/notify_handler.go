@@ -3,8 +3,8 @@ package handlers
 import (
 	"time"
 
-	"gorm.io/gorm"
 	"github.com/fouradithep/pillmate/models"
+	"gorm.io/gorm"
 )
 
 var appLoc = func() *time.Location {
@@ -20,14 +20,13 @@ func GetDueNow(db *gorm.DB, patientID uint, windowMinutes int) ([]models.NotiIte
 		windowMinutes = 1
 	}
 
-	nowLocal := now() // ใช้ helper ให้เป็นมาตรฐาน
-	today := time.Date(nowLocal.Year(), nowLocal.Month(), nowLocal.Day(), 0, 0, 0, 0, appLoc)
+	// ✅ ใช้เวลา UTC เสมอ เพื่อเทียบกับ notify_time ที่เก็บเป็น UTC
+	nowUTC := time.Now().UTC()
+	today := nowUTC.Truncate(24 * time.Hour) // วันที่ UTC
 
-	// time-only (ปี 0001, UTC) ให้ตรงกับตอนบันทึก NotifyTime
-	startT := time.Date(1, 1, 1, nowLocal.Hour(), nowLocal.Minute(), 0, 0, time.UTC)
-
-	endLocal := nowLocal.Add(time.Duration(windowMinutes) * time.Minute)
-	endT := time.Date(1, 1, 1, endLocal.Hour(), endLocal.Minute(), 59, 0, time.UTC) // รวมปลายช่วง
+	startT := time.Date(1, 1, 1, nowUTC.Hour(), nowUTC.Minute(), 0, 0, time.UTC)
+	endUTC := nowUTC.Add(time.Duration(windowMinutes) * time.Minute)
+	endT := time.Date(1, 1, 1, endUTC.Hour(), endUTC.Minute(), 59, 0, time.UTC)
 
 	var out []models.NotiItem
 	err := db.Model(&models.NotiItem{}).

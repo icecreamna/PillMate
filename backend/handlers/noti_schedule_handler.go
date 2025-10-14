@@ -111,30 +111,46 @@ func ExpandNotiInfoOccurrences(notiInfo *models.NotiInfo, winStart, winEnd time.
 			return nil, errors.New("interval_hours required")
 		}
 		stepDuration := time.Duration(*notiInfo.IntervalHours) * time.Hour
-		cursor := intersectStart
 
-		var perDayLimit int
-		if notiInfo.TimesPerDay != nil && *notiInfo.TimesPerDay > 0 {
-			perDayLimit = *notiInfo.TimesPerDay
+		// ✅ เวลาตั้งต้น
+		var firstTime string
+		if notiInfo.Times != nil && len(*notiInfo.Times) > 0 {
+			firstTime = (*notiInfo.Times)[0]
+		} else {
+			firstTime = "00:00"
 		}
-		todayCount := 0
-		currentDay := time.Date(cursor.Year(), cursor.Month(), cursor.Day(), 0, 0, 0, 0, time.Local)
 
-		for !cursor.After(intersectEnd) {
-			cursorDay := time.Date(cursor.Year(), cursor.Month(), cursor.Day(), 0, 0, 0, 0, time.Local)
-			if cursorDay.After(currentDay) {
-				currentDay = cursorDay
-				todayCount = 0
+		for cursorDate := intersectStart; !cursorDate.After(intersectEnd); cursorDate = cursorDate.AddDate(0, 0, 1) {
+			startTime, err := makeLocalDateTime(cursorDate, firstTime)
+			if err != nil {
+				return nil, err
 			}
-			if cursor.Before(intersectStart) {
+
+			// ✅ จำกัดจำนวนครั้งต่อวัน
+			perDayLimit := 0
+			if notiInfo.TimesPerDay != nil && *notiInfo.TimesPerDay > 0 {
+				perDayLimit = *notiInfo.TimesPerDay
+			}
+
+			// ✅ บวกเวลาในวันเดียว
+			cursor := startTime
+			count := 0
+			for !cursor.After(cursorDate.Add(24 * time.Hour)) {
+				if cursor.After(intersectEnd) {
+					break
+				}
+				if cursor.Before(intersectStart) {
+					cursor = cursor.Add(stepDuration)
+					continue
+				}
+				if perDayLimit == 0 || count < perDayLimit {
+					appendOccur(cursor)
+					count++
+				} else {
+					break
+				}
 				cursor = cursor.Add(stepDuration)
-				continue
 			}
-			if perDayLimit == 0 || todayCount < perDayLimit {
-				appendOccur(cursor)
-				todayCount++
-			}
-			cursor = cursor.Add(stepDuration)
 		}
 
 	case NotiFormatCycle:

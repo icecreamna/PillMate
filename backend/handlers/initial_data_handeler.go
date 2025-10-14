@@ -25,6 +25,20 @@ func GetForm(db *gorm.DB, formID uint, includeRelations bool) (*models.Form, err
 }
 
 // GetForms — อ่าน Form ทั้งหมด เลือก preload Units ได้
+// func GetForms(db *gorm.DB, includeRelations bool) ([]models.Form, error) {
+// 	var forms []models.Form
+
+// 	query := db
+// 	if includeRelations {
+// 		query = query.Preload("Units")
+// 	}
+
+// 	if err := query.Find(&forms).Error; err != nil {
+// 		return nil, err
+// 	}
+// 	return forms, nil
+// }
+
 func GetForms(db *gorm.DB, includeRelations bool) ([]models.Form, error) {
 	var forms []models.Form
 

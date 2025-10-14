@@ -4,9 +4,10 @@ import 'package:frontend/providers/home_provider.dart';
 import 'package:frontend/providers/profile_provider.dart';
 import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/screens/drug_screen.dart';
-import 'package:frontend/screens/notification_screen.dart';
 import 'package:frontend/screens/profile_screen.dart';
 import 'package:frontend/screens/today_screen.dart';
+import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/profile_service.dart';
 
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:provider/provider.dart';
@@ -38,10 +39,12 @@ class _HomeViewState extends State<_HomeView> {
       create: (_) => DrugProvider(),
       child: const DrugScreen(),
     ),
-    const NotificationScreen(),
     ChangeNotifierProvider(
-      create: (context) => ProfileProvider(),
-      child:  ProfileScreen(),
+      create: (_) => ProfileProvider(
+        authService: AuthService(),
+        profileService: ProfileService(),
+      ),
+      child: ProfileScreen(),
     ),
   ];
 
@@ -65,10 +68,6 @@ class _HomeViewState extends State<_HomeView> {
           BottomNavigationBarItem(
             label: "ยา",
             icon: Icon(Icons.medication_outlined),
-          ),
-          BottomNavigationBarItem(
-            label: "แจ้งเตือน",
-            icon: Icon(Icons.notifications_none_sharp),
           ),
           BottomNavigationBarItem(
             label: "ผู้ใช้",

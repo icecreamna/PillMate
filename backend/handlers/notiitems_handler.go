@@ -24,18 +24,59 @@ type ListNotiItemsFilter struct {
 	NotifyStatus *bool
 }
 
-func ListNotiItems(db *gorm.DB, patientID uint, f ListNotiItemsFilter) ([]models.NotiItem, error) {
-	q := db.Model(&models.NotiItem{}).
-		Preload("Patient").
-		Preload("MyMedicine").
-		Preload("Group").
-		Preload("NotiInfo").
-		Preload("Form").
-		Preload("Unit").
-		Preload("Instruction")
+type NotiItemWithNames struct {
+	ID        uint `json:"id"`
+	PatientID uint `json:"patient_id"`
 
-	// บังคับกรองตาม patient_id เสมอ (เมิน f.PatientID เพื่อกัน override)
-	q = q.Where("patient_id = ?", patientID)
+	MyMedicineID uint   `json:"my_medicine_id"`
+	NotifyDate   string `json:"notify_date"`
+	NotifyTime   string `json:"notify_time"`
+	NotiInfoID   uint   `json:"noti_info_id"`
+
+	GroupID       *uint  `json:"group_id,omitempty"`
+	GroupName     string `json:"group_name,omitempty"`
+	MedName       string `json:"med_name"`
+	AmountPerTime string `json:"amount_per_time"`
+	FormID        uint   `json:"form_id"`
+	UnitID        *uint  `json:"unit_id,omitempty"`
+	InstructionID *uint  `json:"instruction_id,omitempty"`
+
+	TakenStatus  bool       `json:"taken_status"`
+	TakenTimeAt  *time.Time `json:"taken_time_at,omitempty"`
+	NotifyStatus bool       `json:"notify_status"`
+	HasSymptom   bool       `json:"has_symptom"`
+
+	FormName        string  `json:"form_name"`
+	UnitName        *string `json:"unit_name,omitempty"`
+	InstructionName *string `json:"instruction_name,omitempty"`
+}
+
+func ListNotiItems(db *gorm.DB, patientID uint, f ListNotiItemsFilter) ([]NotiItemWithNames, error) {
+	q := db.Table("noti_items ni").
+		Joins("LEFT JOIN forms f ON ni.form_id = f.id").
+		Joins("LEFT JOIN units u ON ni.unit_id = u.id").
+		Joins("LEFT JOIN instructions i ON ni.instruction_id = i.id").
+		Select(`
+    	ni.id,
+    	ni.patient_id,
+    	ni.my_medicine_id,
+    	ni.group_id,
+    	ni.group_name,
+    	ni.noti_info_id,
+    	to_char(ni.notify_date, 'YYYY-MM-DD') AS notify_date,
+    	to_char(ni.notify_time AT TIME ZONE 'UTC', 'HH24:MI') AS notify_time, -- ✅ บังคับใช้ UTC
+    	ni.taken_status,
+    	ni.notify_status,
+    	ni.med_name,
+    	ni.amount_per_time,
+    	ni.form_id,
+    	f.form_name,
+    	ni.unit_id,
+    	u.unit_name,
+    	ni.instruction_id,
+    	i.instruction_name
+		`).
+		Where("ni.patient_id = ?", patientID).Where("ni.deleted_at IS NULL")
 
 	if f.MyMedicineID != nil {
 		q = q.Where("my_medicine_id = ?", *f.MyMedicineID)
@@ -63,11 +104,58 @@ func ListNotiItems(db *gorm.DB, patientID uint, f ListNotiItemsFilter) ([]models
 		}
 	}
 
-	var items []models.NotiItem
-	if err := q.Order("notify_date, notify_time").Find(&items).Error; err != nil {
+	var rows []struct {
+		ID              uint
+		PatientID       uint
+		MyMedicineID    uint
+		GroupID         *uint
+		GroupName       string
+		NotiInfoID      uint
+		NotifyDate      string
+		NotifyTime      string
+		TakenStatus     bool
+		NotifyStatus    bool
+		MedName         string
+		AmountPerTime   string
+		FormID          uint
+		FormName        string
+		UnitID          *uint
+		UnitName        *string
+		InstructionID   *uint
+		InstructionName *string
+	}
+
+	if err := q.Order("ni.notify_date, ni.notify_time").Scan(&rows).Error; err != nil {
 		return nil, err
 	}
-	return items, nil
+
+	// ✅ map ไปยัง struct สำหรับ response
+	result := make([]NotiItemWithNames, len(rows))
+	for i, r := range rows {
+		result[i] = NotiItemWithNames{
+			ID:              r.ID,
+			PatientID:       r.PatientID,
+			MyMedicineID:    r.MyMedicineID,
+			GroupID:         r.GroupID,
+			GroupName:       r.GroupName,
+			NotiInfoID:      r.NotiInfoID,
+			NotifyDate:      r.NotifyDate,
+			NotifyTime:      r.NotifyTime,
+			TakenStatus:     r.TakenStatus,
+			NotifyStatus:    r.NotifyStatus,
+			MedName:         r.MedName,
+			AmountPerTime:   r.AmountPerTime,
+			FormID:          r.FormID,
+			FormName:        r.FormName,
+			UnitID:          r.UnitID,
+			UnitName:        r.UnitName,
+			InstructionID:   r.InstructionID,
+			InstructionName: r.InstructionName,
+			HasSymptom:      false,
+		}
+	}
+
+	return result, nil
 }
 
 // ===================================================================
@@ -146,4 +234,12 @@ func MarkNotiItemNotified(db *gorm.DB, patientID, notiItemID uint, notified bool
 		return nil, err
 	}
 	return &item, nil
+}
+
+func ListNotiFormats(db *gorm.DB) ([]models.NotiFormat, error) {
+	var formats []models.NotiFormat
+	if err := db.Find(&formats).Error; err != nil {
+		return nil, err
+	}
+	return formats, nil
 }

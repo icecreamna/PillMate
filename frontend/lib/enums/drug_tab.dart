@@ -1,0 +1,1 @@
+enum DrugTab { all, group }

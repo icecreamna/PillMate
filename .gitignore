@@ -1,0 +1,10 @@
+backend/configs/configs.go
+backend/entities/email.go
+backend/entities/otp.go
+backend/go.mod
+backend/go.sum
+backend/main.go
+backend/modules/controller/user_controller.go
+backend/modules/repositories/email_repository.go
+backend/modules/usecases/email_usecase.go
+backend/pkg/database/postgres.go

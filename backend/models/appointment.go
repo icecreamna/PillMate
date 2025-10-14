@@ -26,6 +26,8 @@ type Appointment struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// relations
+	PatientID uint     `gorm:"not null" json:"patient_id"`
+	Patient   Patient  `gorm:"foreignKey:PatientID"`
 	Hospital Hospital `gorm:"foreignKey:HospitalID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"-"`
 	WebAdmin WebAdmin `gorm:"foreignKey:DoctorID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"  json:"-"`
 }
