@@ -1,9 +1,39 @@
 import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class AuthService {
   static const baseURL = "http://10.0.2.2:8080";
   static String? jwtToken;
+
+  static Future<File> _tokenFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/jwt_token.txt');
+  }
+
+  // ✅ บันทึก token ลงไฟล์
+  static Future<void> _saveTokenToFile(String token) async {
+    final file = await _tokenFile();
+    await file.writeAsString(token);
+    print("💾 Token saved to file: ${file.path}");
+  }
+
+  // ✅ โหลด token จากไฟล์ (ใช้ตอน background)
+  static Future<String?> loadTokenFromFile() async {
+    try {
+      final file = await _tokenFile();
+      if (await file.exists()) {
+        final token = await file.readAsString();
+        jwtToken = token;
+        print("🔑 Loaded token from file");
+        return token;
+      }
+    } catch (e) {
+      print("❌ loadTokenFromFile error: $e");
+    }
+    return null;
+  }
 
   Future<Map<String, dynamic>> register({
     required String email,
@@ -36,6 +66,7 @@ class AuthService {
     required String password,
   }) async {
     final lowerEmail = email.trim().toLowerCase();
+
     final res = await http.post(
       Uri.parse("$baseURL/login"),
       headers: {"Content-Type": "application/json"},
@@ -43,9 +74,13 @@ class AuthService {
     );
 
     if (res.statusCode == 200) {
-      print("✅ Login success: ${res.body}");
       final data = jsonDecode(res.body);
-      jwtToken = data["token"];
+      final token = data["token"];
+      if (token != null) {
+        jwtToken = token;
+        print("✅ Login success & token saved to file");
+        await _saveTokenToFile(token); // ✅ เก็บลงไฟล์แทน SharedPreferences
+      }
       return data;
     } else {
       print("❌ Login failed (${res.statusCode}): ${res.body}");
@@ -74,7 +109,7 @@ class AuthService {
     }
   }
 
-  Future<int?> requestPaientId(String email) async {
+  Future<int?> forgotPasswordEmail(String email) async {
     final res = await http.post(
       Uri.parse("$baseURL/patient/password/forgot"),
       headers: {"Content-Type": "application/json"},
@@ -106,4 +141,5 @@ class AuthService {
     print("updated failed");
     throw Exception("Service Reset password failed: ${res.body}");
   }
+
 }

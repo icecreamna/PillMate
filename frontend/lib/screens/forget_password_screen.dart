@@ -45,7 +45,7 @@ class _ForgetPasswordScreenState extends State<_ForgetPasswordView> {
     });
     final email = emailController.text.trim();
 
-    final patientId = await _service.requestPaientId(email);
+    final patientId = await _service.forgotPasswordEmail(email);
 
     if (patientId == null) {
       setState(() => _isLoading = false);

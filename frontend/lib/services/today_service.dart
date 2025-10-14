@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:frontend/providers/today_provider.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
 class TodayService {
   static const baseUrl = "http://10.0.2.2:8080";
