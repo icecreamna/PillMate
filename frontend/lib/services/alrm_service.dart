@@ -57,7 +57,7 @@ class AlarmService {
       print("🌐 เริ่มเรียก due-now ที่ ${DateTime.now()}");
 
       final res = await http.get(
-        Uri.parse("$baseUrl/api/notify/due-now?window=420"),
+        Uri.parse("$baseUrl/api/notify/due-now?window=1"),
         headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
       );
 

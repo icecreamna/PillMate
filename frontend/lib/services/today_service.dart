@@ -36,6 +36,7 @@ class TodayService {
       final notifyDate = DateTime.parse(
         "${d["notify_date"]} ${d["notify_time"]}",
       );
+      final isTaken = d["taken_status"] ?? false;
 
       all.add(
         DoseGroup(
@@ -45,6 +46,7 @@ class TodayService {
           key: "${d["notify_time"]}-$instruction",
           at: notifyDate,
           instruction: instruction,
+          isTaken: isTaken,
           doses: [
             DoseSingle(name: name, amountPerTime: amountPerTime, unit: unit),
           ],
@@ -77,6 +79,8 @@ class TodayService {
           .map<int>((item) => item["noti_item_id"] as int)
           .toList();
 
+      final isTaken = g["taken_status"] ?? false;
+
       all.add(
         DoseGroup(
           notiGroupIds: notiGroupIds,
@@ -85,6 +89,7 @@ class TodayService {
           key: "${g["notify_time"]}-$instruction",
           at: notifyDate,
           instruction: instruction,
+          isTaken: isTaken,
           doses: doses,
         ),
       );
@@ -133,7 +138,6 @@ class TodayService {
       );
     }
   }
-
 
   Future<Map<String, dynamic>?> createSymptom({
     required String symptomNote,

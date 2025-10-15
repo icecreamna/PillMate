@@ -233,7 +233,9 @@ class ProfileScreen extends StatelessWidget {
                                             TextFormField(
                                               inputFormatters: [
                                                 FilteringTextInputFormatter.allow(
-                                                  RegExp(r'[a-zA-Zก-ฮ]'),
+                                                  RegExp(
+                                                    r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]',
+                                                  ),
                                                 ),
                                               ],
                                               keyboardType: TextInputType.text,
@@ -270,7 +272,9 @@ class ProfileScreen extends StatelessWidget {
                                             TextFormField(
                                               inputFormatters: [
                                                 FilteringTextInputFormatter.allow(
-                                                  RegExp(r'[a-zA-Zก-ฮ]'),
+                                                  RegExp(
+                                                    r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]',
+                                                  ),
                                                 ),
                                               ],
                                               keyboardType: TextInputType.text,
