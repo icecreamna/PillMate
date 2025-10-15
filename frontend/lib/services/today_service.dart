@@ -36,6 +36,7 @@ class TodayService {
       final notifyDate = DateTime.parse(
         "${d["notify_date"]} ${d["notify_time"]}",
       );
+      final isTaken = d["taken_status"] ?? false; 
 
       all.add(
         DoseGroup(
@@ -45,6 +46,7 @@ class TodayService {
           key: "${d["notify_time"]}-$instruction",
           at: notifyDate,
           instruction: instruction,
+          isTaken: isTaken,
           doses: [
             DoseSingle(name: name, amountPerTime: amountPerTime, unit: unit),
           ],

@@ -146,7 +146,9 @@ class AddEditViewState extends State<AddEditView> {
                   _headText("ชื่อยา"),
                   TextFormField(
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Zก-ฮ]')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]'),
+                      ),
                     ],
                     decoration: const InputDecoration(
                       hint: Text("ใส่ชื่อยาหรือยี่ห้อยา"),
@@ -172,7 +174,9 @@ class AddEditViewState extends State<AddEditView> {
                   _headText("สรรพคุณ"),
                   TextFormField(
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Zก-ฮ]')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]'),
+                      ),
                     ],
                     decoration: const InputDecoration(
                       hint: Text("ใส่สรรพคุณยา, รักษาอาการ "),
@@ -430,7 +434,7 @@ class AddEditViewState extends State<AddEditView> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("✅ แก้ไขยาเรียบร้อย")),
                         );
-                        Navigator.pop(context,true);
+                        Navigator.pop(context, true);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("❌ แก้ไขยาไม่สำเร็จ")),

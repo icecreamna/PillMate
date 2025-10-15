@@ -8,3 +8,7 @@ backend/modules/controller/user_controller.go
 backend/modules/repositories/email_repository.go
 backend/modules/usecases/email_usecase.go
 backend/pkg/database/postgres.go
+frontend/.dart_tool/package_config.json
+frontend/.dart_tool/package_config.json
+frontend/.dart_tool/package_config.json
+frontend/.dart_tool/package_graph.json

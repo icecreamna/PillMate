@@ -81,7 +81,7 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
                           controller: p.firstnameController,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-zก-ฮ]'),
+                              RegExp(r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]'),
                             ),
                           ],
                         ),
@@ -114,7 +114,7 @@ class _ProfileSetupScreenState extends State<_ProfileSetUpView> {
                           controller: p.lastnameController,
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-zก-ฮ]'),
+                              RegExp(r'[a-zA-Zก-ฮะาิีึืุูเแโใไๅ์่้๊๋ั็็ฯๆฦฦำ]'),
                             ),
                           ],
                         ),
