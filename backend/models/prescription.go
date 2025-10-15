@@ -11,9 +11,6 @@ type Prescription struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	IDCardNumber string         `gorm:"type:varchar(13);not null;index" json:"id_card_number"`
 	DoctorID     uint           `gorm:"not null;index" json:"doctor_id"`
-	MedicineInfoID  uint `gorm:"not null" json:"medicine_info_id"`
-	AmountPerTime 	string `gorm:"not null" json:"amount_per_time"` //ครั้งละ กี่ หน่วย
-	TimesPerDay 	string `gorm:"not null" json:"times_per_day"` //วันละกี่ครั้ง
 
 	// timestamps + soft delete
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
@@ -27,7 +24,6 @@ type Prescription struct {
 	Items []PrescriptionItem `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"items"`
 
 	// ความสัมพันธ์อื่น (เลือก preload ตามต้องการ)
-	MedicineInfo 	MedicineInfo `gorm:"foreignKey:MedicineInfoID"`
 	WebAdmin WebAdmin `gorm:"foreignKey:DoctorID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"-"`
 }
 

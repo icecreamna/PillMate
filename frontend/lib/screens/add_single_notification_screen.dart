@@ -386,7 +386,6 @@ class _AddSingleNotificationViewState
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (!addS.tempDose.import) ...[
                     SizedBox(
                       width: 181,
                       height: 70,
@@ -422,32 +421,7 @@ class _AddSingleNotificationViewState
                         ),
                       ),
                     ),
-                  ],
                   const SizedBox(width: 15),
-                  if (addS.tempDose.import) ...[
-                    Center(
-                      child: SizedBox(
-                        width: 181,
-                        height: 70,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF94B4C1),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                          ),
-                          child: const Text(
-                            "บันทึก",
-                            style: TextStyle(color: Colors.white, fontSize: 24),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ] else ...[
                     SizedBox(
                       width: 181,
                       height: 70,
@@ -468,7 +442,6 @@ class _AddSingleNotificationViewState
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
               const SizedBox(height: 70),

@@ -126,15 +126,18 @@ class _DrugScreenState extends State<DrugScreen> {
                                       await context
                                           .read<DrugProvider>()
                                           .syncHospitalMedicines(context);
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "✅ โหลดยาจากโรงพยาบาลเรียบร้อย",
-                                          ),
-                                        ),
-                                      );
+                                      await context
+                                          .read<DrugProvider>()
+                                          .loadMyMedicines();
+                                      // ScaffoldMessenger.of(
+                                      //   context,
+                                      // ).showSnackBar(
+                                      //   const SnackBar(
+                                      //     content: Text(
+                                      //       "✅ โหลดยาจากโรงพยาบาลเรียบร้อย",
+                                      //     ),
+                                      //   ),
+                                      // );
                                     },
                                     child: const Text(
                                       "เพิ่มยาจากโรงพยาบาล",
@@ -214,6 +217,9 @@ class _DrugScreenState extends State<DrugScreen> {
                                                     .syncHospitalMedicines(
                                                       context,
                                                     );
+                                                await context
+                                                    .read<DrugProvider>()
+                                                    .loadMyMedicines();
                                               },
                                               child: const Text(
                                                 "เพิ่มยาจากโรงพยาบาล",

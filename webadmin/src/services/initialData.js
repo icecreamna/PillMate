@@ -5,9 +5,9 @@ import { request } from "../lib/http";
 export const listForms = ({ with_relations = false } = {}) =>
   request(`/forms${with_relations ? "?with_relations=true" : ""}`); // -> array
 
-// GET /form/:id[?with_relations=true]
+// GET /forms/:id[?with_relations=true]
 export const getForm = (id, { with_relations = false } = {}) =>
-  request(`/form/${id}${with_relations ? "?with_relations=true" : ""}`); // -> object
+  request(`/forms/${id}${with_relations ? "?with_relations=true" : ""}`); // -> object
 
 // GET /forms/:id/units  -> { form_id, units: [{id, unit_name}] }
 export const listUnitsByForm = (formId) =>

@@ -2,8 +2,29 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from '../../../styles/doctor/medicine/MedicineList.module.css'
 import { listMedicinesForDoctor } from '../../../services/medicines'
+import { listForms } from '../../../services/initialData'
 
-export default function MedicineList(){
+// --- Helpers: normalize various response shapes ---
+const asArray = (x) => {
+  if (Array.isArray(x)) return x
+  if (Array.isArray(x?.data)) return x.data
+  if (Array.isArray(x?.items)) return x.items
+  if (Array.isArray(x?.list)) return x.list
+  if (Array.isArray(x?.rows)) return x.rows
+  if (Array.isArray(x?.result)) return x.result
+  if (Array.isArray(x?.forms)) return x.forms      // เผื่อ /forms คืน {forms:[...]}
+  return []
+}
+
+const pick = (o, keys, fallback = '-') => {
+  for (const k of keys) {
+    const v = o?.[k]
+    if (v != null && String(v).trim() !== '') return String(v).trim()
+  }
+  return fallback
+}
+
+export default function MedicineList() {
   const nav = useNavigate()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,22 +35,48 @@ export default function MedicineList(){
     ;(async () => {
       setLoading(true); setError('')
       try {
-        const res = await listMedicinesForDoctor()        // ← ใช้เส้นทาง /doctor
-        const list = Array.isArray(res?.data) ? res.data : []
-        if (!cancelled) setRows(list)
+        // ดึงยา + ฟอร์มพร้อมกัน
+        const [medRes, formRes] = await Promise.all([
+          listMedicinesForDoctor(),   // ควรคืน array หรือ {data:[]}
+          listForms({ with_relations: false }), // ควรคืน array หรือ {data:[]}/{forms:[]}
+        ])
+
+        const meds = asArray(medRes)
+        const forms = asArray(formRes)
+
+        if (!meds.length) {
+          if (!cancelled) {
+            setRows([])
+            setError('ไม่พบข้อมูลยา (GET /doctor/medicine-infos)')
+          }
+          return
+        }
+
+        // map: form_id -> form_name (รองรับหลายคีย์ของชื่อฟอร์ม)
+        const formNameById = new Map()
+        for (const f of forms) {
+          const id = f?.id ?? f?.form_id
+          if (!id) continue
+          const name = f?.form_name ?? f?.name ?? f?.formName ?? f?.FormName ?? f?.title ?? f?.label
+          if (name) formNameById.set(Number(id), String(name))
+        }
+
+        // enrich ชื่อฟอร์มให้แต่ละแถว
+        const enriched = meds.map(m => {
+          const fid = Number(m?.form_id || 0)
+          const formName = m?.form_name || (fid ? formNameById.get(fid) : '')
+          return { ...m, form_name: formName || '-' }
+        })
+
+        if (!cancelled) setRows(enriched)
       } catch (e) {
-        if (!cancelled) setError(e.message || 'โหลดข้อมูลยาไม่สำเร็จ')
+        if (!cancelled) setError(e?.message || 'โหลดข้อมูลไม่สำเร็จ')
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
   }, [])
-
-  const pick = (o, keys, fallback = '-') => {
-    for (const k of keys) { const v = o?.[k]; if (v != null && v !== '') return v }
-    return fallback
-  }
 
   return (
     <div>
@@ -57,8 +104,10 @@ export default function MedicineList(){
                   <td>{i+1}</td>
                   <td>{pick(r,['med_name','medName'])}</td>
                   <td>{pick(r,['generic_name','generic'])}</td>
-                  <td>{pick(r,['strength'])}</td>
-                  <td>{pick(r,['form_name','form'])}</td>
+                  <td>{pick(r,['strength','strength_text','strengthText'])}</td>
+                  <td title={r.form_id ? `form_id=${r.form_id}` : ''}>
+                    {pick(r,['form_name','form'])}
+                  </td>
                   <td className={styles.actions}>
                     <button className={styles.view} onClick={()=>nav(`/doc/medicine-info/${r.id}`)}>
                       View

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/fouradithep/pillmate/db"
@@ -105,6 +106,9 @@ func SetupMobileAppointmentRoutes(api fiber.Router) {
 	// })
 
 	api.Get("/appointments/next", func(c *fiber.Ctx) error {
+		// ปิด cache responses (ข้อมูลส่วนบุคคล)
+		c.Set("Cache-Control", "no-store")
+
 		// ⛑️ ตรวจสอบ auth
 		patientID, ok := c.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
@@ -122,11 +126,16 @@ func SetupMobileAppointmentRoutes(api fiber.Router) {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 
+		// ✅ แปลงเป็นเวลาไทยสำหรับการแสดงผล (ให้สอดคล้องกับ DTO เดิม)
+		bkk, _ := time.LoadLocation("Asia/Bangkok")
+		dateStr := nextAppointment.AppointmentDate.In(bkk).Format("2006-01-02")
+		timeStr := nextAppointment.AppointmentTime.In(bkk).Format("15:04")
+
 		// ✅ ส่งออกเฉพาะข้อมูลที่ต้องการ
 		return c.JSON(fiber.Map{
-			"appointment_date": nextAppointment.AppointmentDate.Format("2006-01-02"),
-			"appointment_time": nextAppointment.AppointmentTime.Format("15:04"),
-			"note":             nextAppointment.Note,
+			"appointment_date": dateStr,
+			"appointment_time": timeStr,
+			"note":             nextAppointment.Note, // *string -> JSON จะเป็นค่า string หรือ null
 		})
 	})
 

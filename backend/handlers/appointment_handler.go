@@ -61,25 +61,37 @@ import (
 // }
 
 func GetNextAppointment(db *gorm.DB, patientID uint) (*models.Appointment, error) {
-	now := time.Now().In(time.Local)
-	today := now.Format("2006-01-02")
+	// ใช้โซนเวลาไทยให้สม่ำเสมอ
+	appLoc, _ := time.LoadLocation("Asia/Bangkok")
+
+	// เวลา "ตอนนี้" ตามไทย
+	nowLocal := time.Now().In(appLoc)
+
+	// "วันนี้" เที่ยงคืน UTC ของวันนั้น (ให้ตรงกับวิธีเก็บคอลัมน์ DATE)
+	todayUTC := time.Date(
+		nowLocal.Year(), nowLocal.Month(), nowLocal.Day(),
+		0, 0, 0, 0, time.UTC,
+	)
+
+	// เวลา HH:MM:SS ของ "ตอนนี้" (ยึดวันที่ 2000-01-01 @Bangkok แล้ว .UTC()) ให้ชนิดตรงกับคอลัมน์ TIME
+	nowHMUTC := time.Date(
+		2000, 1, 1,
+		nowLocal.Hour(), nowLocal.Minute(), nowLocal.Second(), 0,
+		appLoc,
+	).UTC()
 
 	var nextAppointment models.Appointment
 
 	// ✅ Query นัดที่ยังไม่ถึงวัน/เวลา
-	err := db.Select(`
-		appointment_date,
-		('2000-01-01 ' || TO_CHAR(appointment_time, 'HH24:MI:SS'))::timestamp AS appointment_time,
-		note
-	`).
+	err := db.
 		Where(`
 			patient_id = ?
 			AND (
 				appointment_date > ?
 				OR (appointment_date = ? AND appointment_time > ?)
 			)
-		`, patientID, today, today, now.Format("15:04:05")).
-		Order("appointment_date ASC, appointment_time ASC").
+		`, patientID, todayUTC, todayUTC, nowHMUTC).
+		Order("appointment_date ASC, appointment_time ASC, id ASC").
 		First(&nextAppointment).Error
 
 	if err != nil {
