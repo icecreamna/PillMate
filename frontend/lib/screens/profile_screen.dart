@@ -417,10 +417,19 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     width: double.infinity,
-                    height: 178,
+                    height: 213,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          "รหัสผู้ป่วย :"
+                          " ${p.user!.patientCode}",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         Text(
                           "เลขบัตรประชาชน :"
                           " ${p.user!.idCard}",
