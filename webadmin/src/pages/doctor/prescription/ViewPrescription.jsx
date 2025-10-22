@@ -5,7 +5,7 @@ import styles from '../../../styles/doctor/prescription/ViewPrescription.module.
 import { getPatient } from '../../../services/patients'
 import { listPrescriptions } from '../../../services/prescriptions'
 import { getMedicineForDoctor } from '../../../services/medicines'
-import { getForm, getUnit } from '../../../services/initialData'   // <- เพิ่ม getUnit
+import { getForm, getUnit } from '../../../services/initialData'
 import { getDoctorPublic } from '../../../services/doctors'
 
 // helper แสดงวันที่/เวลาแบบไทย
@@ -50,10 +50,10 @@ export default function ViewPrescription() {
           list.flatMap(rx => (Array.isArray(rx.items) ? rx.items : [])).map(it => it.medicine_info_id)
         )].filter(Boolean)
 
-        const medMap = new Map() // id -> raw medicine_info
+        const medMap = new Map()
         await Promise.all(uniqueMedIDs.map(async (mid) => {
           try {
-            const mres = await getMedicineForDoctor(mid)   // GET /doctor/medicine-info/:id
+            const mres = await getMedicineForDoctor(mid)
             const m = mres?.data
             if (m) medMap.set(mid, m)
           } catch {/* noop */}
@@ -63,10 +63,10 @@ export default function ViewPrescription() {
         const uniqueDoctorIDs = [...new Set(
           list.map(rx => rx.doctor_id ?? rx.doctorId).filter(Boolean)
         )]
-        const doctorMap = new Map() // id -> "ชื่อ นามสกุล"
+        const doctorMap = new Map()
         await Promise.all(uniqueDoctorIDs.map(async (did) => {
           try {
-            const dres = await getDoctorPublic(did) // GET /doctor/doctors/:id
+            const dres = await getDoctorPublic(did)
             const d = dres?.data
             if (d) {
               const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || (d.username || '-')
@@ -75,7 +75,7 @@ export default function ViewPrescription() {
           } catch {/* noop */}
         }))
 
-        // ===== เก็บ form_id / unit_id ที่ต้องใช้ (จาก item และ medicine_info) =====
+        // ===== เก็บ form_id / unit_id ที่ต้องใช้ =====
         const formIDs = new Set()
         const unitIDs = new Set()
 
@@ -91,8 +91,8 @@ export default function ViewPrescription() {
         }
 
         // ===== ดึงชื่อ form/unit ตาม id =====
-        const formMap = new Map() // id -> form_name
-        const unitMap = new Map() // id -> unit_name
+        const formMap = new Map()
+        const unitMap = new Map()
 
         await Promise.all([
           ...[...formIDs].map(async (fid) => {
@@ -113,7 +113,7 @@ export default function ViewPrescription() {
           }),
         ])
 
-        // 3) map ใบสั่งยา → เติมชื่อยา/รูปแบบ/หน่วย/ความแรง + ชื่อหมอ + ประกอบข้อความ
+        // 3) map ใบสั่งยา
         const mapped = list.map(rx => {
           const did = rx.doctor_id ?? rx.doctorId
           const doctorName = (did && doctorMap.get(did)) || rx.doctor_name || rx.doctorName || '-'
@@ -127,7 +127,6 @@ export default function ViewPrescription() {
             items: (Array.isArray(rx.items) ? rx.items : []).map(it => {
               const mi = it.medicine_info_id ? medMap.get(it.medicine_info_id) : null
 
-              // ---- ชื่อยา/generic/strength ----
               const medName =
                 it.med_name || it.MedName ||
                 mi?.med_name || mi?.MedName || '-'
@@ -137,7 +136,6 @@ export default function ViewPrescription() {
               const strength =
                 it.strength || mi?.strength || '-'
 
-              // ---- form ----
               const formName =
                 it.form_name ||
                 (it.form_id ? formMap.get(it.form_id) : '') ||
@@ -145,15 +143,13 @@ export default function ViewPrescription() {
                 (mi?.form_id ? formMap.get(mi.form_id) : '') ||
                 '-'
 
-              // ---- unit ----
               const unitName =
                 it.unit_name ||
                 (it.unit_id ? unitMap.get(it.unit_id) : '') ||
                 mi?.unit_name ||
                 (mi?.unit_id ? unitMap.get(mi.unit_id) : '') ||
-                '' // ไม่มีจริง ๆ ปล่อยว่าง
+                ''
 
-              // ---- dosage text ----
               const rawDosePerTime = it.amount_per_time ?? it.dosePerTime
               const dosePerTime =
                 (rawDosePerTime !== undefined && rawDosePerTime !== null && String(rawDosePerTime) !== '')
@@ -166,14 +162,7 @@ export default function ViewPrescription() {
                   ? `${rawTimesPerDay} ครั้ง`
                   : '-'
 
-              return {
-                medName,
-                generic,
-                strength,
-                form: formName,
-                dosePerTime,   // “ครั้งละ X หน่วย/ฟอร์ม”
-                timesPerDay,   // “วันละ N ครั้ง”
-              }
+              return { medName, generic, strength, form: formName, dosePerTime, timesPerDay }
             })
           }
         })
@@ -223,6 +212,7 @@ export default function ViewPrescription() {
       {patient && (
         <div className={styles.patientBar}>
           <div><strong>ชื่อผู้ป่วย:</strong> {[patient.first_name, patient.last_name].filter(Boolean).join(' ') || '-'}</div>
+          <div><strong>Patient Code:</strong> {patient.patient_code || '-'}</div>{/* ← เพิ่มบรรทัดนี้ */}
           <div><strong>เลขบัตร:</strong> {patient.id_card_number || '-'}</div>
         </div>
       )}

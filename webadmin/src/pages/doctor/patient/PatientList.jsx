@@ -7,6 +7,12 @@ import { listPatients, deletePatient } from '../../../services/patients'
 // เก็บเฉพาะตัวเลข (กันกรณีพิมพ์มีขีด/ช่องว่าง)
 const normIdCard = (s) => (s || '').replace(/[^\d]/g, '')
 
+// แปลงเป็น “candidate” สำหรับ patient_code: เอาเฉพาะตัวเลข แล้ว pad ซ้ายให้ครบ 6
+const toPatientCodeCandidate = (s) => {
+  const digits = (s || '').replace(/\D/g, '')
+  return digits ? digits.padStart(6, '0') : ''
+}
+
 // คำนวณอายุจาก birth_day (ISO string)
 function calcAge(birthISO) {
   if (!birthISO) return '-'
@@ -19,11 +25,12 @@ function calcAge(birthISO) {
   return age < 0 ? '-' : age
 }
 
-// แปลง DTO → รูปแบบที่ UI เดิมใช้
+// แปลง DTO → รูปแบบที่ UI ใช้ (มี patient_code)
 function mapPatientDTO(p) {
   return {
     raw: p,
     id: p.id,
+    code: p.patient_code || '-',
     name: [p.first_name, p.last_name].filter(Boolean).join(' ') || '-',
     idcard: p.id_card_number || '-',
     gender: p.gender || '-',
@@ -36,7 +43,7 @@ export default function PatientList(){
 
   const [query, setQuery] = useState('')
   const [allRows, setAllRows] = useState([])   // เก็บทั้งหมดจาก API
-  const [selected, setSelected] = useState(null) // เก็บผลค้นหาแบบตรงด้วยเลขบัตร
+  const [selected, setSelected] = useState(null) // เก็บผลค้นหาแบบตรง
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -61,17 +68,30 @@ export default function PatientList(){
     return () => { cancelled = true }
   }, [])
 
-  // ค้นหาด้วยเลขบัตร (normalize ก่อน แล้ว exact match ที่ฝั่ง FE)
+  // ค้นหาด้วย patient_code หรือ เลขบัตร (normalize ก่อน แล้ว exact match ที่ฝั่ง FE)
   const handleSearch = async () => {
-    const q = normIdCard(query.trim())
-    if (!q) { setSelected(null); return }
+    const raw = (query || '').trim()
+    if (!raw) { setSelected(null); return }
+
+    const idQ = normIdCard(raw)                    // candidate สำหรับเลขบัตร
+    const codeQ = toPatientCodeCandidate(raw)      // candidate สำหรับ patient_code (6 หลัก)
+    const rawUpper = raw.toUpperCase()
+
     try {
-      const res = await listPatients({ q }) // GET /doctor/hospital-patients?q=...
+      const res = await listPatients({ q: raw }) // BE รองรับค้นหา patient_code ด้วยแล้ว
       const list = Array.isArray(res?.data) ? res.data : []
-      // เลือก “เลขบัตรตรงเป๊ะ” ก่อน (normalize ทั้งสองฝั่ง) ถ้าไม่เจอ fallback ตัวแรก
-      const exact = list.find(p => normIdCard(String(p.id_card_number)) === q) || list[0]
+
+      // จัดลำดับการหา exact:
+      // 1) ตรงกับ patient_code แบบ raw (เผื่ออนาคตมี prefix)
+      // 2) ตรงกับ patient_code แบบ 6 หลัก (pad ซ้าย)
+      // 3) ตรงกับเลขบัตรประชาชน (normalize ตัวเลขทั้งสองฝั่ง)
+      const exact = list.find(p => String(p.patient_code || '').toUpperCase() === rawUpper)
+                 || list.find(p => String(p.patient_code || '') === codeQ)
+                 || list.find(p => normIdCard(String(p.id_card_number || '')) === idQ)
+                 || list[0]
+
       if (exact) setSelected(mapPatientDTO(exact))
-      else alert('ไม่พบหมายเลขบัตรประชาชนนี้')
+      else alert('ไม่พบข้อมูลที่ค้นหา')
     } catch (e) {
       alert(e.message || 'ค้นหาไม่สำเร็จ')
     }
@@ -103,7 +123,7 @@ export default function PatientList(){
         <div className={styles.headerActions}>
           <input
             className={styles.search}
-            placeholder="ค้นหาหมายเลขบัตรประชาชน"
+            placeholder="ค้นหา Patient Code หรือ เลขบัตรประชาชน"
             value={query}
             onChange={e=>setQuery(e.target.value)}
             onKeyDown={onKeyDown}
@@ -122,11 +142,12 @@ export default function PatientList(){
             <thead>
               <tr>
                 <th style={{width:'6%'}}>#</th>
-                <th style={{width:'20%'}}>Name</th>
-                <th style={{width:'20%'}}>IDCardNumber</th>
+                <th style={{width:'18%'}}>Name</th>
+                <th style={{width:'14%'}}>Patient Code</th>
+                <th style={{width:'18%'}}>IDCardNumber</th>
                 <th style={{width:'12%'}}>Gender</th>
                 <th style={{width:'10%'}}>Age</th>
-                <th style={{width:'25%'}}># Action</th>
+                <th style={{width:'22%'}}># Action</th>
               </tr>
             </thead>
             <tbody>
@@ -134,6 +155,7 @@ export default function PatientList(){
                 <tr key={p.id}>
                   <td>{i+1}</td>
                   <td>{p.name}</td>
+                  <td>{p.code}</td>
                   <td>{p.idcard}</td>
                   <td>{p.gender}</td>
                   <td>{p.age}</td>
@@ -145,7 +167,7 @@ export default function PatientList(){
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={6} style={{textAlign:'center', opacity:.7, padding:'12px'}}>ไม่พบข้อมูล</td></tr>
+                <tr><td colSpan={7} style={{textAlign:'center', opacity:.7, padding:'12px'}}>ไม่พบข้อมูล</td></tr>
               )}
             </tbody>
           </table>

@@ -34,6 +34,7 @@ type WebAdmin struct {
 type HospitalPatient struct {
 	ID            uint           `gorm:"primaryKey" json:"id"`
 	IDCardNumber  string         `gorm:"type:varchar(13);not null;uniqueIndex:uniq_active_idcard,where:deleted_at IS NULL" json:"id_card_number"`
+	PatientCode   string         `gorm:"type:varchar(20);not null;uniqueIndex:uniq_patient_code,where:deleted_at IS NULL" json:"patient_code"` // รหัสผู้ป่วยภายในโรงพยาบาล
 	FirstName     string         `gorm:"type:varchar(100);not null" json:"first_name"`
 	LastName      string         `gorm:"type:varchar(100);not null" json:"last_name"`
 	PhoneNumber   string         `gorm:"type:varchar(10);not null;uniqueIndex:uniq_active_phone,where:deleted_at IS NULL" json:"phone_number"`

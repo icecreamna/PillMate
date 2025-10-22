@@ -1,3 +1,4 @@
+// src/pages/doctor/patient/ViewPatient.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styles from '../../../styles/doctor/patient/ViewPatient.module.css'
@@ -22,6 +23,7 @@ export default function ViewPatient() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   // เก็บ DTO ต้นฉบับ (จาก BE)
   const [rec, setRec] = useState(null)
@@ -48,16 +50,26 @@ export default function ViewPatient() {
   const view = useMemo(() => {
     if (!rec) return null
     return {
-      firstName: rec.first_name || '',
-      lastName:  rec.last_name  || '',
-      birthDay:  rec.birth_day  || '',           // "YYYY-MM-DD" จาก DTO
-      gender:    rec.gender     || '',
+      code:      rec.patient_code || '',          // << เพิ่ม patient_code
+      firstName: rec.first_name   || '',
+      lastName:  rec.last_name    || '',
+      birthDay:  rec.birth_day    || '',          // "YYYY-MM-DD" จาก DTO
+      gender:    rec.gender       || '',
       idcard:    rec.id_card_number || '',
-      phone:     rec.phone_number  || '',
+      phone:     rec.phone_number   || '',
     }
   }, [rec])
 
   const age = useMemo(() => calcAgeYMD(view?.birthDay || ''), [view])
+
+  const copyCode = async () => {
+    if (!view?.code) return
+    try {
+      await navigator.clipboard.writeText(view.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    } catch {}
+  }
 
   if (loading) return <div className={styles.page}>กำลังโหลด...</div>
   if (error)   return (
@@ -83,6 +95,20 @@ export default function ViewPatient() {
       <hr className={styles.hr} />
 
       <div className={styles.card}>
+        {/* แถว Patient Code */}
+        <div className={styles.row} style={{alignItems:'flex-end'}}>
+          <div className={styles.label} style={{gridColumn:'1 / -1'}}>
+            <span>Patient Code</span>
+            <div style={{display:'flex', gap:8, alignItems:'center'}}>
+              <input className={styles.input} value={view.code} disabled style={{maxWidth:220, fontFamily:'ui-monospace, SFMono-Regular, Menlo, monospace'}} />
+              <button className={styles.copyBtn} onClick={copyCode} disabled={!view.code}>
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+              {/* {view.code && <span className={styles.badge} style={{opacity:.8}}>HN</span>} */}
+            </div>
+          </div>
+        </div>
+
         <div className={styles.row}>
           <label className={styles.label}>
             <span>First Name</span>

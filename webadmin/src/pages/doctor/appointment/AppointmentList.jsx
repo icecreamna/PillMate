@@ -1,3 +1,4 @@
+// src/pages/doctor/appointment/AppointmentList.jsx
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from '../../../styles/doctor/appointment/AppointmentList.module.css'
@@ -22,9 +23,16 @@ function calcAge(birthYMD) {
   if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--
   return age < 0 ? '-' : age
 }
+const onlyDigits = (s) => (s || '').replace(/[^\d]/g, '')
+const toPatientCodeCandidate = (s) => {
+  const digits = (s || '').replace(/\D/g, '')
+  return digits ? digits.padStart(6, '0') : ''
+}
+
 function mapPatientDTO(p){
   return {
     id: p.id,
+    code: p.patient_code || '-',
     name: [p.first_name, p.last_name].filter(Boolean).join(' ') || '-',
     idcard: p.id_card_number || '-',
     gender: p.gender || '-',
@@ -73,23 +81,35 @@ export default function AppointmentList() {
     return () => { cancelled = true }
   }, [])
 
-  // ค้นหาด้วยเลขบัตร (ตรงตัว) — ถ้าเว้นว่างให้แสดงทั้งหมด
+  // ค้นหา Patient Code หรือ เลขบัตร — ถ้าเว้นว่างให้แสดงทั้งหมด
   const onSearch = async () => {
     setError('')
-    const qtrim = q.trim()
-    if (!qtrim) { setSelectedRows(allRows); return }
+    const raw = q.trim()
+    if (!raw) { setSelectedRows(allRows); return }
+
+    const idQ = onlyDigits(raw)
+    const codeQ = toPatientCodeCandidate(raw)
+    const rawUpper = raw.toUpperCase()
 
     try {
       setLoading(true)
-      const res = await listPatients({ q: qtrim })
+      const res = await listPatients({ q: raw })
       const list = Array.isArray(res?.data) ? res.data : []
-      // เอาคนที่เลขบัตรตรง
-      const exact = list.find(p => String(p.id_card_number) === qtrim)
+
+      // ลำดับ exact:
+      // 1) patient_code เท่ากับที่พิมพ์ (รองรับตัวอักษรในอนาคต)
+      // 2) patient_code เท่ากับเลข 6 หลัก (pad ซ้าย)
+      // 3) id_card_number เท่ากับเลขบัตร (normalize ตัวเลข)
+      const exact =
+        list.find(p => String(p.patient_code || '').toUpperCase() === rawUpper) ||
+        list.find(p => String(p.patient_code || '') === codeQ) ||
+        list.find(p => onlyDigits(String(p.id_card_number || '')) === idQ)
+
       if (exact) {
         setSelectedRows([mapPatientDTO(exact)])
       } else {
         setSelectedRows([])
-        setError('ไม่พบผู้ป่วยตามเลขบัตรนี้')
+        setError('ไม่พบผู้ป่วย')
       }
     } catch (e) {
       setError(e.message || 'ค้นหาไม่สำเร็จ')
@@ -162,7 +182,7 @@ export default function AppointmentList() {
         <div className={styles.searchWrap}>
           <input
             className={styles.searchInput}
-            placeholder="ค้นหาเลขบัตรประชาชน"
+            placeholder="ค้นหา Patient Code หรือ เลขบัตรประชาชน"
             value={q}
             onChange={e=>setQ(e.target.value)}
             onKeyDown={onKeyDown}
@@ -181,8 +201,9 @@ export default function AppointmentList() {
           <thead>
             <tr>
               <th style={{width:'6%'}}>#</th>
-              <th style={{width:'32%'}}>Name</th>
-              <th style={{width:'26%'}}>IDCardNumber</th>
+              <th style={{width:'26%'}}>Name</th>
+              <th style={{width:'16%'}}>Patient Code</th>
+              <th style={{width:'22%'}}>IDCardNumber</th>
               <th style={{width:'12%'}}>Gender</th>
               <th style={{width:'10%'}}>Age</th>
               <th># Action</th>
@@ -190,14 +211,15 @@ export default function AppointmentList() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{textAlign:'center', color:'#6b7280', height:56}}>กำลังโหลด...</td></tr>
+              <tr><td colSpan={7} style={{textAlign:'center', color:'#6b7280', height:56}}>กำลังโหลด...</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={6} style={{textAlign:'center', color:'#6b7280', height:56}}>ไม่มีข้อมูล</td></tr>
+              <tr><td colSpan={7} style={{textAlign:'center', color:'#6b7280', height:56}}>ไม่มีข้อมูล</td></tr>
             ) : (
               rows.map((p, i) => (
                 <tr key={p.id}>
                   <td>{i + 1}</td>
                   <td>{p.name}</td>
+                  <td>{p.code}</td>
                   <td>{p.idcard}</td>
                   <td>{p.gender}</td>
                   <td>{p.age}</td>
@@ -227,7 +249,7 @@ export default function AppointmentList() {
                   type="date"
                   className={styles.input}
                   value={dateVal}
-                  min={todayStr()}                 // ไม่ให้เลือกวันย้อนหลัง (ปรับได้)
+                  min={todayStr()}
                   onChange={e=>setDateVal(e.target.value)}
                 />
               </div>
@@ -238,10 +260,10 @@ export default function AppointmentList() {
                   className={styles.input}
                   value={timeVal}
                   onChange={e=>setTimeVal(e.target.value)}
-                  lang="th-TH"                     // บังคับ UI เป็น 24 ชม. ส่วนใหญ่ของ browser
-                  step="60"                        // ทีละ 1 นาที (ปรับได้)
+                  lang="th-TH"
+                  step="60"
                   inputMode="numeric"
-                  pattern="^\d{2}:\d{2}$"         // กันค่าที่ไม่ใช่ HH:mm
+                  pattern="^\\d{2}:\\d{2}$"
                   aria-label="เวลา (24 ชั่วโมง)"
                 />
               </div>

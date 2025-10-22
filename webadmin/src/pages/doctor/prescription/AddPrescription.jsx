@@ -7,7 +7,6 @@ import { listMedicinesForDoctor } from '../../../services/medicines' // GET /doc
 import { listForms } from '../../../services/initialData'            // GET /forms?with_relations=true
 import { createPrescription } from '../../../services/prescriptions'
 
-/** (เลิกใช้) เดาหน่วยจากฟอร์ม — คงไว้เพื่ออ้างอิง แต่จะไม่ถูกนำมาใช้แล้ว */
 function inferUnitFromForm(formName) {
   const s = String(formName || '').trim()
   if (!s) return ''
@@ -33,41 +32,47 @@ export default function AddPrescription() {
   // --- Modal state ---
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [dosePerTime, setDosePerTime] = useState('1') // ครั้งละ (ตัวเลข)
-  const [timesPerDay, setTimesPerDay] = useState('3') // วันละ (ตัวเลข)
+  const [dosePerTime, setDosePerTime] = useState('1')
+  const [timesPerDay, setTimesPerDay] = useState('3')
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true); setError('')
       try {
-        // 1) ผู้ป่วย -> ใช้ id_card_number ตอนยิง create
+        // ผู้ป่วย
         const pRes = await getPatient(patientId)
         const p = pRes?.data
         if (!p) throw new Error('ไม่พบข้อมูลผู้ป่วย')
         if (cancelled) return
         setPatient(p)
 
-        // 2) โหลด forms (พร้อม relations) เพื่อทำ lookup form_name (ไม่ใช้เพื่อหาหน่วย)
-        //    คาดหวังโครง: [{id, form_name, units:[{id, unit_name}, ...]}]
-        const fRes = await listForms({ with_relations: true })
-        const forms = Array.isArray(fRes) ? fRes : []
+        // forms + units
+        const fs = await listForms({ with_relations: true })
+        const forms = Array.isArray(fs) ? fs : []
         const formMap = new Map(forms.map(f => [String(f.id), f]))
+        const unitLookupByForm = new Map(
+          forms.map(f => [
+            String(f.id),
+            new Map((Array.isArray(f.units) ? f.units : []).map(u => [String(u.id), u.unit_name || u.name || '']))
+          ])
+        )
 
-        // 3) โหลดยาที่หมอเห็นได้
-        const mRes = await listMedicinesForDoctor() // -> { data:[...] }
+        // ยาที่หมอเห็นได้
+        const mRes = await listMedicinesForDoctor()
         const meds = Array.isArray(mRes?.data) ? mRes.data : []
 
-        // 4) map ยา -> เติม form_name จาก form_id/ยา
-        //    หน่วย: ใช้เฉพาะ "ที่ติดมากับยาตัวนั้น" เท่านั้น ถ้าไม่มีให้เป็น '' (แล้วไปแสดง '-' ที่ UI)
+        // map ยา -> form + unit
         const mapped = meds.map(m => {
-          const fm = formMap.get(String(m.form_id || '')) || null
+          const fid = String(m.form_id ?? '')
+          const form = formMap.get(fid) || null
           const formName =
             m.form_name || m.form ||
-            fm?.form_name || fm?.name || '-'
+            form?.form_name || form?.name || '-'
 
-          // หน่วย: ไม่ดึงจาก form.units / ไม่เดาจากชื่อฟอร์มอีกต่อไป
-          const unitLabel = String(m.unit_name || m.unit || '').trim()
+          const unitFromMed = String(m.unit_name || m.unit || '').trim()
+          const unitFromLookup = unitLookupByForm.get(fid)?.get(String(m.unit_id ?? '')) || ''
+          const unitLabel = unitFromMed || unitFromLookup || inferUnitFromForm(formName) || ''
 
           return {
             id: m.id,
@@ -75,7 +80,7 @@ export default function AddPrescription() {
             generic: m.generic_name || m.GenericName || '-',
             strength: m.strength || '-',
             form: formName,
-            unitLabel, // ถ้าไม่มี = ''
+            unitLabel,
             checked: false,
             dosePerTime: undefined,
             timesPerDay: undefined,
@@ -129,26 +134,20 @@ export default function AddPrescription() {
       return
     }
 
-    // helper: ส่งเป็น "เลขล้วน (สตริง)" ถ้าไม่มีให้เป็น "0"
     const toNumStr = (v) => {
       const s = String(v ?? '').trim()
       return s === '' ? '0' : s
     }
 
-    // items -> ส่งเฉพาะ "เลขล้วน" ไม่พ่วงหน่วย/คำว่า "ครั้ง"
     const items = selected.map(s => ({
       medicine_info_id: s.id,
-      amount_per_time: toNumStr(s.dosePerTime), // e.g. "1"
-      times_per_day:   toNumStr(s.timesPerDay),  // e.g. "3"
+      amount_per_time: toNumStr(s.dosePerTime),
+      times_per_day:   toNumStr(s.timesPerDay),
     }))
 
     try {
       setSaving(true)
-      await createPrescription({
-        id_card_number: idCard,
-        items,
-        // doctor_id / sync_until / app_sync_status ไม่ต้องส่ง ถ้า backend เติมเองจาก token/Default
-      })
+      await createPrescription({ id_card_number: idCard, items })
       nav('/doc/prescription', { replace: true })
     } catch (e) {
       setError(e.message || 'บันทึกไม่สำเร็จ')
@@ -164,9 +163,11 @@ export default function AddPrescription() {
         <button className={styles.back} onClick={() => nav(-1)}>← Back</button>
       </div>
 
+      {/* แก้ตรงนี้: แสดง Patient Code ด้วย */}
       {patient && (
         <div className={styles.patientBar}>
           <div><strong>ชื่อผู้ป่วย:</strong> {[patient.first_name, patient.last_name].filter(Boolean).join(' ') || '-'}</div>
+          <div><strong>Patient Code:</strong> {patient.patient_code || '-'}</div>
           <div><strong>เลขบัตร:</strong> {patient.id_card_number || '-'}</div>
         </div>
       )}
@@ -205,8 +206,7 @@ export default function AddPrescription() {
                       {r.medName}
                       {(r.dosePerTime != null && r.timesPerDay != null) ? (
                         <div className={styles.doseNote}>
-                          {/* แสดงผล: ถ้าไม่มีหน่วยให้ขึ้น '-' */}
-                          ครั้งละ {r.dosePerTime} {r.unitLabel?.trim() ? r.unitLabel : '-'} | วันละ {r.timesPerDay} ครั้ง
+                          ครั้งละ {r.dosePerTime} {r.unitLabel} | วันละ {r.timesPerDay} ครั้ง
                         </div>
                       ) : null}
                     </td>
@@ -237,7 +237,6 @@ export default function AddPrescription() {
         </>
       )}
 
-      {/* Modal */}
       {open && editing && (
         <div className={styles.modalOverlay} onClick={closeModal}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -262,9 +261,7 @@ export default function AddPrescription() {
                     onChange={e => setDosePerTime(e.target.value)}
                   />
                 </label>
-                <div className={styles.unit}>
-                  {editing.unitLabel && editing.unitLabel.trim() ? editing.unitLabel : '-'}
-                </div>
+                <div className={styles.unit}>{editing.unitLabel}</div>
               </div>
 
               <div className={styles.row}>
