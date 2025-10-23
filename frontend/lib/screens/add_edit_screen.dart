@@ -261,7 +261,8 @@ class AddEditViewState extends State<AddEditView> {
                         height: 50,
                         child: TextFormField(
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                            LengthLimitingTextInputFormatter(5)
                           ],
                           decoration: InputDecoration(
                             labelText: "ครั้งละ",
@@ -324,6 +325,7 @@ class AddEditViewState extends State<AddEditView> {
                         child: TextFormField(
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                            LengthLimitingTextInputFormatter(2)
                           ],
                           decoration: InputDecoration(
                             labelText: "วันละ",

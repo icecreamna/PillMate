@@ -8,12 +8,14 @@ class InfoUser {
   final String lastName;
   final String idCard;
   final String tel;
+  final String? patientCode;
 
   InfoUser({
     required this.firstName,
     required this.lastName,
     required this.idCard,
     required this.tel,
+    this.patientCode,
   });
 }
 
@@ -74,6 +76,7 @@ class ProfileProvider extends ChangeNotifier {
           lastName: data["last_name"] ?? "",
           idCard: data["id_card_number"] ?? "",
           tel: data["phone_number"] ?? "",
+          patientCode: data["patient_code"] ?? "ไม่มีรหัสผู้ป่วย",
         );
         debugPrint("✅ Profile loaded: ${_user!.firstName} ${_user!.lastName}");
       } else {
