@@ -298,11 +298,14 @@ class _TodayScreenState extends State<TodayScreen> {
                                         children: [
                                           Text(
                                             timeText + " น.",
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 24,
                                               fontWeight: FontWeight.normal,
                                               color: Colors.black,
-                                            ),
+                                              decoration: d.isTaken
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                            ), 
                                           ),
                                           const SizedBox(width: 7),
                                           Text(
