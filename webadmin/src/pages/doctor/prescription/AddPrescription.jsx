@@ -18,6 +18,16 @@ function inferUnitFromForm(formName) {
   return ''
 }
 
+// ช่วย normalize ข้อความให้ค้นหาง่ายขึ้น (ไม่สนช่องว่าง/ตัวพิมพ์ใหญ่เล็ก/สัญลักษณ์)
+function norm(s) {
+  return String(s || '')
+    .toLocaleLowerCase('th-TH')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '') // strip combining marks
+    .replace(/\s+/g, '')             // remove spaces
+    .replace(/[^\p{L}\p{N}.%-]/gu, '') // keep letters/numbers/บางสัญลักษณ์พื้นฐาน
+}
+
 export default function AddPrescription() {
   const nav = useNavigate()
   const { patientId } = useParams()
@@ -28,6 +38,9 @@ export default function AddPrescription() {
 
   const [patient, setPatient] = useState(null)
   const [rows, setRows] = useState([])
+
+  // --- Search state ---
+  const [q, setQ] = useState('')
 
   // --- Modal state ---
   const [open, setOpen] = useState(false)
@@ -97,6 +110,7 @@ export default function AddPrescription() {
     return () => { cancelled = true }
   }, [patientId])
 
+  // สำเนาเริ่มต้น (กันกรณีอยากเทียบ diff ภายหลัง)
   const initial = useMemo(() => rows.map(d => ({ ...d })), [rows])
 
   const toggle = (id) => {
@@ -120,6 +134,20 @@ export default function AddPrescription() {
     )
     closeModal()
   }
+
+  // กรองรายการตามคำค้นหา (ค้นหาจากหลายช่อง)
+  const visibleRows = useMemo(() => {
+    const nq = norm(q)
+    if (!nq) return rows
+    return rows.filter(r => {
+      return (
+        norm(r.medName).includes(nq) ||
+        norm(r.generic).includes(nq) ||
+        norm(r.form).includes(nq) ||
+        norm(r.strength).includes(nq)
+      )
+    })
+  }, [rows, q])
 
   const submit = async () => {
     setError('')
@@ -163,7 +191,7 @@ export default function AddPrescription() {
         <button className={styles.back} onClick={() => nav(-1)}>← Back</button>
       </div>
 
-      {/* แก้ตรงนี้: แสดง Patient Code ด้วย */}
+      {/* Patient bar */}
       {patient && (
         <div className={styles.patientBar}>
           <div><strong>ชื่อผู้ป่วย:</strong> {[patient.first_name, patient.last_name].filter(Boolean).join(' ') || '-'}</div>
@@ -171,6 +199,21 @@ export default function AddPrescription() {
           <div><strong>เลขบัตร:</strong> {patient.id_card_number || '-'}</div>
         </div>
       )}
+
+      {/* Search box */}
+      <div className={styles.toolsBar}>
+        <input
+          type="text"
+          className={styles.searchInput}
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="ค้นหาชื่อยา / Generic / รูปแบบยา (ไทย/English)"
+          aria-label="ค้นหาชื่อยา"
+        />
+        <div className={styles.searchInfo}>
+          แสดง {visibleRows.length} จากทั้งหมด {rows.length} รายการ
+        </div>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
@@ -191,7 +234,7 @@ export default function AddPrescription() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {visibleRows.map((r) => (
                   <tr key={r.id} className={r.checked ? '' : styles.dim}>
                     <td>
                       <input
@@ -218,10 +261,10 @@ export default function AddPrescription() {
                     </td>
                   </tr>
                 ))}
-                {rows.length === 0 && (
+                {visibleRows.length === 0 && (
                   <tr>
                     <td colSpan={6} style={{textAlign:'center', color:'#6b7280', height:56}}>
-                      ไม่มียาให้เลือก
+                      ไม่พบรายการที่ตรงกับคำค้น
                     </td>
                   </tr>
                 )}
