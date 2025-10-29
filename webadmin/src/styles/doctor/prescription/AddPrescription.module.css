@@ -66,3 +66,18 @@
   background:#16a34a; color:#fff; font-weight:700; cursor:pointer;
 }
 .confirm:hover{ background:#15803d; }
+
+/* ยืดความกว้างช่องค้นหา */
+.toolsBar{ display:flex; align-items:center; gap:10px; }
+
+.searchInput{
+  flex: 1 1 560px;   /* ยืดได้และตั้งฐานเริ่ม ~560px */
+  max-width: 300px;  /* ไม่ให้ยาวเกินไปบนจอใหญ่ */
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  
+  height:36px; width:260px;
+  border:1px solid #d1d5db; border-radius:8px; padding:0 10px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
