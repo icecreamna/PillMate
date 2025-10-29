@@ -6,6 +6,7 @@ import 'package:frontend/screens/forget_password_screen.dart';
 import 'package:frontend/screens/new_password_screen.dart';
 import 'package:frontend/screens/profile_setup_screen.dart';
 import 'package:frontend/screens/register_screen.dart';
+import 'package:frontend/services/otp_service.dart';
 
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/filled_button_custom.dart';
@@ -21,11 +22,17 @@ class OtpScreens extends StatelessWidget {
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final PageType otpType = args['otpType'] as PageType;
     final String email = args['email'] as String;
+    final int patientId = args["patient_id"];
 
     return ChangeNotifierProvider(
       create: (_) {
-        final p = OtpProvider(otpType: otpType, emailText: email);
-        p.init();
+        final p = OtpProvider(
+          otpType: otpType,
+          emailText: email,
+          patientId: patientId,
+          otpService: OtpService(),
+        );
+        // p.init();
         return p;
       },
       child: _OtpView(),
@@ -202,6 +209,8 @@ class _OtpViewState extends State<_OtpView> {
                                       child: Text(
                                         isCount
                                             ? "ขออีกครั้งใน ${otpSend.countdown} วินาที"
+                                            : otpSend.isSending
+                                            ? "กำลังส่ง..."
                                             : "ขอรหัส OTP อีกครั้ง",
                                         style: TextStyle(
                                           fontSize: 16,
@@ -240,10 +249,12 @@ class _OtpViewState extends State<_OtpView> {
                       const Spacer(),
                       FilledButtonCustom(
                         text: "ยืนยันอีเมล",
-                        onPressed: () {
+                        onPressed: () async {
                           final p = context.read<OtpProvider>();
-                          final ok = p.validateOtp(_otp);
+                          final ok = await p.validateOtp(_otp);
                           if (!ok) return;
+                          if (!mounted) return;
+
                           switch (p.otpType) {
                             case PageType.register:
                               Navigator.pushReplacement(
@@ -251,6 +262,9 @@ class _OtpViewState extends State<_OtpView> {
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       const ProfileSetupScreen(),
+                                  settings: RouteSettings(
+                                    arguments: {"patient_id": p.patientId},
+                                  ),
                                 ),
                               );
                               break;
@@ -261,7 +275,10 @@ class _OtpViewState extends State<_OtpView> {
                                   builder: (context) =>
                                       const NewPasswordScreen(),
                                   settings: RouteSettings(
-                                    arguments: {"email": p.emailText},
+                                    arguments: {
+                                      "email": p.emailText,
+                                      "patient_id": p.patientId,
+                                    },
                                   ),
                                 ),
                               );

@@ -115,13 +115,15 @@ func SetupSymptomRoutes(api fiber.Router) {
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
-		symptomIDUint64, err := strconv.ParseUint(ctx.Params("id"), 10, 64)
-		if err != nil || symptomIDUint64 == 0 {
+		// แปลงพารามิเตอร์ id -> noti_item_id
+		notiItemIDUint64, err := strconv.ParseUint(ctx.Params("id"), 10, 64)
+		if err != nil || notiItemIDUint64 == 0 {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 		}
-		symptomID := uint(symptomIDUint64)
+		notiItemID := uint(notiItemIDUint64)
 
-		symptom, getErr := handlers.GetSymptom(db.DB, authenticatedPatientID, symptomID)
+		// เรียกด้วย noti_item_id แทน
+		symptom, getErr := handlers.GetSymptomByNoti(db.DB, authenticatedPatientID, notiItemID)
 		if getErr != nil {
 			status := fiber.StatusInternalServerError
 			if errors.Is(getErr, gorm.ErrRecordNotFound) {
@@ -129,7 +131,7 @@ func SetupSymptomRoutes(api fiber.Router) {
 			}
 			return ctx.Status(status).JSON(fiber.Map{"error": getErr.Error()})
 		}
-		// ส่งเฉพาะฟิลด์ของ Symptom (DTO)
+
 		return ctx.JSON(fiber.Map{"data": dto.SymptomToDTO(*symptom)})
 	})
 

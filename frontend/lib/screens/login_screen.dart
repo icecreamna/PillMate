@@ -4,24 +4,24 @@ import 'package:frontend/providers/login_provider.dart';
 import 'package:frontend/screens/forget_password_screen.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/register_screen.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/widgets/text_field_input.dart';
 import 'package:frontend/utils/colors.dart' as color;
 import 'package:frontend/widgets/filled_button_custom.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
-
   const LoginScreen({super.key});
-   @override
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => LoginProvider(),
+      create: (_) => LoginProvider(AuthService()),
       child: _LoginView(), // แยก View ออกมาเพื่อไม่ให้ provider ถูกสร้างซ้ำ
     );
   }
 }
 
-class _LoginView extends StatefulWidget{
+class _LoginView extends StatefulWidget {
   @override
   State<_LoginView> createState() => _LoginViewState();
 }
@@ -40,6 +40,7 @@ class _LoginViewState extends State<_LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final pl = context.watch<LoginProvider>();
     return Scaffold(
       backgroundColor: color.AppColors.backgroundColor1st,
       body: SafeArea(
@@ -176,16 +177,54 @@ class _LoginViewState extends State<_LoginView> {
                           ),
                           const Spacer(),
                           FilledButtonCustom(
-                            text: "เข้าสู่ระบบ",
-                            onPressed: () => _formKey.currentState!.validate()
-                                ? Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const HomeScreen(),
-                                    ),
-                                  )
-                                : null,
+                            text: pl.isLoading
+                                ? "กำลังเข้าระบบ..."
+                                : "เข้าสู่ระบบ",
+                            onPressed: pl.isLoading
+                                ? null
+                                : () async {
+                                    if (!_formKey.currentState!.validate())
+                                      return;
+
+                                    final provider = context
+                                        .read<LoginProvider>();
+                                    final email = _emailController.text.trim();
+                                    final password = _passwordController.text
+                                        .trim();
+
+                                    final res = await provider.login(
+                                      email: email,
+                                      password: password,
+                                    );
+
+                                    if (res != null && res["token"] != null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("เข้าสู่ระบบสำเร็จ ✅"),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const HomeScreen(),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "อีเมลหรือรหัสผ่านไม่ถูกต้อง ❌",
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
                           ),
                           const SizedBox(height: 15),
                           Row(

@@ -1,0 +1,70 @@
+.headerRow{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.title{ margin:0; font-size:28px; font-weight:800; color:#111; }
+
+.headerActions{ display:flex; gap:8px; align-items:center; }
+
+/* input ค้นหา */
+.search{
+  height:36px; width:260px;
+  border:1px solid #d1d5db; border-radius:8px; padding:0 10px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.search:focus{
+  outline:none; border-color:#60a5fa;
+  box-shadow:0 0 0 3px rgba(59,130,246,.25);
+}
+
+/* ปุ่มค้นหา */
+.searchBtn{
+  height:36px; padding:0 12px; border-radius:8px;
+  border:1px solid #3b82f6; background:#3b82f6; color:#fff; cursor:pointer;
+  transition: background-color .15s ease, border-color .15s ease, transform .05s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.searchBtn:hover{ background:#2563eb; border-color:#1d4ed8; }
+.searchBtn:active{ transform:translateY(1px); }
+.searchBtn:focus-visible{
+  outline:none; box-shadow:0 0 0 3px rgba(37,99,235,.35);
+}
+.searchBtn:disabled{ opacity:.6; cursor:not-allowed; }
+
+/* ปุ่มเพิ่ม */
+.addBtn{
+  height:36px; padding:0 14px; border:none; border-radius:8px;
+  background:#22c55e; color:#fff; font-weight:600; cursor:pointer;
+  transition: background-color .15s ease, transform .05s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.addBtn:hover{ background:#16a34a; }
+.addBtn:active{ transform:translateY(1px); }
+.addBtn:focus-visible{
+  outline:none; box-shadow:0 0 0 3px rgba(34,197,94,.35);
+}
+.addBtn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.tableWrap{ border:1px solid #d1d5db; border-radius:10px; overflow:hidden; }
+.table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:15px; color:#111; }
+.table th,.table td{ padding:12px 14px; border-bottom:1px solid #e5e7eb; text-align:left; }
+.table thead th{ background:#6b7280; color:#fff; font-weight:700; }
+.table tbody tr:nth-child(even){ background:#f9fafb; }
+
+.actions{ display:flex; gap:6px; justify-content:flex-start; }
+.view,.edit,.delete{
+  min-width:56px; height:26px; line-height:26px; padding:0 8px; font-size:12px;
+  border-radius:6px; border:1px solid transparent; color:#fff; cursor:pointer;
+  transition: background-color .15s ease, border-color .15s ease, transform .05s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.view{ background:#22c55e; border-color:#16a34a; }
+.view:hover{ background:#16a34a; }
+.edit{ background:#3b82f6; border-color:#2563eb; }
+.edit:hover{ background:#2563eb; }
+.delete{ background:#ef4444; border-color:#b91c1c; }
+.delete:hover{ background:#b91c1c; }
+.view:active,.edit:active,.delete:active{ transform:translateY(1px); }
+.view:focus-visible,.edit:focus-visible,.delete:focus-visible{
+  outline:none; box-shadow:0 0 0 3px rgba(0,0,0,.08);
+}
+
+/* เล็กน้อยสำหรับจอแคบ */
+@media (max-width: 640px){
+  .headerActions{ flex-wrap:wrap; }
+  .search{ width:100%; }
+}

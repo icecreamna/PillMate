@@ -1,0 +1,27 @@
+.page { padding: 0 16px 24px; }
+.header { display:flex; justify-content:space-between; align-items:center; }
+.title { margin:24px 0 8px; font-size:28px; font-weight:800; }
+.back { height:32px; padding:0 12px; border-radius:8px; border:1px solid #93c5fd; background:#dbeafe; color:#1e3a8a; cursor:pointer; }
+.hr { border:none; height:1px; background:#e5e7eb; margin:8px 0 20px; }
+
+.card { max-width: 960px; margin: 0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; }
+
+.form { display:grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+.col { display:grid; gap:12px; }
+.label { display:grid; gap:6px; font-size:14px; }
+
+.input, .select {
+  height:36px; border:1px solid #d1d5db; border-radius:6px; padding:0 10px; background:#f9fafb;
+}
+.textarea {
+  border:1px solid #d1d5db; border-radius:6px; padding:8px 10px; background:#f9fafb; resize:vertical; min-height:96px;
+}
+
+/* ให้ฟิลด์อ่านอย่างเดียวดูต่างจากแก้ไข */
+.input[readonly], .textarea[readonly], .select:disabled {
+  color:#111; background:#f3f4f6;
+}
+
+@media (max-width: 900px) {
+  .form { grid-template-columns: 1fr; }
+}

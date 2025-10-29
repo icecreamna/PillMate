@@ -5,13 +5,12 @@ import (
 
 	"github.com/fouradithep/pillmate/models"
 	"gorm.io/gorm"
-	"time"
-	
+	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 // uint → *uint (ช่วยตอน seed/assign ค่าให้ฟิลด์ pointer)
 func UintPtr(v uint) *uint { return &v }
-
 
 func SeedInitialData(db *gorm.DB) {
 	// seed ข้อมูล Form
@@ -128,7 +127,6 @@ func SeedInitialData(db *gorm.DB) {
 		{InstructionName: "หลังอาหาร"},
 		{InstructionName: "พร้อมอาหาร"},
 		{InstructionName: "ก่อนนอน"},
-		
 	}
 	for _, instruction := range instructions {
 		if err := db.FirstOrCreate(&instruction, models.Instruction{InstructionName: instruction.InstructionName}).Error; err != nil {
@@ -142,7 +140,6 @@ func SeedInitialData(db *gorm.DB) {
 		{FormatName: "ทุกกี่ชั่วโมง (Interval)"},
 		{FormatName: "วันเว้นวัน / ทุกกี่วัน (EveryNDays)"},
 		{FormatName: "ทานต่อเนื่อง/พักยา (Cycle)"},
-		
 	}
 	for _, notiformat := range notiformats {
 		if err := db.FirstOrCreate(&notiformat, models.NotiFormat{FormatName: notiformat.FormatName}).Error; err != nil {
@@ -152,85 +149,83 @@ func SeedInitialData(db *gorm.DB) {
 
 	// seed ข้อมูล MedicineInfo
 	medicines := []models.MedicineInfo{
-    {
-        MedName: "Paracetamol",
-        GenericName: "Acetaminophen",
-        Properties: "บรรเทาอาการปวดลดไข้",
-        Strength: "500mg",
-        FormID: 1,
-        UnitID: UintPtr(1), 
-        InstructionID: UintPtr(2), 
-		// MedStatus: "active",
-    },
+		{
+			MedName:       "Paracetamol",
+			GenericName:   "Acetaminophen",
+			Properties:    "บรรเทาอาการปวดลดไข้",
+			Strength:      "500mg",
+			FormID:        1,
+			UnitID:        UintPtr(1),
+			InstructionID: UintPtr(2),
+			// MedStatus: "active",
+		},
 
-	{
-        MedName: "PROBUFEN 400",
-        GenericName: "Ibuprofen",
-        Properties: "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
-        Strength: "400 mg",
-        FormID: 2,
-        UnitID: UintPtr(2), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "PROBUFEN 400",
+			GenericName:   "Ibuprofen",
+			Properties:    "บรรเทาอาการปวดและลดไข้ หรือลดการอักเสบ",
+			Strength:      "400 mg",
+			FormID:        2,
+			UnitID:        UintPtr(2),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "ไบโซลวอน สำหรับเด็ก",
-        GenericName: "bromhexine",
-        Properties: "ละลายเสมหะและบรรเทาอาการไอ",
-        Strength: "4 mg/5 ml",
-        FormID: 3,
-        UnitID: UintPtr(3), 
-        InstructionID: UintPtr(2), 
-    },
+		{
+			MedName:       "ไบโซลวอน สำหรับเด็ก",
+			GenericName:   "bromhexine",
+			Properties:    "ละลายเสมหะและบรรเทาอาการไอ",
+			Strength:      "4 mg/5 ml",
+			FormID:        3,
+			UnitID:        UintPtr(3),
+			InstructionID: UintPtr(2),
+		},
 
-	{
-        MedName: "COUNTERPAIN COOL",
-        GenericName: "menthol",
-        Properties: "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
-        Strength: "4%",
-        FormID: 5, 
-    },
+		{
+			MedName:     "COUNTERPAIN COOL",
+			GenericName: "menthol",
+			Properties:  "ใช้ทาบรรเทาอาการปวดกล้ามเนื้อ เนื่องจากการพลิกหรือเคล็ด",
+			Strength:    "4%",
+			FormID:      5,
+		},
 
-	{
-        MedName: "ยาทาแก้ผดผื่นคัน คาลาไมน์",
-        GenericName: "calamine+zinc oxide",
-        Properties: "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
-        Strength: "(10 G+5 G)/100 ML",
-        FormID: 5, 
-    },
+		{
+			MedName:     "ยาทาแก้ผดผื่นคัน คาลาไมน์",
+			GenericName: "calamine+zinc oxide",
+			Properties:  "บรรเทาอาการระคายเคืองของผิวหนัง ผื่น ลมพิษในระดับเล็กน้อย",
+			Strength:    "(10 G+5 G)/100 ML",
+			FormID:      5,
+		},
 
-	{
-        MedName: "วินซูลิน-30/70",
-        GenericName: "insulin",
-        Properties: "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
-        Strength: "100 iu/1ml",
-        FormID: 4,
-        UnitID: UintPtr(7), 
-        InstructionID: UintPtr(1), 
-    },
+		{
+			MedName:       "วินซูลิน-30/70",
+			GenericName:   "insulin",
+			Properties:    "ใช้สำหรับรักษาโรคเบาหวาน โดยช่วยลดระดับน้ำตาลในเลือด",
+			Strength:      "100 iu/1ml",
+			FormID:        4,
+			UnitID:        UintPtr(7),
+			InstructionID: UintPtr(1),
+		},
 
-	{
-        MedName: "TEARS NATURALE II",
-        GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
-        Properties: "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
-        Strength: "(0.3 G+0.1 G)/100 ML",
-        FormID: 6,
-        UnitID: UintPtr(12), 
-    },
-    
-    // ...ใส่ยาอีกตามต้องการ
+		{
+			MedName:     "TEARS NATURALE II",
+			GenericName: "hypromellose(hydroxypropyl methylcellulose)+dextran 70",
+			Properties:  "รักษาภาวะตาแห้งที่ขาดเมือกและขาดน้ำ",
+			Strength:    "(0.3 G+0.1 G)/100 ML",
+			FormID:      6,
+			UnitID:      UintPtr(12),
+		},
+
+		// ...ใส่ยาอีกตามต้องการ
 	}
 	for _, medicine := range medicines {
-    if err := db.Create(&medicine).Error; err != nil {
-        log.Println("Seed medicineinfo error:", err)
-    }}
-
-	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
+		if err := db.Create(&medicine).Error; err != nil {
+			log.Println("Seed medicineinfo error:", err)
+		}
+	}
 
 	// --- Seed Hospitals ---
 	hospitals := []models.Hospital{
 		{HospitalName: "โรงพยาบาลตัวอย่าง A"},
-		{HospitalName: "โรงพยาบาลตัวอย่าง B"},
 	}
 	for i := range hospitals {
 		if err := db.FirstOrCreate(&hospitals[i],
@@ -243,71 +238,109 @@ func SeedInitialData(db *gorm.DB) {
 	// --- Seed WebAdmins (หมอ / แอดมิน) ---
 	admins := []models.WebAdmin{
 		{
-			Username:  "doctor@test.com",
-			Password:  "1234", 
-			FirstName: "ยาดม",
-			LastName:  "หงไทย",
-			Role:      "doctor",
-			
-		}}
-	for i := range admins {
-		if err := db.FirstOrCreate(&admins[i],
-			models.WebAdmin{Username: admins[i].Username},
-		).Error; err != nil {
-			log.Println("Seed webadmin error:", err)
-		}
-	}
-
-	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
-	prescriptions := []models.Prescription{
-	{ IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	{ IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
-	}
-
-	for i := range prescriptions {
-		key := models.Prescription{
-			IDCardNumber:   prescriptions[i].IDCardNumber,
-			MedicineInfoID: prescriptions[i].MedicineInfoID,
-			HospitalID:     prescriptions[i].HospitalID,
-			DoctorID:       prescriptions[i].DoctorID,
-		}
-		attrs := models.Prescription{
-			AmountPerTime: prescriptions[i].AmountPerTime,
-			TimesPerDay:   prescriptions[i].TimesPerDay,
-			AppSyncStatus: false,
-		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
-			log.Fatal("seed prescriptions failed: ", err)
-		}
-	}
-
-	// --- Seed Appointments ---
-	appointments := []models.Appointment{
-		{
-			IDCardNumber:    "1101700203452",
-			AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
-			AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
-			HospitalID:      1,
-			DoctorID:        1,
-			Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+			Username:  "admin@pillmate.com",
+			Password:  "admin1234", // default ครั้งแรก
+			FirstName: "System",
+			LastName:  "Admin",
+			Role:      "superadmin",
 		},
 	}
 
-	for i := range appointments {
-		key := models.Appointment{
-			IDCardNumber:    appointments[i].IDCardNumber,
-			AppointmentDate: appointments[i].AppointmentDate,
-			AppointmentTime: appointments[i].AppointmentTime,
-			HospitalID:      appointments[i].HospitalID,
-			DoctorID:        appointments[i].DoctorID,
+	isBcrypt := func(s string) bool {
+		return strings.HasPrefix(s, "$2a$") || strings.HasPrefix(s, "$2b$") || strings.HasPrefix(s, "$2y$")
+	}
+
+	for _, a := range admins {
+		// เตรียม hash สำหรับ "กรณีสร้างใหม่"
+		hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Println("bcrypt error:", err)
+			continue
 		}
-		attrs := models.Appointment{
-			Note: appointments[i].Note,
+
+		var out models.WebAdmin
+		// ใช้ UNIQUE(username) ที่มีอยู่แล้วได้เลย (case-sensitive)
+		tx := db.
+			Where("username = ?", a.Username).
+			Attrs(models.WebAdmin{
+				Username:  a.Username,
+				Password:  string(hashed), // ถ้าสร้างใหม่จะเก็บเป็น hash ทันที
+				FirstName: a.FirstName,
+				LastName:  a.LastName,
+				Role:      a.Role,
+			}).
+			FirstOrCreate(&out)
+		if tx.Error != nil {
+			log.Println("Seed webadmin FirstOrCreate error:", tx.Error)
+			continue
 		}
-		if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
-			log.Println("seed appointments failed:", err)
+
+		// ถ้ามีอยู่แล้ว แต่ password ยังเป็น plaintext -> รีแฮชทับ (idempotent)
+		if !isBcrypt(out.Password) {
+			newHashed, err := bcrypt.GenerateFromPassword([]byte(out.Password), bcrypt.DefaultCost)
+			if err != nil {
+				log.Println("bcrypt rehash error:", err)
+				continue
+			}
+			if err := db.Model(&out).Update("password", string(newHashed)).Error; err != nil {
+				log.Println("Seed webadmin rehash update error:", err)
+			}
 		}
 	}
+
+	// ----- ทำbackend web แล้วค่อยลบ ---------------------------------------------------------------------------
+
+	
+	// --- Seed Prescription --- ตอนทำbackend ให้วนยาแต่ละตัวเข้าตารางนะ เพราะแต่ละยาขนาดการกินต่างกัน
+	// prescriptions := []models.Prescription{
+	// { IDCardNumber: "1101700203452", MedicineInfoID: 1, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// { IDCardNumber: "1234567890123", MedicineInfoID: 2, AmountPerTime: "1", TimesPerDay: "3", HospitalID: 1, DoctorID: 1, AppSyncStatus: false },
+	// }
+
+	// for i := range prescriptions {
+	// 	key := models.Prescription{
+	// 		IDCardNumber:   prescriptions[i].IDCardNumber,
+	// 		MedicineInfoID: prescriptions[i].MedicineInfoID,
+	// 		HospitalID:     prescriptions[i].HospitalID,
+	// 		DoctorID:       prescriptions[i].DoctorID,
+	// 	}
+	// 	attrs := models.Prescription{
+	// 		AmountPerTime: prescriptions[i].AmountPerTime,
+	// 		TimesPerDay:   prescriptions[i].TimesPerDay,
+	// 		AppSyncStatus: false,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&prescriptions[i]).Error; err != nil {
+	// 		log.Fatal("seed prescriptions failed: ", err)
+	// 	}
+	// }
+
+	// --- Seed Appointments ---
+	// appointments := []models.Appointment{
+	// 	{
+	// 		IDCardNumber:    "1101700203452",
+	// 		AppointmentDate: time.Date(2025, 10, 10, 0, 0, 0, 0, time.Local),              // date-only
+	// 		AppointmentTime: time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC),                    // time-only
+	// 		HospitalID:      1,
+	// 		DoctorID:        1,
+	// 		Note:            "งดอาหารก่อนตรวจ 8 ชั่วโมง",
+	// 	},
+	// }
+
+	// for i := range appointments {
+	// 	key := models.Appointment{
+	// 		IDCardNumber:    appointments[i].IDCardNumber,
+	// 		AppointmentDate: appointments[i].AppointmentDate,
+	// 		AppointmentTime: appointments[i].AppointmentTime,
+	// 		HospitalID:      appointments[i].HospitalID,
+	// 		DoctorID:        appointments[i].DoctorID,
+	// 	}
+	// 	attrs := models.Appointment{
+	// 		Note: appointments[i].Note,
+	// 	}
+	// 	if err := db.Where(&key).Attrs(&attrs).FirstOrCreate(&appointments[i]).Error; err != nil {
+	// 		log.Println("seed appointments failed:", err)
+	// 	}
+	// }
 
 
 

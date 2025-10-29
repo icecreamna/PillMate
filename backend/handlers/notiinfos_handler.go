@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/fouradithep/pillmate/models"
@@ -33,12 +34,13 @@ type CreateNotiFixedTimesReq struct {
 
 // Interval (every N hours)
 type CreateNotiIntervalReq struct {
-	MyMedicineID  *uint  `json:"my_medicine_id"`
-	GroupID       *uint  `json:"group_id"`
-	StartDate     string `json:"start_date"`
-	EndDate       string `json:"end_date"`
-	IntervalHours int    `json:"interval_hours"` // > 0
-	TimesPerDay   *int   `json:"times_per_day"`  // optional
+	MyMedicineID  *uint    `json:"my_medicine_id"`
+	GroupID       *uint    `json:"group_id"`
+	StartDate     string   `json:"start_date"`
+	EndDate       string   `json:"end_date"`
+	IntervalHours int      `json:"interval_hours"` // > 0
+	TimesPerDay   *int     `json:"times_per_day"`
+	Times         []string `json:"times"` // optional
 }
 
 // Every N days
@@ -53,12 +55,12 @@ type CreateNotiEveryNDaysReq struct {
 
 // Cycle (e.g., 21 on / 7 off)
 type CreateNotiCycleReq struct {
-	MyMedicineID  *uint   `json:"my_medicine_id"`
-	GroupID       *uint   `json:"group_id"`
-	StartDate     string  `json:"start_date"`
-	EndDate       string  `json:"end_date"`
-	CyclePattern  []int64 `json:"cycle_pattern"` // เช่น [21,7]
-	Times         []string `json:"times"`
+	MyMedicineID *uint    `json:"my_medicine_id"`
+	GroupID      *uint    `json:"group_id"`
+	StartDate    string   `json:"start_date"`
+	EndDate      string   `json:"end_date"`
+	CyclePattern []int64  `json:"cycle_pattern"` // เช่น [21,7]
+	Times        []string `json:"times"`
 }
 
 // ===================================================================
@@ -66,16 +68,18 @@ type CreateNotiCycleReq struct {
 // ===================================================================
 
 type NotiInfoResp struct {
-	ID            uint     `json:"id"`
-	MyMedicineID  *uint    `json:"my_medicine_id,omitempty"`
-	GroupID       *uint    `json:"group_id,omitempty"`
-	NotiFormatID  uint     `json:"format_id"`
-	StartDate     string   `json:"start_date"`
-	EndDate       string   `json:"end_date"`
-	IntervalHours *int     `json:"interval_hours,omitempty"`
-	IntervalDay   *int     `json:"interval_day,omitempty"`
-	Times         []string `json:"times,omitempty"`
-	CyclePattern  []int    `json:"cycle_pattern,omitempty"`
+	ID             uint     `json:"id"`
+	MyMedicineID   *uint    `json:"my_medicine_id,omitempty"`
+	GroupID        *uint    `json:"group_id,omitempty"`
+	NotiFormatID   uint     `json:"noti_format_id"`
+	NotiFormatName string   `gorm:"column:noti_format_name"`
+	StartDate      string   `json:"start_date"`
+	EndDate        string   `json:"end_date"`
+	IntervalHours  *int     `json:"interval_hours,omitempty"`
+	IntervalDay    *int     `json:"interval_day,omitempty"`
+	TimesPerDay    *int     `json:"times_per_day,omitempty"` // optional
+	Times          []string `json:"times,omitempty"`
+	CyclePattern   []int    `json:"cycle_pattern,omitempty"`
 }
 
 // ===================== Helpers (ทั่วไป) =====================
@@ -187,13 +191,20 @@ func CreateNotiFixedTimes(db *gorm.DB, patientID uint, req CreateNotiFixedTimesR
 	}
 
 	startDate, err := time.Parse(dateLayout, req.StartDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
 	endDate, err := time.Parse(dateLayout, req.EndDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
-	if err := validateRange(startDate, endDate); err != nil { return nil, err }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
 
 	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
+		PatientID:     patientID,
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
 		StartDate:     startDate,
@@ -226,12 +237,21 @@ func CreateNotiInterval(db *gorm.DB, patientID uint, req CreateNotiIntervalReq) 
 	}
 
 	startDate, err := time.Parse(dateLayout, req.StartDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
 	endDate, err := time.Parse(dateLayout, req.EndDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
-	if err := validateRange(startDate, endDate); err != nil { return nil, err }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
+
+	timesArr := pq.StringArray(req.Times)
 
 	item := models.NotiInfo{
+		PatientID:     patientID,
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
 		StartDate:     startDate,
@@ -239,7 +259,7 @@ func CreateNotiInterval(db *gorm.DB, patientID uint, req CreateNotiIntervalReq) 
 		NotiFormatID:  NotiFormatInterval,
 		IntervalHours: &req.IntervalHours,
 		TimesPerDay:   req.TimesPerDay,
-		Times:         nil,
+		Times:         &timesArr,
 		IntervalDay:   nil,
 		CyclePattern:  nil,
 	}
@@ -264,14 +284,21 @@ func CreateNotiEveryNDays(db *gorm.DB, patientID uint, req CreateNotiEveryNDaysR
 	}
 
 	startDate, err := time.Parse(dateLayout, req.StartDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
 	endDate, err := time.Parse(dateLayout, req.EndDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
-	if err := validateRange(startDate, endDate); err != nil { return nil, err }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
 
 	intervalDay := req.IntervalDay
 	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
+		PatientID:     patientID,
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
 		StartDate:     startDate,
@@ -304,14 +331,21 @@ func CreateNotiCycle(db *gorm.DB, patientID uint, req CreateNotiCycleReq) (*Noti
 	}
 
 	startDate, err := time.Parse(dateLayout, req.StartDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
 	endDate, err := time.Parse(dateLayout, req.EndDate)
-	if err != nil { return nil, gorm.ErrInvalidData }
-	if err := validateRange(startDate, endDate); err != nil { return nil, err }
+	if err != nil {
+		return nil, gorm.ErrInvalidData
+	}
+	if err := validateRange(startDate, endDate); err != nil {
+		return nil, err
+	}
 
 	cyclePatternArr := pq.Int64Array(req.CyclePattern)
 	timesArr := pq.StringArray(req.Times)
 	item := models.NotiInfo{
+		PatientID:     patientID,
 		MyMedicineID:  req.MyMedicineID,
 		GroupID:       req.GroupID,
 		StartDate:     startDate,
@@ -368,6 +402,7 @@ func ListNotiInfos(db *gorm.DB, patientID uint, filter map[string]any) ([]NotiIn
 		EndDate       string         `gorm:"column:end_date"`
 		IntervalHours *int           `gorm:"column:interval_hours"`
 		IntervalDay   *int           `gorm:"column:interval_day"`
+		TimesPerDay   *int           `gorm:"column:times_per_day"`
 		Times         pq.StringArray `gorm:"column:times"`
 		CyclePattern  pq.Int64Array  `gorm:"column:cycle_pattern"`
 	}
@@ -381,6 +416,7 @@ func ListNotiInfos(db *gorm.DB, patientID uint, filter map[string]any) ([]NotiIn
 		to_char(end_date,'YYYY-MM-DD')   AS end_date,
 		interval_hours,
 		interval_day,
+		times_per_day,
 		times,
 		cycle_pattern
 	`).Order("id")
@@ -414,6 +450,7 @@ func ListNotiInfos(db *gorm.DB, patientID uint, filter map[string]any) ([]NotiIn
 			EndDate:       r.EndDate,
 			IntervalHours: r.IntervalHours,
 			IntervalDay:   r.IntervalDay,
+			TimesPerDay:   r.TimesPerDay,
 			Times:         times,
 			CyclePattern:  cycle,
 		})
@@ -422,54 +459,64 @@ func ListNotiInfos(db *gorm.DB, patientID uint, filter map[string]any) ([]NotiIn
 }
 
 // Get รายการเดียวของผู้ป่วยคนนั้น (where id + EXISTS)
-func GetNotiInfo(db *gorm.DB, patientID, id uint) (*NotiInfoResp, error) {
+func GetNotiInfoByType(db *gorm.DB, patientID uint, typ string, id uint) (*NotiInfoResp, error) {
 	type row struct {
-		ID            uint           `gorm:"column:id"`
-		MyMedicineID  *uint          `gorm:"column:my_medicine_id"`
-		GroupID       *uint          `gorm:"column:group_id"`
-		NotiFormatID  uint           `gorm:"column:noti_format_id"`
-		StartDate     string         `gorm:"column:start_date"`
-		EndDate       string         `gorm:"column:end_date"`
-		IntervalHours *int           `gorm:"column:interval_hours"`
-		IntervalDay   *int           `gorm:"column:interval_day"`
-		Times         pq.StringArray `gorm:"column:times"`
-		CyclePattern  pq.Int64Array  `gorm:"column:cycle_pattern"`
+		ID             uint           `gorm:"column:id"`
+		MyMedicineID   *uint          `gorm:"column:my_medicine_id"`
+		GroupID        *uint          `gorm:"column:group_id"`
+		NotiFormatID   uint           `gorm:"column:noti_format_id"`
+		NotiFormatName string         `gorm:"column:noti_format_name"`
+		StartDate      string         `gorm:"column:start_date"`
+		EndDate        string         `gorm:"column:end_date"`
+		IntervalHours  *int           `gorm:"column:interval_hours"`
+		IntervalDay    *int           `gorm:"column:interval_day"`
+		TimesPerDay    *int           `gorm:"column:times_per_day"`
+		Times          pq.StringArray `gorm:"column:times"`
+		CyclePattern   pq.Int64Array  `gorm:"column:cycle_pattern"`
 	}
 
-	q := db.Model(&models.NotiInfo{}).
-		Where("id = ?", id).
-		Where(`
-			(
-				my_medicine_id IS NOT NULL AND EXISTS (
-					SELECT 1 FROM my_medicines m
-					WHERE m.id = noti_infos.my_medicine_id AND m.patient_id = ?
-				)
-			) OR
-			(
-				group_id IS NOT NULL AND EXISTS (
-					SELECT 1 FROM groups g
-					WHERE g.id = noti_infos.group_id AND g.patient_id = ?
-				)
-			)
-		`, patientID, patientID).
-		Select(`
-			id,
-			my_medicine_id,
-			group_id,
-			noti_format_id,
-			to_char(start_date,'YYYY-MM-DD') AS start_date,
-			to_char(end_date,'YYYY-MM-DD')   AS end_date,
-			interval_hours,
-			interval_day,
-			times,
-			cycle_pattern
-		`)
+	var q *gorm.DB
+
+	switch typ {
+	case "medicine":
+		q = db.Table("noti_infos ni").
+			Joins("LEFT JOIN noti_formats nf ON nf.id = ni.noti_format_id").
+			Where("ni.my_medicine_id = ?", id).
+			Where("ni.deleted_at IS NULL").
+			Where("EXISTS (SELECT 1 FROM my_medicines m WHERE m.id = ni.my_medicine_id AND m.patient_id = ?)", patientID)
+
+	case "group":
+		q = db.Table("noti_infos ni").
+			Joins("LEFT JOIN noti_formats nf ON nf.id = ni.noti_format_id").
+			Where("ni.group_id = ?", id).
+			Where("ni.deleted_at IS NULL").
+			Where("EXISTS (SELECT 1 FROM groups g WHERE g.id = ni.group_id AND g.patient_id = ?)", patientID)
+
+	default:
+		return nil, fmt.Errorf("invalid type (must be 'medicine' or 'group')")
+	}
+
+	q = q.Select(`
+		ni.id,
+		ni.my_medicine_id,
+		ni.group_id,
+		ni.noti_format_id,
+		nf.format_name AS noti_format_name,
+		to_char(ni.start_date,'YYYY-MM-DD') AS start_date,
+		to_char(ni.end_date,'YYYY-MM-DD')   AS end_date,
+		ni.interval_hours,
+		ni.interval_day,
+		ni.times_per_day,
+		ni.times,
+		ni.cycle_pattern
+	`)
 
 	var r row
 	if err := q.Take(&r).Error; err != nil {
 		return nil, err
 	}
 
+	// 🧩 แปลง array จาก SQL → Go
 	var times []string
 	if r.Times != nil {
 		times = []string(r.Times)
@@ -484,17 +531,20 @@ func GetNotiInfo(db *gorm.DB, patientID, id uint) (*NotiInfoResp, error) {
 	}
 
 	out := &NotiInfoResp{
-		ID:            r.ID,
-		MyMedicineID:  r.MyMedicineID,
-		GroupID:       r.GroupID,
-		NotiFormatID:  r.NotiFormatID,
-		StartDate:     r.StartDate,
-		EndDate:       r.EndDate,
-		IntervalHours: r.IntervalHours,
-		IntervalDay:   r.IntervalDay,
-		Times:         times,
-		CyclePattern:  cycle,
+		ID:             r.ID,
+		MyMedicineID:   r.MyMedicineID,
+		GroupID:        r.GroupID,
+		NotiFormatID:   r.NotiFormatID,
+		NotiFormatName: r.NotiFormatName,
+		StartDate:      r.StartDate,
+		EndDate:        r.EndDate,
+		IntervalHours:  r.IntervalHours,
+		IntervalDay:    r.IntervalDay,
+		TimesPerDay:    r.TimesPerDay,
+		Times:          times,
+		CyclePattern:   cycle,
 	}
+
 	return out, nil
 }
 
@@ -556,4 +606,3 @@ func DeleteNotiInfo(db *gorm.DB, patientID, id uint) error {
 
 	return tx.Commit().Error
 }
-

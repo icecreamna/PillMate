@@ -20,6 +20,18 @@ import (
 // -------- Patients: register/login --------
 
 func CreatePatient(db *gorm.DB, patient *models.Patient) error {
+
+	var existing models.Patient
+	if err := db.Where("email = ?", patient.Email).First(&existing).Error; err == nil {
+		// ถ้าเจอ และยังไม่ได้ verify → ลบ record เดิมก่อน
+		if existing.VerificationStatus == "unverified" {
+			db.Unscoped().Delete(&existing)
+		} else {
+			// ถ้า verify แล้ว → ห้ามสมัครซ้ำ
+			return fmt.Errorf("email already registered")
+		}
+	}
+
 	// 1) hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(patient.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -106,7 +118,7 @@ func IssueOTP(db *gorm.DB, patientID uint, ttl time.Duration) (*models.Verificat
 
 	// บันทึก DB
 	vc := &models.VerificationCode{
-		OTPCode:   raw,                         // เก็บตามโมเดลเดิมของลูก (plaintext)
+		OTPCode:   raw, // เก็บตามโมเดลเดิมของลูก (plaintext)
 		PatientID: patientID,
 		ExpiresAt: time.Now().Add(ttl),
 	}

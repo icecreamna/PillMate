@@ -2,48 +2,41 @@ package dto
 
 import (
 	"time"
-
+	
 	"github.com/fouradithep/pillmate/models"
 )
 
-type AppointmentDTO struct {
-	ID               uint   `json:"id"`
-	IDCardNumber     string `json:"id_card_number"`
-	AppointmentDate  string `json:"appointment_date"` // "YYYY-MM-DD"
-	AppointmentTime  string `json:"appointment_time"` // "HH:MM"
-
-	HospitalID       uint   `json:"hospital_id"`
-	HospitalName     string `json:"hospital_name,omitempty"`
-
-	DoctorID         uint   `json:"doctor_id"`
-	DoctorFirstName  string `json:"doctor_first_name,omitempty"`
-	DoctorLastName   string `json:"doctor_last_name,omitempty"`
-
-	Note             string `json:"note,omitempty"`
+// ส่งออกสำหรับ Mobile (สตริงทั้งหมดสำหรับ date/time)
+type MobileAppointmentResponse struct {
+	ID              uint    `json:"id"`
+	IDCardNumber    string  `json:"id_card_number"`
+	AppointmentDate string  `json:"appointment_date"` // "YYYY-MM-DD" (Bangkok)
+	AppointmentTime string  `json:"appointment_time"` // "HH:MM"     (Bangkok)
+	HospitalID      uint    `json:"hospital_id"`
+	DoctorID        uint    `json:"doctor_id"`
+	Note            *string `json:"note,omitempty"`
+	CreatedAt       string  `json:"created_at"`       // RFC3339 (Bangkok)
+	UpdatedAt       string  `json:"updated_at"`       // RFC3339 (Bangkok)
 }
 
-func AppointmentToDTO(a models.Appointment) AppointmentDTO {
-	return AppointmentDTO{
-		ID:               a.ID,
-		IDCardNumber:     a.IDCardNumber,
-		AppointmentDate:  a.AppointmentDate.Format("2006-01-02"),
-		AppointmentTime:  a.AppointmentTime.In(time.UTC).Format("15:04"),
-
-		HospitalID:       a.HospitalID,
-		HospitalName:     a.Hospital.HospitalName,
-
-		DoctorID:         a.DoctorID,
-		DoctorFirstName:  a.WebAdmin.FirstName,
-		DoctorLastName:   a.WebAdmin.LastName,
-
-		Note:             a.Note,
+func ToMobileAppointmentResponse(m models.Appointment) MobileAppointmentResponse {
+	return MobileAppointmentResponse{
+		ID:              m.ID,
+		IDCardNumber:    m.IDCardNumber,
+		AppointmentDate: formatYMDBangkok(m.AppointmentDate), // UTC -> Bangkok -> "YYYY-MM-DD"
+		AppointmentTime: formatHMBangkok(m.AppointmentTime),  // UTC -> Bangkok -> "HH:MM"
+		HospitalID:      m.HospitalID,
+		DoctorID:        m.DoctorID,
+		Note:            m.Note,
+		CreatedAt:       m.CreatedAt.In(appLoc).Format(time.RFC3339), // "YYYY-MM-DDTHH:MM:SS+07:00"
+		UpdatedAt:       m.UpdatedAt.In(appLoc).Format(time.RFC3339),
 	}
 }
 
-func AppointmentsToDTO(list []models.Appointment) []AppointmentDTO {
-	out := make([]AppointmentDTO, 0, len(list))
-	for _, ap := range list {
-		out = append(out, AppointmentToDTO(ap))
+func ToMobileAppointmentResponses(ms []models.Appointment) []MobileAppointmentResponse {
+	out := make([]MobileAppointmentResponse, 0, len(ms))
+	for _, m := range ms {
+		out = append(out, ToMobileAppointmentResponse(m))
 	}
 	return out
 }
