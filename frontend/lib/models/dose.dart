@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class Dose {
   final String id;
   final String name;
@@ -8,6 +10,9 @@ class Dose {
   final String unit;
   final String picture;
   final bool import; // hospital = true, manual = false
+  final String? startDate;
+  final String? endDate;
+  final String? note;
 
   final int? formId;
   final int? unitId;
@@ -27,13 +32,17 @@ class Dose {
     this.formId,
     this.unitId,
     this.instructionId,
-    this.groupId
+    this.groupId,
+    this.startDate,
+    this.endDate,
+    this.note,
   });
-
 
   /// ✅ แปลงจาก JSON ที่มาจาก backend
   factory Dose.fromJson(Map<String, dynamic> json) {
     final formName = json["form_name"] ?? "-";
+    final startDate = json["start_date"] ?? "-";
+    final endDate = json["end_date"] ?? "-";
     return Dose(
       id: json["id"].toString(),
       name: json["med_name"] ?? "-",
@@ -42,13 +51,15 @@ class Dose {
       frequency: json["times_per_day"] ?? "-",
       instruction: json["instruction_name"] ?? "-",
       unit: json["unit_name"] ?? "-",
+      startDate: _toThaiDate(startDate),
+      endDate: _toThaiDate(endDate),
+      note: json["note"] ?? "",
       picture: _mapImage(formName),
       import: (json["source"] == "hospital"),
-
       formId: json["form_id"],
       unitId: json["unit_id"],
       instructionId: json["instruction_id"],
-      groupId: json["group_id"]
+      groupId: json["group_id"],
     );
   }
 
@@ -69,6 +80,24 @@ class Dose {
         return "assets/images/eye-drop 1.png";
       default:
         return "assets/images/pill.png";
+    }
+  }
+
+  static String? _toThaiDate(dynamic dateStr) {
+    if (dateStr == null || dateStr == "") return null;
+    try {
+      DateTime utc = DateTime.parse(dateStr).toUtc();
+      DateTime thaiTime = utc.add(const Duration(hours: 7));
+
+      // แปลงปีเป็น พ.ศ.
+      int buddhistYear = thaiTime.year + 543;
+
+      // จัดรูปแบบเป็นวัน/เดือน/ปี (พ.ศ.)
+      String day = thaiTime.day.toString().padLeft(2, '0');
+      String month = thaiTime.month.toString().padLeft(2, '0');
+      return "$day/$month/$buddhistYear";
+    } catch (e) {
+      return dateStr.toString(); // ถ้าแปลงไม่ได้ให้คืนค่าเดิม
     }
   }
 }

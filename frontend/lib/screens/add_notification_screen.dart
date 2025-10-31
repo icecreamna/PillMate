@@ -150,6 +150,35 @@ class _AddNotificationScreenState extends State<AddNotificationScreen> {
                                         fontSize: 16,
                                       ),
                                     ),
+                                    if (addN.dose!.import) ...[
+                                      Text(
+                                        "วิธีการกิน: ${addN.dose!.note ?? ""}",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        "วันเริ่มทานยา: " +
+                                                addN.dose!.startDate.toString() ??
+                                            "",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        "วันหยุดทานยา: " +
+                                                addN.dose!.endDate.toString() ??
+                                            "",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
                                     Text(
                                       addN.dose!.instruction,
                                       style: const TextStyle(
@@ -481,13 +510,12 @@ class _AddNotificationScreenState extends State<AddNotificationScreen> {
                         );
                         final success = await addN.addNotification(info);
                         if (success && context.mounted) {
-                          
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("✅ เพิ่มการแจ้งเตือนสำเร็จ"),
                             ),
                           );
-                          Navigator.pop(context,true);
+                          Navigator.pop(context, true);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

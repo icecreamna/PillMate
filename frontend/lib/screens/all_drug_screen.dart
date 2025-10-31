@@ -80,6 +80,33 @@ class AllDrugScreen extends StatelessWidget {
                                 fontSize: 16,
                               ),
                             ),
+                            if (d.import) ...[
+                              Text(
+                                "วิธีการกิน: ${d.note ?? ""}",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                "วันเริ่มทานยา: " + d.startDate.toString() ??
+                                    "",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                "วันหยุดทานยา: " + d.endDate.toString() ?? "",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 5),
                             Text(
                               d.instruction,
                               style: const TextStyle(
