@@ -34,9 +34,25 @@ export const resetDoctorPassword = (id, new_password) =>
 
 /** ===== Doctor (public/role=doctor) endpoints ===== */
 
-// GET /doctor/me  — ดึงข้อมูลหมอจาก token ที่ล็อกอินอยู่
+// GET /doctor/me — ดึงข้อมูลหมอจาก token ที่ล็อกอินอยู่
 export const getMyDoctor = () =>
   request(`/doctor/me`); // -> { data: {...} }
+
+// PUT /doctor/me — หมอแก้โปรไฟล์ตัวเอง
+// payload: { first_name?, last_name?, username? }  (BE จะไม่รับ password ที่ endpoint นี้)
+export const updateMyDoctor = (payload = {}) =>
+  request(`/doctor/me`, { method: "PUT", body: payload }); // -> { message, data }
+
+// PATCH /doctor/me/password — หมอเปลี่ยนรหัสผ่านตัวเอง
+// body: { old_password, new_password }
+export const changeMyPassword = (old_password, new_password) =>
+  request(`/doctor/me/password`, {
+    method: "PATCH",
+    body: {
+      old_password: String(old_password || ""),
+      new_password: String(new_password || ""),
+    },
+  }); // -> { message, data }
 
 // GET /doctor/doctors/:id — อ่านข้อมูลหมอตาม id (read-only)
 export const getDoctorPublic = (id) =>

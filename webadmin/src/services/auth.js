@@ -14,3 +14,16 @@ export const logout = () =>
 // GET /admin/me
 export const me = () =>
   request("/admin/me");
+
+// ===== ใหม่ (สำหรับ doctor self-service) =====
+// POST /auth/doctor/register  — สมัครหมอเอง (public)
+export const registerDoctor = ({ username, password, first_name, last_name }) =>
+  request("/auth/doctor/register", {
+    method: "POST",
+    body: {
+      username: String(username || "").trim(),
+      password: String(password || "").trim(),
+      first_name: String(first_name || "").trim(),
+      last_name: String(last_name || "").trim(),
+    },
+  });

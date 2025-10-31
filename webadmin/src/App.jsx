@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login.jsx'
+import RegisterDoctor from "./pages/RegisterDoctor";
 import RequireAuth from './components/RequireAuth.jsx'  // ใช้ตรวจสิทธิ์ผ่าน /admin/me
 
 /** Admin (superadmin) */
@@ -15,6 +16,8 @@ import EditMedicine from './pages/admin/medicine/EditMedicine.jsx'
 
 /** Doctor */
 import DocLayout from './pages/doctor/DocLayout.jsx'
+import EditMyProfile from "./pages/doctor/EditMyProfile"
+import ChangePassword from './pages/doctor/ChangePassword.jsx'
 import PatientList from './pages/doctor/patient/PatientList.jsx'
 import AddPatient from './pages/doctor/patient/AddPatient.jsx'
 import ViewPatient from './pages/doctor/patient/ViewPatient.jsx'
@@ -39,6 +42,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomeRedirect />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register/doctor" element={<RegisterDoctor />} />
 
       {/* -------- Admin -------- */}
       <Route
@@ -68,6 +72,8 @@ export default function App() {
           </RequireAuth>
         }
       >
+        <Route path="profile" element={<EditMyProfile />} />
+        <Route path="change-password" element={<ChangePassword />} />
         <Route index element={<PatientList />} />
         <Route path="patients" element={<PatientList />} />
         <Route path="patients/add" element={<AddPatient />} />

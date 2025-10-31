@@ -59,6 +59,7 @@ func main() {
 
 	// ---------- Admin/Web ----------------------------
 	routes.SetupAdminAuthRoutes(app)
+	routes.SetupDoctorSelfRoutes(app)
 
 	// กลุ่มสำหรับ superadmin 
 	admin := app.Group("/admin",

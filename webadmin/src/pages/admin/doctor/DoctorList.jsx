@@ -1,10 +1,9 @@
+// src/pages/admin/doctor/DoctorList.jsx
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import styles from '../../../styles/admin/doctor/DoctorList.module.css'
 import { listDoctors, deleteDoctor } from '../../../services/doctors'
 
 export default function DoctorList() {
-  const navigate = useNavigate()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -13,7 +12,6 @@ export default function DoctorList() {
     setLoading(true); setError("")
     try {
       const res = await listDoctors() // GET /admin/doctors
-      // BE คืน { data: [...] }
       const list = Array.isArray(res?.data) ? res.data : []
       setRows(list)
     } catch (err) {
@@ -28,28 +26,21 @@ export default function DoctorList() {
   const onDelete = async (id) => {
     if (!confirm('ยืนยันการลบรายการนี้?')) return
     try {
-      await deleteDoctor(id)           // DELETE /admin/doctors/:id
-      setRows(prev => prev.filter(x => x.id !== id)) // ลบออกจากตารางทันที
+      await deleteDoctor(id) // DELETE /admin/doctors/:id
+      setRows(prev => prev.filter(x => x.id !== id))
     } catch (err) {
       alert(err.message || "ลบไม่สำเร็จ")
     }
   }
 
-  // helper รวมชื่อ (รองรับ DTO ที่เป็น first_name/last_name หรือ name)
   const displayName = (d) =>
     [d.first_name, d.last_name].filter(Boolean).join(" ") || d.name || "-"
 
   return (
     <div>
-      {/* หัวข้อ + ปุ่มอยู่บรรทัดเดียวกัน (สไตล์เดิม) */}
+      {/* หัวข้ออย่างเดียว (เอาปุ่ม Add Doctor ออก) */}
       <div className={styles.headerRow}>
         <h2 className={styles.title}>Doctors</h2>
-        <button
-          className={styles.addBtn}
-          onClick={() => navigate('/admin/add')}
-        >
-          + Add Doctor
-        </button>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
@@ -60,10 +51,9 @@ export default function DoctorList() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '5%' }}>#</th>
-                <th style={{ width: '25%' }}>Name</th>
+                <th style={{ width: '8%'  }}>#</th>
+                <th style={{ width: '42%' }}>Name</th>
                 <th style={{ width: '40%' }}>Username</th>
-                <th style={{ width: '20%' }}>Password</th>
                 <th style={{ width: '10%' }}># Action</th>
               </tr>
             </thead>
@@ -73,14 +63,7 @@ export default function DoctorList() {
                   <td>{i + 1}</td>
                   <td>{displayName(d)}</td>
                   <td>{d.username}</td>
-                  <td>{"**********"}</td>
                   <td className={styles.actions}>
-                    <button
-                      className={styles.edit}
-                      onClick={() => navigate(`/admin/${d.id}/edit`)}
-                    >
-                      Edit
-                    </button>
                     <button
                       className={styles.delete}
                       onClick={() => onDelete(d.id)}
@@ -92,7 +75,7 @@ export default function DoctorList() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: 12 }}>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: 12 }}>
                     ไม่พบข้อมูล
                   </td>
                 </tr>

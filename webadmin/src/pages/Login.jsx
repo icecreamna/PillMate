@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom"; // ✅ เพิ่ม Link
 import styles from "../styles/auth/Login.module.css";
 import { login } from "../services/auth";
 
@@ -21,30 +21,20 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // เรียก BE: ตั้งคุกกี้ admin_jwt ที่ฝั่งเซิร์ฟเวอร์
       const data = await login(username, password);
-      // โครงตอบกลับคาดหวัง: { user:{..., role, email}, role }
       const role  = data?.role || data?.user?.role || "";
       const email = data?.user?.email || username || "";
 
-      // เก็บเฉพาะข้อมูลโชว์/redirect (ไม่เก็บ token ใน FE เพราะใช้ HttpOnly cookie)
       localStorage.setItem("role", role);
       localStorage.setItem("email", email);
 
-      // มี returnTo มาก็พากลับก่อน
       if (returnTo) {
         nav(returnTo, { replace: true });
         return;
       }
-
-      // เปลี่ยนเส้นทางตามบทบาท
-      if (role === "superadmin") {
-        nav("/admin", { replace: true });
-      } else if (role === "doctor") {
-        nav("/doc", { replace: true });
-      } else {
-        nav("/", { replace: true });
-      }
+      if (role === "superadmin") nav("/admin", { replace: true });
+      else if (role === "doctor") nav("/doc", { replace: true });
+      else nav("/", { replace: true });
     } catch (err) {
       setError(err?.message || "Login error");
     } finally {
@@ -86,6 +76,17 @@ export default function Login() {
             {loading ? "กำลังเข้าสู่ระบบ..." : "Login"}
           </button>
         </form>
+
+        {/* ✅ ปุ่ม Register for Doctor */}
+        <div className={styles.actions} style={{ marginTop: 12, textAlign: "center" }}>
+          <span className={styles.muted}>ยังไม่มีบัญชีหมอ?</span>{" "}
+          <Link
+            to={`/register/doctor${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+            className={styles.linkButton /* ถ้ายังไม่มี คลาสนี้ให้ใช้ styles.button แทน */}
+          >
+            Register for Doctor
+          </Link>
+        </div>
       </div>
     </div>
   );
