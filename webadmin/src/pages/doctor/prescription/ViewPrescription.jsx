@@ -1,4 +1,3 @@
-// src/pages/doctor/prescription/ViewPrescription.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import styles from '../../../styles/doctor/prescription/ViewPrescription.module.css'
@@ -8,7 +7,7 @@ import { getMedicineForDoctor } from '../../../services/medicines'
 import { getForm, getUnit } from '../../../services/initialData'
 import { getDoctorPublic } from '../../../services/doctors'
 
-// helper แสดงวันที่/เวลาแบบไทย
+// ==== helpers ====
 function formatDateTH(d) {
   const dt = new Date(d)
   return dt.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -16,6 +15,25 @@ function formatDateTH(d) {
 function formatTimeTH(d) {
   const dt = new Date(d)
   return dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+}
+/** YYYY-MM-DD -> DD/MM/YYYY (สำหรับแสดงผล) */
+function isoToDDMMYYYY(iso) {
+  const s = String(iso || '')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return ''
+  const [y, m, d] = s.split('-')
+  return `${d}/${m}/${y}`
+}
+/** YYYY-MM-DD -> YYYY-MM-DD (end+1 วัน) */
+function addOneDayISO(iso) {
+  const s = String(iso || '')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return ''
+  const dt = new Date(`${s}T00:00:00`)
+  if (Number.isNaN(dt.getTime())) return ''
+  dt.setDate(dt.getDate() + 1)
+  const y = dt.getFullYear()
+  const m = String(dt.getMonth() + 1).padStart(2, '0')
+  const d = String(dt.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 export default function ViewPrescription() {
@@ -33,14 +51,14 @@ export default function ViewPrescription() {
       setLoading(true); setError('')
 
       try {
-        // 1) โหลดผู้ป่วย
+        // 1) ผู้ป่วย
         const pRes = await getPatient(patientId)
         const p = pRes?.data
         if (!p) throw new Error('ไม่พบข้อมูลผู้ป่วย')
         if (cancelled) return
         setPatient(p)
 
-        // 2) โหลดใบสั่งยาทั้งหมดของผู้ป่วย ด้วย q = id_card_number
+        // 2) ใบสั่งยาทั้งหมด (q = id_card_number)
         const rxRes = await listPrescriptions({ q: p.id_card_number })
         const list = Array.isArray(rxRes?.data) ? rxRes.data : []
         if (cancelled) return
@@ -90,7 +108,7 @@ export default function ViewPrescription() {
           }
         }
 
-        // ===== ดึงชื่อ form/unit ตาม id =====
+        // ===== ดึงชื่อ form/unit =====
         const formMap = new Map()
         const unitMap = new Map()
 
@@ -113,7 +131,7 @@ export default function ViewPrescription() {
           }),
         ])
 
-        // 3) map ใบสั่งยา
+        // 3) map ใบสั่งยา + รายการ
         const mapped = list.map(rx => {
           const did = rx.doctor_id ?? rx.doctorId
           const doctorName = (did && doctorMap.get(did)) || rx.doctor_name || rx.doctorName || '-'
@@ -162,7 +180,18 @@ export default function ViewPrescription() {
                   ? `${rawTimesPerDay} ครั้ง`
                   : '-'
 
-              return { medName, generic, strength, form: formName, dosePerTime, timesPerDay }
+              // ====== ฟิลด์ใหม่: start_date / end_date / expire_date(คำนวณ) / note ======
+              const startISO = it.start_date ?? it.startDate ?? null
+              const endISO   = it.end_date   ?? it.endDate   ?? null
+              const note     = it.note ?? it.Note ?? ''
+
+              const expireISO = endISO ? addOneDayISO(endISO) : null
+
+              return {
+                medName, generic, strength, form: formName,
+                dosePerTime, timesPerDay,
+                startISO, endISO, expireISO, note
+              }
             })
           }
         })
@@ -178,13 +207,11 @@ export default function ViewPrescription() {
     return () => { cancelled = true }
   }, [patientId])
 
-  // หาว่าอันไหนล่าสุด (เอาตามเวลา orderedAt มากสุด)
   const latestAt = useMemo(() => {
     if (!data.length) return null
     return Math.max(...data.map(rx => new Date(rx.orderedAt).getTime()))
   }, [data])
 
-  // จัดกลุ่มตามวันที่ (ใหม่ → เก่า) และเรียงเวลาในวัน (ใหม่ → เก่า)
   const groups = useMemo(() => {
     const map = new Map()
     for (const rx of data) {
@@ -212,7 +239,7 @@ export default function ViewPrescription() {
       {patient && (
         <div className={styles.patientBar}>
           <div><strong>ชื่อผู้ป่วย:</strong> {[patient.first_name, patient.last_name].filter(Boolean).join(' ') || '-'}</div>
-          <div><strong>Patient Code:</strong> {patient.patient_code || '-'}</div>{/* ← เพิ่มบรรทัดนี้ */}
+          <div><strong>Patient Code:</strong> {patient.patient_code || '-'}</div>
           <div><strong>เลขบัตร:</strong> {patient.id_card_number || '-'}</div>
         </div>
       )}
@@ -249,11 +276,11 @@ export default function ViewPrescription() {
                       <thead>
                         <tr>
                           <th style={{width:'6%'}}>#</th>
-                          <th style={{width:'26%'}}>MedName</th>
-                          <th style={{width:'26%'}}>GenericName</th>
-                          <th style={{width:'14%'}}>Strength</th>
+                          <th style={{width:'23%'}}>MedName</th>
+                          <th style={{width:'23%'}}>GenericName</th>
+                          <th style={{width:'12%'}}>Strength</th>
                           <th style={{width:'12%'}}>Form</th>
-                          <th style={{width:'30%'}}>Dosage</th>
+                          <th style={{width:'24%'}}>Dosage & Period</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -267,7 +294,21 @@ export default function ViewPrescription() {
                             <td>{it.strength}</td>
                             <td>{it.form}</td>
                             <td className={styles.dose}>
-                              ครั้งละ <strong>{it.dosePerTime}</strong> | วันละ <strong>{it.timesPerDay}</strong>
+                              <div>ครั้งละ <strong>{it.dosePerTime}</strong> | วันละ <strong>{it.timesPerDay}</strong></div>
+
+                              {(it.startISO || it.endISO) && (
+                                <div className={styles.period}>
+                                  {it.startISO && <span>เริ่ม {isoToDDMMYYYY(it.startISO)}</span>}
+                                  {it.endISO && <span className={styles.sep}>สิ้นสุด {isoToDDMMYYYY(it.endISO)}</span>}
+                                  {it.expireISO && <span className={styles.expire}>หมดอายุ {isoToDDMMYYYY(it.expireISO)}</span>}
+                                </div>
+                              )}
+
+                              {it.note && (
+                                <div className={styles.noteLine}>
+                                  <span className={styles.noteLabel}>note:</span> {it.note}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))}

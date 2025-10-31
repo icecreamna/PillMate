@@ -10,33 +10,32 @@ import (
 
 // รายการยาแต่ละตัวในใบสั่ง (สำหรับสร้าง/แทนที่)
 type CreatePrescriptionItemDTO struct {
-	MedicineInfoID uint   `json:"medicine_info_id"`          // ต้องมีอยู่จริง
-	AmountPerTime  string `json:"amount_per_time"`           // เช่น "1 เม็ด"
-	TimesPerDay    string `json:"times_per_day"`             // เช่น "2 ครั้ง"
+	MedicineInfoID uint    `json:"medicine_info_id"`          // ต้องมีอยู่จริง
+	AmountPerTime  string  `json:"amount_per_time"`           // เช่น "1 เม็ด"
+	TimesPerDay    string  `json:"times_per_day"`             // เช่น "2 ครั้ง"
+	// ฟิลด์ใหม่ (optional) — เก็บเป็น "YYYY-MM-DD"
+	StartDate      *string `json:"start_date,omitempty"`
+	EndDate        *string `json:"end_date,omitempty"`
+	// ไม่รับ expire_date จาก client (คำนวณใน hook)
+	Note           *string `json:"note,omitempty"`
 }
 
 // สร้างใบสั่งยา (หัว) พร้อมรายการยา 1..N รายการ
 type CreatePrescriptionDTO struct {
-	IDCardNumber  string                      `json:"id_card_number"`                 // ต้องเป็นตัวเลข 13 หลัก (ตรวจใน handler)
-	DoctorID      uint                        `json:"doctor_id"`                      // ต้องมีอยู่จริง และ role=doctor (ไม่ส่งได้ถ้าจะอิงจาก token ฝั่ง route)
-	SyncUntil     *time.Time                  `json:"sync_until,omitempty"`           // optional; ไม่ส่ง = +60 วัน (ตั้งใน hook)
-	AppSyncStatus *bool                       `json:"app_sync_status,omitempty"`      // optional; default=false
-	Items         []CreatePrescriptionItemDTO `json:"items"`                          // ต้องมี >= 1
+	IDCardNumber  string                      `json:"id_card_number"`
+	DoctorID      uint                        `json:"doctor_id"`
+	SyncUntil     *time.Time                  `json:"sync_until,omitempty"`
+	AppSyncStatus *bool                       `json:"app_sync_status,omitempty"`
+	Items         []CreatePrescriptionItemDTO `json:"items"` // ต้องมี >= 1
 }
 
-// อัปเดตใบสั่งยา (หัวเอกสาร) — ไม่รวมการแก้ไขรายการยา (items)
-// หมายเหตุ: ถ้าต้องการแก้ไข items แนะนำทำ endpoint แยก (เช่น replace ทั้งชุด หรือ add/update/delete รายการทีละตัว)
+// อัปเดตใบสั่งยา (หัวเอกสาร)
 type UpdatePrescriptionDTO struct {
 	IDCardNumber  *string    `json:"id_card_number,omitempty"`
 	DoctorID      *uint      `json:"doctor_id,omitempty"`
 	SyncUntil     *time.Time `json:"sync_until,omitempty"`
 	AppSyncStatus *bool      `json:"app_sync_status,omitempty"`
 }
-
-// (ตัวเลือกเพิ่มเติม หากภายหลังต้องการแก้ไขรายการยาเป็นชุดเดียว)
-// type ReplacePrescriptionItemsDTO struct {
-// 	Items []CreatePrescriptionItemDTO `json:"items"` // แทนที่ทั้งชุด
-// }
 
 // ========== Response DTOs ==========
 
@@ -45,8 +44,14 @@ type PrescriptionItemResponse struct {
 	MedicineInfoID uint      `json:"medicine_info_id"`
 	AmountPerTime  string    `json:"amount_per_time"`
 	TimesPerDay    string    `json:"times_per_day"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	// ฟิลด์ใหม่ (optional) — "YYYY-MM-DD"
+	StartDate   *string   `json:"start_date,omitempty"`
+	EndDate     *string   `json:"end_date,omitempty"`
+	ExpireDate  *string   `json:"expire_date,omitempty"` // คำนวณจาก EndDate + 1 วัน (hook)
+	Note        *string   `json:"note,omitempty"`
+
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type PrescriptionResponse struct {
@@ -77,6 +82,12 @@ func NewPrescriptionResponse(m models.Prescription) PrescriptionResponse {
 			MedicineInfoID: it.MedicineInfoID,
 			AmountPerTime:  it.AmountPerTime,
 			TimesPerDay:    it.TimesPerDay,
+
+			StartDate:      it.StartDate,
+			EndDate:        it.EndDate,
+			ExpireDate:     it.ExpireDate, // ได้มาจาก hook ของโมเดล
+			Note:           it.Note,
+
 			CreatedAt:      it.CreatedAt,
 			UpdatedAt:      it.UpdatedAt,
 		})

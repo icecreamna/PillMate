@@ -42,6 +42,9 @@ type MyMedicine struct {
 	// จัดกลุ่ม (เช่น ในแอปรวมเป็นกลุ่ม)
 	GroupID         *uint          `gorm:"index" json:"group_id,omitempty"`
 
+	// ==== เพิ่มฟิลด์วันหมดอายุ ====
+	ExpireAt        *time.Time     `gorm:"index" json:"expire_at,omitempty"`
+
 	// Relations
 	Group        Group        `gorm:"foreignKey:GroupID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 	Patient      Patient      `gorm:"foreignKey:PatientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`

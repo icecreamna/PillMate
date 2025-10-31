@@ -91,25 +91,21 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 		} else {
 			idCard = ""
 		}
-
 		if idCard == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "missing id_card_number for this account",
-			})
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing id_card_number for this account"})
 		}
 
-		// คำนวณ TODAY ตาม timezone ที่เซ็ตไว้ (เช่น Asia/Bangkok)
+		// TODAY ตาม time.Local
 		today := time.Now().In(time.Local).Truncate(24 * time.Hour)
 
 		// 2) ดึง prescriptions ที่ยังไม่ซิงก์ (พร้อม items) และยังไม่หมดอายุซิงก์
 		var prescs []models.Prescription
-		q := db.DB.
+		if err := db.DB.
 			Where("id_card_number = ? AND app_sync_status = ?", idCard, false).
 			Where("sync_until >= ?", today).
 			Preload("Items").
-			Order("id ASC")
-
-		if err := q.Find(&prescs).Error; err != nil {
+			Order("id ASC").
+			Find(&prescs).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 		}
 		if len(prescs) == 0 {
@@ -120,23 +116,29 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 			})
 		}
 
+		// CHANGED: เพิ่มฟิลด์ start_date / end_date / expire_date / note ในผลลัพธ์
 		type syncedRow struct {
-			MyMedicineID       uint   `json:"mymedicine_id"`
-			PrescriptionID     uint   `json:"prescription_id"`
-			PrescriptionItemID *uint  `json:"prescription_item_id,omitempty"`
-			MedName            string `json:"med_name"`
-			FormID             uint   `json:"form_id"`
-			UnitID             *uint  `json:"unit_id,omitempty"`
-			InstructionID      *uint  `json:"instruction_id,omitempty"`
-			AmountPerTime      string `json:"amount_per_time"`
-			TimesPerDay        string `json:"times_per_day"`
-			Source             string `json:"source"`
-			MedicineInfoID     *uint  `json:"medicine_info_id,omitempty"`
+			MyMedicineID       uint    `json:"mymedicine_id"`
+			PrescriptionID     uint    `json:"prescription_id"`
+			PrescriptionItemID *uint   `json:"prescription_item_id,omitempty"`
+			MedName            string  `json:"med_name"`
+			FormID             uint    `json:"form_id"`
+			UnitID             *uint   `json:"unit_id,omitempty"`
+			InstructionID      *uint   `json:"instruction_id,omitempty"`
+			AmountPerTime      string  `json:"amount_per_time"`
+			TimesPerDay        string  `json:"times_per_day"`
+			Source             string  `json:"source"`
+			MedicineInfoID     *uint   `json:"medicine_info_id,omitempty"`
+
+			StartDate          *string `json:"start_date,omitempty"`   // NEW
+			EndDate            *string `json:"end_date,omitempty"`     // NEW
+			ExpireDate         *string `json:"expire_date,omitempty"`  // NEW (จาก hook ใน PrescriptionItem)
+			Note               *string `json:"note,omitempty"`         // NEW
 		}
 
 		created := make([]syncedRow, 0, 16)
 
-		// 3) ทำในทรานแซกชัน: สร้าง MyMedicine ต่อ "รายการยา" แล้วมาร์ก prescription เป็น synced
+		// 3) ทำในทรานแซกชัน
 		if err := db.DB.Transaction(func(tx *gorm.DB) error {
 			for _, p := range prescs {
 				for _, it := range p.Items {
@@ -146,12 +148,10 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						return err
 					}
 
-					// ป้องกันการสร้างซ้ำ (กรณีเรียกซ้ำ/ fail กลางทาง)
+					// กันซ้ำ
 					var exists int64
 					check := tx.Model(&models.MyMedicine{}).
 						Where("patient_id = ? AND prescription_id = ?", patientID, p.ID)
-
-					// ถ้ามีคอลัมน์ prescription_item_id ใน my_medicines ให้ใช้เป็น key กันซ้ำหลัก
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "prescription_item_id") {
 						check = check.Where("prescription_item_id = ?", it.ID)
 					}
@@ -159,39 +159,29 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						return err
 					}
 					if exists > 0 {
-						continue // ข้ามตัวที่เคยสร้างแล้ว
+						continue
 					}
 
-					// เตรียม pointer ให้ปลอดภัย (รองรับฟิลด์ pointer *uint)
+					// เตรียม ptr
 					var (
 						unitPtr, instrPtr *uint
 						medInfoPtr        *uint
 						prescItemIDPtr    *uint
 					)
-
-					// medicine_info_id (อ้างอิงต้นทางยา)
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "medicine_info_id") {
-						v := mi.ID
-						medInfoPtr = &v
+						v := mi.ID; medInfoPtr = &v
 					}
-					// prescription_item_id (อ้างอิงรายการในใบสั่ง)
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "prescription_item_id") {
-						v := it.ID
-						prescItemIDPtr = &v
+						v := it.ID; prescItemIDPtr = &v
 					}
-					// unit_id (*uint → เช็ค nil)
-					if tx.Migrator().HasColumn(&models.MyMedicine{}, "unit_id") {
-						if mi.UnitID != nil {
-							unitPtr = mi.UnitID
-						}
+					if tx.Migrator().HasColumn(&models.MyMedicine{}, "unit_id") && mi.UnitID != nil {
+						unitPtr = mi.UnitID
 					}
-					// instruction_id (*uint → เช็ค nil)
-					if tx.Migrator().HasColumn(&models.MyMedicine{}, "instruction_id") {
-						if mi.InstructionID != nil {
-							instrPtr = mi.InstructionID
-						}
+					if tx.Migrator().HasColumn(&models.MyMedicine{}, "instruction_id") && mi.InstructionID != nil {
+						instrPtr = mi.InstructionID
 					}
 
+					// สร้าง MyMedicine (ไม่เก็บวันที่/โน้ตลงตารางนี้)
 					mm := models.MyMedicine{
 						PatientID:     patientID,
 						MedName:       mi.MedName,
@@ -207,11 +197,11 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						PrescriptionItemID: prescItemIDPtr,
 						MedicineInfoID:     medInfoPtr,
 					}
-
 					if err := tx.Create(&mm).Error; err != nil {
 						return err
 					}
 
+					// เพิ่มลงผลลัพธ์ พร้อมฟิลด์จาก PrescriptionItem
 					created = append(created, syncedRow{
 						MyMedicineID:       mm.ID,
 						PrescriptionID:     p.ID,
@@ -224,6 +214,11 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						TimesPerDay:        mm.TimesPerDay,
 						Source:             mm.Source,
 						MedicineInfoID:     medInfoPtr,
+
+						StartDate:  it.StartDate,   // NEW
+						EndDate:    it.EndDate,     // NEW
+						ExpireDate: it.ExpireDate,  // NEW
+						Note:       it.Note,        // NEW
 					})
 				}
 

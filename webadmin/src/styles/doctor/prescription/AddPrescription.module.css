@@ -8,20 +8,16 @@
 .table thead th{ background:#6b7280; color:#fff; font-weight:700; }
 .table tbody tr:nth-child(even){ background:#f9fafb; }
 
-.actions{ display:flex; justify-content:center; }
+.actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
 .specify{
   height:24px; padding:0 10px; font-size:12px; border-radius:8px;
   border:1px solid #06b6d4; background:#67e8f9; color:#0f172a; cursor:pointer;
 }
 .specify:hover{ background:#22d3ee; }
 
-/* checkbox ให้สีเขียว */
 .checkbox{ width:16px; height:16px; accent-color:#16a34a; cursor:pointer; }
-
-/* ถ้ายกเลิกติ๊ก ให้จางลงเล็กน้อย */
 .dim td{ color:#475569; opacity:.7; }
 
-/* แจ้งเตือน */
 .error{
   background:#fee2e2; border:1px solid #fecaca; color:#991b1b;
   padding:10px 12px; border-radius:8px; margin:12px 0 0; max-width:600px;
@@ -35,49 +31,106 @@
 .submit:hover{ background:#15803d; }
 .submit:disabled{ opacity:.7; cursor:not-allowed; }
 
-/* ==== Modal (ใหม่) ==== */
+.toolsBar{ display:flex; align-items:center; gap:10px; }
+.searchInput{
+  flex:1 1 560px; max-width:300px; height:36px;
+  border:1px solid #d1d5db; border-radius:8px; padding:0 10px;
+  transition: border-color .15s ease, box-shadow .15s ease; margin-bottom: 5px;
+}
+.searchInput:focus{
+  outline:none;
+  border-color:#60a5fa;
+  box-shadow:0 0 0 3px rgba(59,130,246,.2);
+}
+.searchInfo{ color:#64748b; font-size:13px; }
+
+/* ===== Modal compact ===== */
 .modalOverlay{
   position:fixed; inset:0; background:rgba(0,0,0,.35);
-  display:flex; align-items:center; justify-content:center; z-index:50;
+  display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;
 }
 .modal{
-  width:min(520px, 92vw); background:#fff; border-radius:12px; padding:20px 20px 16px;
+  width:min(720px, 92vw); background:#fff; border-radius:12px; 
   position:relative; box-shadow:0 20px 40px rgba(0,0,0,.25);
+  display:flex; flex-direction:column; max-height:86vh; overflow:hidden;
 }
 .modalClose{
   position:absolute; right:10px; top:6px; font-size:28px; line-height:1; border:none; background:transparent; cursor:pointer;
 }
-.modalHead{ display:grid; gap:10px; margin:8px 0 14px; font-size:18px; color:#111; }
+.modalHead{ padding:12px 16px 8px; border-bottom:1px solid #f1f5f9; }
+.modalTitle{ font-size:16px; line-height:1.2; color:#111; }
+.modalSub{ font-size:12px; color:#64748b; margin-top:2px; }
 
-.box{
-  border:1px solid #e5e7eb; border-radius:10px; padding:14px; background:#fff;
+.modalContent{ padding:12px 16px; overflow-y:auto; }
+.hRow{ display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+.hField{
+  display:inline-flex; align-items:center; gap:8px;
+  background:#f8fafc; border:1px solid #e2e8f0; padding:6px 8px; border-radius:10px;
 }
-.boxTitle{ font-weight:700; margin-bottom:12px; }
-.row{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.label{ display:grid; gap:6px; width:220px; }
-.input{
-  height:36px; border:1px solid #d1d5db; border-radius:8px; padding:0 10px; font-size:16px;
-}
-.unit{ color:#111; }
+.hLabel{ font-size:12px; color:#334155; white-space:nowrap; }
+.hInput{ height:28px; padding:0 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; }
+.hUnit{ font-size:12px; color:#475569; }
+.hHint{ font-size:11px; color:#64748b; margin-left:auto; white-space:nowrap; }
 
-.modalActions{ display:flex; justify-content:center; margin-top:16px; }
+/* ===== Date overlay + calendar icon ===== */
+.dateWrap{
+  position:relative;
+  width:176px;   /* กว้างขึ้นเผื่อไอคอน */
+  height:28px;
+}
+.dateDisplay{
+  position:absolute; inset:0;
+  display:flex; align-items:center; padding:0 30px 0 8px; /* เผื่อพื้นที่ด้านขวาให้ไอคอน */
+  border:1px solid #cbd5e1; border-radius:8px; background:#fff;
+  font-size:13px; color:#0f172a; font-variant-numeric:tabular-nums;
+  pointer-events:none;
+}
+.dateDisplay:empty::before{ content:'dd/mm/yyyy'; color:#94a3b8; }
+.dateNative{
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; -webkit-appearance:none; appearance:none; cursor:pointer;
+}
+
+/* ปุ่มไอคอนปฏิทิน */
+.calBtn{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  width:22px; height:22px; border:none; border-radius:6px;
+  background:#e2e8f0; color:#0f172a; display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.calBtn:hover{ background:#cbd5e1; }
+
+/* Note */
+.hRowNote{ display:flex; align-items:center; }
+.hTextarea{
+  width:100%; min-height:56px; max-height:96px;
+  padding:8px 10px; font-size:13px; border:1px solid #cbd5e1; border-radius:10px; resize:vertical;
+}
+
+.modalActions{ display:flex; justify-content:flex-end; gap:8px; padding:10px 16px 14px; border-top:1px solid #f1f5f9; }
 .confirm{
-  min-width:160px; height:38px; border:none; border-radius:8px;
+  min-width:140px; height:36px; border:none; border-radius:8px;
   background:#16a34a; color:#fff; font-weight:700; cursor:pointer;
 }
 .confirm:hover{ background:#15803d; }
 
-/* ยืดความกว้างช่องค้นหา */
-.toolsBar{ display:flex; align-items:center; gap:10px; }
+.brief{ display:flex; flex-direction:column; align-items:flex-end; font-size:12px; color:#334155; }
+.noteBrief{ font-size:11px; color:#64748b; margin-top:2px; }
 
-.searchInput{
-  flex: 1 1 560px;   /* ยืดได้และตั้งฐานเริ่ม ~560px */
-  max-width: 300px;  /* ไม่ให้ยาวเกินไปบนจอใหญ่ */
-  width: 100%;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  
-  height:36px; width:260px;
-  border:1px solid #d1d5db; border-radius:8px; padding:0 10px;
-  transition: border-color .15s ease, box-shadow .15s ease;
+@media (max-width: 480px) {
+  .modal{ width:95vw; max-height:88vh; }
+  .hHint{ width:100%; margin-left:0; margin-top:4px; white-space:normal; }
+}
+
+.patientBar{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap:8px;
+  padding:10px 12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#f8fafc;
+  margin-bottom:10px;
+  font-size:14px;
+  color:#0f172a;
 }

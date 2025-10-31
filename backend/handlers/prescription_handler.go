@@ -89,6 +89,9 @@ func CreatePrescription(db *gorm.DB, in *dto.CreatePrescriptionDTO) (*dto.Prescr
 				MedicineInfoID: it.MedicineInfoID,
 				AmountPerTime:  amt,
 				TimesPerDay:    tpd,
+				StartDate:      it.StartDate, // NEW
+  				EndDate:        it.EndDate,   // NEW (hook จะตั้ง ExpireDate ให้เอง)
+  				Note:           it.Note,      // NEW
 			})
 		}
 		if len(items) > 0 {
