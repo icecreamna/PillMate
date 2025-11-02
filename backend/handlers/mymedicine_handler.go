@@ -135,7 +135,7 @@ func GetMyMedicines(db *gorm.DB, patientID uint) ([]MyMedicineView, error) {
 		Joins("LEFT JOIN instructions i ON i.id = m.instruction_id").
 		Joins("LEFT JOIN prescription_items pi ON pi.id = m.prescription_item_id").
 		Where("m.patient_id = ? AND m.deleted_at IS NULL", patientID).
-		Where("(m.expire_at IS NULL OR m.expire_at >= ?)", today).
+		Where("(pi.expire_date IS NULL OR pi.expire_date::date >= ?)", today).
 		Scan(&result).Error
 	if err != nil {
 		return nil, err

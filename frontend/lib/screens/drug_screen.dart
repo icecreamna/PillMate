@@ -20,14 +20,19 @@ class DrugScreen extends StatefulWidget {
 }
 
 class _DrugScreenState extends State<DrugScreen> {
+  bool _firstTime = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DrugProvider>().loadMyMedicines();
       context.read<DrugProvider>().loadGroups();
+      context.read<DrugProvider>().getCountNotification();
     });
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -108,47 +113,73 @@ class _DrugScreenState extends State<DrugScreen> {
                             children: [
                               Align(
                                 alignment: Alignment.topRight,
-                                child: SizedBox(
-                                  width: 144,
-                                  height: 45,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFFFDF6A),
-                                      padding: EdgeInsets.zero,
-                                      shadowColor: Colors.black,
-                                      elevation: 4,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.zero,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    SizedBox(
+                                      width: 144,
+                                      height: 45,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFFDF6A,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          shadowColor: Colors.black,
+                                          elevation: 4,
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.zero,
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          debugPrint(
+                                            " ปุ่มกดแล้ว เริ่ม sync...",
+                                          );
+                                          await context
+                                              .read<DrugProvider>()
+                                              .syncHospitalMedicines(context);
+                                          await context
+                                              .read<DrugProvider>()
+                                              .loadMyMedicines();
+                                          await context
+                                              .read<DrugProvider>()
+                                              .getCountNotification();
+                                        },
+                                        child: const Text(
+                                          "เพิ่มยาจากโรงพยาบาล",
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ),
-                                    onPressed: () async {
-                                      debugPrint("🟡 ปุ่มกดแล้ว เริ่ม sync...");
-                                      await context
-                                          .read<DrugProvider>()
-                                          .syncHospitalMedicines(context);
-                                      await context
-                                          .read<DrugProvider>()
-                                          .loadMyMedicines();
-                                      // ScaffoldMessenger.of(
-                                      //   context,
-                                      // ).showSnackBar(
-                                      //   const SnackBar(
-                                      //     content: Text(
-                                      //       "✅ โหลดยาจากโรงพยาบาลเรียบร้อย",
-                                      //     ),
-                                      //   ),
-                                      // );
-                                    },
-                                    child: const Text(
-                                      "เพิ่มยาจากโรงพยาบาล",
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
+
+                                    if (p.countNoti > 0)
+                                      Positioned(
+                                        right: -6,
+                                        top: -6,
+                                        child: Container(
+                                          width: 18,
+                                          height: 18,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            "${p.countNoti}",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -194,43 +225,80 @@ class _DrugScreenState extends State<DrugScreen> {
                                   child: p.page == DrugTab.all
                                       ? Align(
                                           alignment: Alignment.topRight,
-                                          child: SizedBox(
-                                            width: 144,
-                                            height: 45,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFFFFDF6A,
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                                elevation: 4,
-                                                shadowColor: Colors.black,
-                                                shape:
-                                                    const RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.zero,
-                                                    ),
-                                              ),
-                                              onPressed: () async {
-                                                await context
-                                                    .read<DrugProvider>()
-                                                    .syncHospitalMedicines(
-                                                      context,
+                                          child: Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              SizedBox(
+                                                width: 144,
+                                                height: 45,
+                                                child: ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFFFFDF6A),
+                                                    padding: EdgeInsets.zero,
+                                                    shadowColor: Colors.black,
+                                                    elevation: 4,
+                                                    shape:
+                                                        const RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.zero,
+                                                        ),
+                                                  ),
+                                                  onPressed: () async {
+                                                    debugPrint(
+                                                      "🟡 ปุ่มกดแล้ว เริ่ม sync...",
                                                     );
-                                                await context
-                                                    .read<DrugProvider>()
-                                                    .loadMyMedicines();
-                                              },
-                                              child: const Text(
-                                                "เพิ่มยาจากโรงพยาบาล",
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
+                                                    await context
+                                                        .read<DrugProvider>()
+                                                        .syncHospitalMedicines(
+                                                          context,
+                                                        );
+                                                    await context
+                                                        .read<DrugProvider>()
+                                                        .loadMyMedicines();
+                                                    await context
+                                                        .read<DrugProvider>()
+                                                        .getCountNotification();
+                                                  },
+                                                  child: const Text(
+                                                    "เพิ่มยาจากโรงพยาบาล",
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 16,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
+
+                                              if (p.countNoti > 0)
+                                                Positioned(
+                                                  right: -6,
+                                                  top: -6,
+                                                  child: Container(
+                                                    width: 18,
+                                                    height: 18,
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                          color: Colors.red,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                    alignment: Alignment.center,
+                                                    child: Text(
+                                                      "${p.countNoti}",
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         )
                                       : Align(

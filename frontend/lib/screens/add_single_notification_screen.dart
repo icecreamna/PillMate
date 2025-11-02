@@ -422,6 +422,7 @@ class _AddSingleNotificationViewState
                             .removeMedicine(id: int.parse(addS.tempDose.id));
                         if (success) {
                           await context.read<DrugProvider>().loadMyMedicines();
+                          await context.read<DrugProvider>().getCountNotification();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("✅ ลบยาเรียบร้อย")),
                           );

@@ -169,4 +169,24 @@ class MedicineService {
       return false;
     }
   }
+
+  Future<int?> getCountNotification() async {
+    final String? token = AuthService.jwtToken;
+    if (token == null) {
+      print("⚠️ Missing token — user not logged in");
+      return null;
+    }
+
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/prescriptions/sync-status"),
+      headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
+    );
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      print("Number of count notification ${body["count"]}");
+      return body["count"] ?? 0;
+    } else {
+      throw Exception("❌ Cant load number of count: ${res.statusCode} - ${res.body}");
+    }
+  }
 }

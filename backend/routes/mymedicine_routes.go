@@ -103,7 +103,14 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 		if err := db.DB.
 			Where("id_card_number = ? AND app_sync_status = ?", idCard, false).
 			Where("sync_until >= ?", today).
-			Preload("Items").
+			Where(`
+    EXISTS (
+        SELECT 1 FROM prescription_items pi
+        WHERE pi.prescription_id = prescriptions.id
+        AND (pi.expire_date IS NULL OR pi.expire_date::date >= ?)
+    )
+`, today).
+			Preload("Items", "(expire_date IS NULL OR expire_date::date >= ?)", today). // <-- preload filter ด้วย
 			Order("id ASC").
 			Find(&prescs).Error; err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -118,22 +125,22 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 
 		// CHANGED: เพิ่มฟิลด์ start_date / end_date / expire_date / note ในผลลัพธ์
 		type syncedRow struct {
-			MyMedicineID       uint    `json:"mymedicine_id"`
-			PrescriptionID     uint    `json:"prescription_id"`
-			PrescriptionItemID *uint   `json:"prescription_item_id,omitempty"`
-			MedName            string  `json:"med_name"`
-			FormID             uint    `json:"form_id"`
-			UnitID             *uint   `json:"unit_id,omitempty"`
-			InstructionID      *uint   `json:"instruction_id,omitempty"`
-			AmountPerTime      string  `json:"amount_per_time"`
-			TimesPerDay        string  `json:"times_per_day"`
-			Source             string  `json:"source"`
-			MedicineInfoID     *uint   `json:"medicine_info_id,omitempty"`
+			MyMedicineID       uint   `json:"mymedicine_id"`
+			PrescriptionID     uint   `json:"prescription_id"`
+			PrescriptionItemID *uint  `json:"prescription_item_id,omitempty"`
+			MedName            string `json:"med_name"`
+			FormID             uint   `json:"form_id"`
+			UnitID             *uint  `json:"unit_id,omitempty"`
+			InstructionID      *uint  `json:"instruction_id,omitempty"`
+			AmountPerTime      string `json:"amount_per_time"`
+			TimesPerDay        string `json:"times_per_day"`
+			Source             string `json:"source"`
+			MedicineInfoID     *uint  `json:"medicine_info_id,omitempty"`
 
-			StartDate          *string `json:"start_date,omitempty"`   // NEW
-			EndDate            *string `json:"end_date,omitempty"`     // NEW
-			ExpireDate         *string `json:"expire_date,omitempty"`  // NEW (จาก hook ใน PrescriptionItem)
-			Note               *string `json:"note,omitempty"`         // NEW
+			StartDate  *string `json:"start_date,omitempty"`  // NEW
+			EndDate    *string `json:"end_date,omitempty"`    // NEW
+			ExpireDate *string `json:"expire_date,omitempty"` // NEW (จาก hook ใน PrescriptionItem)
+			Note       *string `json:"note,omitempty"`        // NEW
 		}
 
 		created := make([]syncedRow, 0, 16)
@@ -169,10 +176,12 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						prescItemIDPtr    *uint
 					)
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "medicine_info_id") {
-						v := mi.ID; medInfoPtr = &v
+						v := mi.ID
+						medInfoPtr = &v
 					}
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "prescription_item_id") {
-						v := it.ID; prescItemIDPtr = &v
+						v := it.ID
+						prescItemIDPtr = &v
 					}
 					if tx.Migrator().HasColumn(&models.MyMedicine{}, "unit_id") && mi.UnitID != nil {
 						unitPtr = mi.UnitID
@@ -215,10 +224,10 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 						Source:             mm.Source,
 						MedicineInfoID:     medInfoPtr,
 
-						StartDate:  it.StartDate,   // NEW
-						EndDate:    it.EndDate,     // NEW
-						ExpireDate: it.ExpireDate,  // NEW
-						Note:       it.Note,        // NEW
+						StartDate:  it.StartDate,  // NEW
+						EndDate:    it.EndDate,    // NEW
+						ExpireDate: it.ExpireDate, // NEW
+						Note:       it.Note,       // NEW
 					})
 				}
 
@@ -355,7 +364,7 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 	api.Get("/prescriptions/sync-status", func(c *fiber.Ctx) error {
 		patientID, ok := c.Locals("patient_id").(uint)
 		if !ok || patientID == 0 {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error":"Unauthorized"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 		}
 
 		// เอา id_card_number ของผู้ใช้
@@ -364,7 +373,7 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 		}
 		if me.IDCardNumber == nil || strings.TrimSpace(*me.IDCardNumber) == "" {
-			return c.Status(400).JSON(fiber.Map{"error":"missing id_card_number"})
+			return c.Status(400).JSON(fiber.Map{"error": "missing id_card_number"})
 		}
 		idCard := strings.TrimSpace(*me.IDCardNumber)
 
@@ -382,10 +391,10 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 		}
 
 		return c.JSON(fiber.Map{
-			"has_syncable": len(ids) > 0,
-			"count":        len(ids),
-			"prescription_ids": ids,                    // เผื่อ FE จะโชว์ badge รายละเอียด
-			"today":        today.Format("2006-01-02"),
+			"has_syncable":     len(ids) > 0,
+			"count":            len(ids),
+			"prescription_ids": ids, // เผื่อ FE จะโชว์ badge รายละเอียด
+			"today":            today.Format("2006-01-02"),
 		})
 	})
 
