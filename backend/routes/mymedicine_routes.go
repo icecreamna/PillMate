@@ -350,4 +350,43 @@ func SetupMyMedicineRoutes(api fiber.Router) {
 
 		return c.JSON(fiber.Map{"message": "Mymedicine deleted"})
 	})
+
+	// GET /api/prescriptions/sync-status
+	api.Get("/prescriptions/sync-status", func(c *fiber.Ctx) error {
+		patientID, ok := c.Locals("patient_id").(uint)
+		if !ok || patientID == 0 {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error":"Unauthorized"})
+		}
+
+		// เอา id_card_number ของผู้ใช้
+		var me models.Patient
+		if err := db.DB.Select("id_card_number").First(&me, patientID).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+		if me.IDCardNumber == nil || strings.TrimSpace(*me.IDCardNumber) == "" {
+			return c.Status(400).JSON(fiber.Map{"error":"missing id_card_number"})
+		}
+		idCard := strings.TrimSpace(*me.IDCardNumber)
+
+		today := time.Now().In(time.Local).Truncate(24 * time.Hour)
+
+		// ดึงเฉพาะ id และนับ (เบา ๆ)
+		var ids []uint
+		if err := db.DB.
+			Model(&models.Prescription{}).
+			Where("id_card_number = ? AND app_sync_status = FALSE", idCard).
+			Where("sync_until >= ?", today).
+			Order("id ASC").
+			Pluck("id", &ids).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		return c.JSON(fiber.Map{
+			"has_syncable": len(ids) > 0,
+			"count":        len(ids),
+			"prescription_ids": ids,                    // เผื่อ FE จะโชว์ badge รายละเอียด
+			"today":        today.Format("2006-01-02"),
+		})
+	})
+
 }
