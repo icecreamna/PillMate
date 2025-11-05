@@ -52,6 +52,9 @@ class MedicineService {
             "form_id": e["form_id"],
             "unit_id": e["unit_id"],
             "instruction_id": e["instruction_id"],
+            "start_date": e["start_date"],
+            "end_date": e["end_date"],
+            "note": e["note"],
             "form_name": "-",
             "unit_name": "-",
             "instruction_name": "-",
@@ -164,6 +167,26 @@ class MedicineService {
     } else {
       print("❌ Error: ${res.body}");
       return false;
+    }
+  }
+
+  Future<int?> getCountNotification() async {
+    final String? token = AuthService.jwtToken;
+    if (token == null) {
+      print("⚠️ Missing token — user not logged in");
+      return null;
+    }
+
+    final res = await http.get(
+      Uri.parse("$baseUrl/api/prescriptions/sync-status"),
+      headers: {"Content-Type": "application/json", "Cookie": "jwt=$token"},
+    );
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      print("Number of count notification ${body["count"]}");
+      return body["count"] ?? 0;
+    } else {
+      throw Exception("❌ Cant load number of count: ${res.statusCode} - ${res.body}");
     }
   }
 }

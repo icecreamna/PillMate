@@ -23,3 +23,67 @@
   height:32px; border:1px solid #ef4444; background:#ef4444; color:#fff; border-radius:6px; padding:0 12px; cursor:pointer;
 }
 .content { padding:16px; }
+
+.actions{
+  display:flex;
+  flex-direction:column;   /* เรียงปุ่มบน→ล่าง */
+  gap:8px;
+  align-items:flex-end;    /* ชิดขวาเหมือน logout */
+}
+
+.manage{
+  height:32px;
+  padding:0 12px;
+  border-radius:6px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#111;
+  cursor:pointer;
+}
+.manage:hover{ background:#f3f4f6; }
+
+/* ปรับให้ช่องซ้าย-ขวา: อีเมล/ปุ่มผู้ใช้ไปชิดขวา */
+.topbar {
+  display:flex; gap:8px; justify-content:space-between; align-items:center;
+  padding:10px 12px; border-bottom:1px solid #e5e7eb;
+}
+
+/* ========== User dropdown ========== */
+.userMenu { position: relative; }
+
+.userBtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 32px; padding: 0 10px;
+  border: 1px solid #d1d5db; border-radius: 6px;
+  background: #fff; color: #111; cursor: pointer;
+}
+.userBtn:hover { background: #f3f4f6; }
+
+.userAvatar { width: 18px; text-align: center; }
+.userEmail { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.caret { opacity: .7; }
+
+.dropdown {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  min-width: 220px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  padding: 6px; z-index: 20;
+}
+
+.dropdownItem {
+  width: 100%; text-align: left;
+  height: 34px; padding: 0 10px;
+  background: #fff; border: 0; border-radius: 6px; cursor: pointer; color: #111;
+}
+.dropdownItem:hover { background: #f3f4f6; }
+
+.logoutItem {
+  color: #b91c1c;
+}
+.logoutItem:hover {
+  background: #fee2e2;
+}
+
+.separator {
+  height: 1px; background: #e5e7eb; margin: 6px 0;
+}

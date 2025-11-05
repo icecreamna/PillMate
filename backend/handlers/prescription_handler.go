@@ -89,6 +89,9 @@ func CreatePrescription(db *gorm.DB, in *dto.CreatePrescriptionDTO) (*dto.Prescr
 				MedicineInfoID: it.MedicineInfoID,
 				AmountPerTime:  amt,
 				TimesPerDay:    tpd,
+				StartDate:      it.StartDate, // NEW
+  				EndDate:        it.EndDate,   // NEW (hook จะตั้ง ExpireDate ให้เอง)
+  				Note:           it.Note,      // NEW
 			})
 		}
 		if len(items) > 0 {
@@ -97,14 +100,14 @@ func CreatePrescription(db *gorm.DB, in *dto.CreatePrescriptionDTO) (*dto.Prescr
 			}
 		}
 
-		// 3) **สำคัญ**: ปิดซิงก์ของใบเก่าทั้งหมดให้เป็น "เมื่อวาน"
-		//    ตามนโยบาย: เมื่อมีใบใหม่เข้ามา ให้ใบเก่าหมดอายุการซิงก์ทันที
-		yesterday := time.Now().AddDate(0, 0, -1)
-		if err := tx.Model(&models.Prescription{}).
-			Where("id_card_number = ? AND id <> ?", idc, created.ID).
-			Update("sync_until", yesterday).Error; err != nil {
-			return err
-		}
+		// // 3) **สำคัญ**: ปิดซิงก์ของใบเก่าทั้งหมดให้เป็น "เมื่อวาน"
+		// //    ตามนโยบาย: เมื่อมีใบใหม่เข้ามา ให้ใบเก่าหมดอายุการซิงก์ทันที
+		// yesterday := time.Now().AddDate(0, 0, -1)
+		// if err := tx.Model(&models.Prescription{}).
+		// 	Where("id_card_number = ? AND id <> ?", idc, created.ID).
+		// 	Update("sync_until", yesterday).Error; err != nil {
+		// 	return err
+		// }
 
 		return nil
 	}); err != nil {

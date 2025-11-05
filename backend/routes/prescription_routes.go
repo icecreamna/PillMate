@@ -40,8 +40,8 @@ func SetupPrescriptionRoutes(api fiber.Router) {
 	//   "id_card_number": "1101700234567",
 	//   "doctor_id": 7, // (optional) ถ้าไม่ส่งจะดึงจาก token ฝั่งเซิร์ฟเวอร์
 	//   "items": [
-	//     { "medicine_info_id": 12, "amount_per_time": "1 เม็ด", "times_per_day": "2 ครั้ง" },
-	//     { "medicine_info_id": 45, "amount_per_time": "5 ml",  "times_per_day": "3 ครั้ง" }
+	//     { "medicine_info_id": 12, "amount_per_time": "1 เม็ด", "times_per_day": "2 ครั้ง", "start_date": "2025-11-01","end_date":"2025-11-14","note": "กินทุก2ชั่วโมง" },
+	//     { "medicine_info_id": 45, "amount_per_time": "5 ml",  "times_per_day": "3 ครั้ง", "start_date": "2025-11-01","end_date":"2025-11-14","note": "กินทุก2ชั่วโมง"}
 	//   ],
 	//   "sync_until": "2025-12-31T00:00:00+07:00", // (optional) ไม่ส่ง = +60 วัน (กำหนดใน hook)
 	//   "app_sync_status": false                    // (optional) default=false

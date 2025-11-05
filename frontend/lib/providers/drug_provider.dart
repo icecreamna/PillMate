@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/enums/drug_tab.dart';
 import 'package:frontend/services/group_service.dart';
@@ -16,12 +18,15 @@ class DrugProvider extends ChangeNotifier {
   final Map<String, int> _groupsId = {};
 
   bool _isLoading = false;
+
+  int _countNoti = 0;
   bool get isLoading => _isLoading;
 
   DrugTab get page => _page;
   Map<String, List<String>> get groups => _groups;
   Map<String, int> get groupsId => _groupsId;
   List<Dose> get doseAll => _myMedicines;
+  int get countNoti => _countNoti;
 
   Future<void> loadMyMedicines() async {
     _isLoading = true;
@@ -106,6 +111,24 @@ class DrugProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Provider can't load Groups");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> getCountNotification() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final count = await _medicineService.getCountNotification();
+
+        _countNoti = count ?? 0;
+        notifyListeners();
+        print("Count = $_countNoti");
+    } catch (e) {
+      debugPrint("provider get count catch $e");
     } finally {
       _isLoading = false;
       notifyListeners();
